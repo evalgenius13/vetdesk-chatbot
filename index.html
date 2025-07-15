@@ -404,15 +404,48 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   const [showQuickActions, setShowQuickActions] = React.useState(true);
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
-  // Removed: const [copiedMessageId, setCopiedMessageId] = React.useState(null); // This state is not needed as copy feature is removed
+  const [currentTopicActions, setCurrentTopicActions] = React.useState(null);
 
   const topicQuickActions = [
-  { text: "What are VA disability claims?", label: "Disability Claims", topic: "disability" },
-  { text: "What are VA appeals?", label: "Appeals", topic: "appeals" },
-  { text: "What is VA healthcare?", label: "Healthcare", topic: "healthcare" },
-  { text: "What are GI Bill benefits?", label: "Education", topic: "education" },
-  { text: "What are VA home loans?", label: "Home Loans", topic: "homeloans" }
-];
+    { text: "What are VA disability claims?", label: "Disability Claims", topic: "disability" },
+    { text: "What are VA appeals?", label: "Appeals", topic: "appeals" },
+    { text: "What is VA healthcare?", label: "Healthcare", topic: "healthcare" },
+    { text: "What are GI Bill benefits?", label: "Education", topic: "education" },
+    { text: "What are VA home loans?", label: "Home Loans", topic: "homeloans" }
+  ];
+
+  const actionQuickLinks = {
+    disability: [
+      { text: "How do I file a new disability claim? Walk me through the process step by step.", label: "File New Claim" },
+      { text: "How do I check the status of my disability claim?", label: "Check Claim Status" },
+      { text: "I want to appeal my disability rating decision. What are my options?", label: "Appeal Decision" },
+      { text: "I need help with my disability claim. What resources are available?", label: "Get Help" }
+    ],
+    appeals: [
+      { text: "How do I file a Supplemental Claim with new evidence?", label: "File Supplemental Claim" },
+      { text: "What is a Higher-Level Review and how do I request one?", label: "Higher-Level Review" },
+      { text: "How do I appeal to the Board of Veterans Appeals?", label: "Board Appeal" },
+      { text: "What are the deadlines for filing appeals?", label: "Appeal Deadlines" }
+    ],
+    healthcare: [
+      { text: "How do I enroll in VA healthcare?", label: "Enroll in Healthcare" },
+      { text: "How do I schedule a VA medical appointment?", label: "Schedule Appointment" },
+      { text: "What is Community Care and how do I access it?", label: "Community Care" },
+      { text: "How do I get my VA medical records?", label: "Medical Records" }
+    ],
+    education: [
+      { text: "How do I apply for GI Bill benefits?", label: "Apply for GI Bill" },
+      { text: "Can I transfer my GI Bill benefits to family members?", label: "Transfer Benefits" },
+      { text: "What schools are approved for GI Bill benefits?", label: "Find Schools" },
+      { text: "How do I use VR&E vocational rehabilitation benefits?", label: "Vocational Rehab" }
+    ],
+    homeloans: [
+      { text: "How do I get a VA home loan Certificate of Eligibility?", label: "Get COE" },
+      { text: "What are the VA home loan requirements and benefits?", label: "Loan Requirements" },
+      { text: "How do I find a VA-approved lender?", label: "Find Lender" },
+      { text: "Can I use my VA loan benefit multiple times?", label: "Reuse Benefits" }
+    ]
+  };
 
   const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
 
@@ -425,8 +458,12 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   React.useEffect(() => {
     if (!isLoading && !streaming) {
       setLoadingAction(null);
+      // Reset to topics after bot responds to action questions
+      if (currentTopicActions && !streaming) {
+        setTimeout(() => setCurrentTopicActions(null), 2000);
+      }
     }
-  }, [isLoading, streaming]);
+  }, [isLoading, streaming, currentTopicActions]);
 
   // Rate Limiting Protection
   const handleSend = () => {
@@ -436,16 +473,26 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     onSend();
   };
 
-  // Enhanced Quick Ask
-  const handleQuickAsk = (action, idx) => {
+  // Enhanced Quick Ask for two-level navigation
+  const handleTopicQuickAsk = (action, idx) => {
     setLoadingAction(idx);
+    setCurrentTopicActions(action.topic);
     onQuickAsk(action.text);
+  };
+
+  const handleActionQuickAsk = (action, idx) => {
+    setLoadingAction(`action-${idx}`);
+    onQuickAsk(action.text);
+  };
+
+  const resetToTopics = () => {
+    setCurrentTopicActions(null);
   };
 
   // Character count for long messages
   const charCount = input.length;
   const maxChars = 500;
-
+  
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
       {/* Text Size Controls */}
