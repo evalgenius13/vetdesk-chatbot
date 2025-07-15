@@ -690,49 +690,49 @@ messages.map(renderMessage)
 )}
 <div ref={messagesEndRef}></div>
 </div>
-
-<div style={{borderTop: '1px solid #d1d5db', backgroundColor: '#f9fafb', padding: '16px'}}>
-<div style={{display: 'flex', gap: '12px'}}>
-<textarea
-ref={textareaRef}
-style={{
-flex: '1',
-padding: '16px',
-backgroundColor: 'white',
-color: '#1f2937',
-borderRadius: '16px',
-border: '2px solid #9ca3af',
-outline: 'none',
-fontSize: '16px',
-resize: 'none',
-minHeight: '52px',
-maxHeight: '120px',
-overflow: 'hidden'
-}}
-value={input}
-onChange={handleInputChange}
-onKeyDown={handleKeyPress}
-disabled={isLoading}
-/>
-<button
-style={{
-padding: '16px 24px',
-backgroundColor: '#2563eb',
-color: 'white',
-borderRadius: '16px',
-fontWeight: '500',
-fontSize: '16px',
-border: 'none',
-cursor: 'pointer'
-}}
-onClick={handleSendMessage}
-disabled={!input.trim() || isLoading}
->
-↑
-</button>
-</div>
-</div>
-</div>
+return (
+  <div style={{ borderTop: '1px solid #d1d5db', backgroundColor: '#f9fafb', padding: '16px' }}>
+    <div style={{ display: 'flex', gap: '12px' }}>
+      <textarea
+        id="chatbot-input"
+        ref={textareaRef}
+        value={input}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyPress}
+        disabled={isLoading}
+        style={{
+          flex: '1',
+          padding: '16px',
+          backgroundColor: 'white',
+          color: '#1f2937',
+          borderRadius: '16px',
+          border: '2px solid #9ca3af',
+          outline: 'none',
+          fontSize: '16px',
+          resize: 'none',
+          minHeight: '52px',
+          maxHeight: '120px',
+          overflow: 'hidden'
+        }}
+      />
+      <button
+        onClick={handleSendMessage}
+        disabled={isLoading || !input.trim()}
+        style={{
+          padding: '12px 16px',
+          backgroundColor: '#2563eb',
+          color: 'white',
+          border: 'none',
+          borderRadius: '12px',
+          fontWeight: 'bold',
+          fontSize: '15px',
+          cursor: 'pointer'
+        }}
+      >
+        Send
+      </button>
+    </div>
+  </div>
 );
 }
 
@@ -750,95 +750,76 @@ chatRoot.innerHTML = '<div style="padding: 20px; text-align: center;">Chatbot te
 
 // Separate news component
 function NewsApp() {
-const [newsArticles, setNewsArticles] = useState([]);
-const [loadingNews, setLoadingNews] = useState(true);
+  const [newsArticles, setNewsArticles] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-useEffect(() => {
-const loadNews = async () => {
-try {
-const newsRes = await fetch("https://vetdesk-demo2-api.vercel.app/api/va-news");
-if (newsRes.ok) {
-const newsData = await newsRes.json();
-setNewsArticles(newsData.sources || []);
-}
-} catch (error) {
-console.log("Failed to load news:", error);
-} finally {
-setLoadingNews(false);
-}
-};
-loadNews();
-}, []);
+  React.useEffect(() => {
+    fetch('https://api.npoint.io/1393450047760424960/news')
+      .then((res) => res.json())
+      .then((data) => {
+        setNewsArticles(data.news || []);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsLoading(false);
+      });
+  }, []);
 
-const handleNewsQuestion = (article) => {
-// Scroll to chatbot and send question
-document.querySelector('#chatbot-root').scrollIntoView({ behavior: 'smooth' });
-// This would need to communicate with the chatbot - simplified for now
-alert(`You clicked on: ${article.title}`);
-};
+  const handleNewsQuestion = (article) => {
+    const inputBox = document.querySelector('#chatbot-input');
+    if (inputBox) {
+      inputBox.value = `How does this affect me? (${article.title})`;
+      inputBox.focus();
+      inputBox.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 
-return (
-    <>
-  {loadingNews ? (
-    <div style={{ textAlign: 'center', color: '#6b7280' }}>Loading news...</div>
-  ) : newsArticles.length > 0 ? (
-    <div id="news-root">
+    const chatbox = document.querySelector('#chatbot-root');
+    if (chatbox) {
+      chatbox.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  if (isLoading) {
+    return <div style={{ textAlign: 'center', color: '#6b7280' }}>Loading news...</div>;
+  }
+
+  if (!newsArticles.length) {
+    return <div style={{ textAlign: 'center', color: '#6b7280' }}>No news available</div>;
+  }
+
+  return (
+    <div>
       {newsArticles.map((article, index) => (
-        <div className="news-article" key={index}>
-          {article.image && (
-            <img
-              src={article.image}
-              alt={article.title}
-              onError={(e) => (e.target.style.display = 'none')}
-            />
-          )}
+        <div key={index} className="news-article">
+          {article.image && <img src={article.image} alt="" />}
           <div className="news-article-content">
-            <h4>
-              <a
-                href={article.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'inherit', textDecoration: 'none' }}
+            <h4>{article.title}</h4>
+            <span>{article.date}</span>
+            <div style={{ marginTop: '10px' }}>
+              <button
+                onClick={() => handleNewsQuestion(article)}
+                style={{
+                  marginTop: '10px',
+                  backgroundColor: '#2563eb',
+                  color: 'white',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
               >
-                {article.title}
-              </a>
-            </h4>
-            <span>
-              {new Date(article.pubDate).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}{' '}
-              – {article.source}
-            </span>
-            <button
-              onClick={() => handleNewsQuestion(article)}
-              style={{
-                marginTop: '12px',
-                width: '100%',
-                padding: '10px 16px',
-                backgroundColor: '#2563eb',
-                color: 'white',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: 500,
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              How does this affect me?
-            </button>
+                How does this affect me?
+              </button>
+            </div>
           </div>
         </div>
       ))}
     </div>
-  ) : (
-    <div style={{ textAlign: 'center', color: '#6b7280' }}>No news available</div>
-  )}
-</>
-);
+  );
 }
 
-const newsRoot = document.getElementById('news-root');
+const newsRoot = document.getElementById('news-container');
 if (newsRoot) {
 try {
 ReactDOM.createRoot(newsRoot).render(<NewsApp />);
