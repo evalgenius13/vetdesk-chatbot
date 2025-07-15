@@ -730,13 +730,12 @@ return (
 
 const chatRoot = document.getElementById('chatbot-root');
 if (chatRoot) {
-try {
-if (!chatRoot.hasChildNodes()) {
-ReactDOM.createRoot(chatRoot).render(<ChatbotApp />);
-}
+    try {
+  if (!chatRoot.hasChildNodes()) {
+    ReactDOM.createRoot(chatRoot).render(<ChatbotApp />);
+  }
 } catch (error) {
-console.error('Failed to render chatbot:', error);
-chatRoot.innerHTML = '<div style="padding: 20px; text-align: center;">Chatbot temporarily unavailable. Please refresh the page.</div>';
+  console.error("Failed to render chatbot:", error);
 }
 }
 
