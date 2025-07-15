@@ -409,6 +409,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   const [showQuickActions, setShowQuickActions] = React.useState(true);
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
+  // Removed: const [copiedMessageId, setCopiedMessageId] = React.useState(null); // This state is not needed as copy feature is removed
 
   const quickActions = [
     { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
@@ -543,31 +544,38 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       )}
 
-{/* Chat Messages */}
-<div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
-  {messages.map((msg, idx) => (
-    <div key={idx} className={`message-row ${msg.sender}`}>
-      {msg.sender === "bot" && <div className="avatar bot">VD</div>}
-      <div className={`message-bubble ${msg.sender}`}>
-        <div className={`message-content ${msg.sender}`}>
-          <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-        </div>
-      </div>
-      {msg.sender === "user" && <div className="avatar user">U</div>}
-    </div>
-  ))}
+      {/* Chat Messages AREA */}
+      <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`message-row ${msg.sender}`}>
+            {msg.sender === "bot" && <div className="avatar bot">VD</div>}
+            <div className={`message-bubble ${msg.sender}`}>
+              <div className={`message-content ${msg.sender}`}>
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+                {/* Copy button functionality has been intentionally removed here */}
+              </div>
+            </div>
+            {msg.sender === "user" && <div className="avatar user">U</div>}
+          </div>
+        ))}
 
-  {(isLoading || streaming) && (
-    <div className="typing-indicator">
-      <div className="avatar bot">VD</div>
-      <div className="typing-dots">
-        <div className="typing-dot"></div>
-        <div className="typing-dot"></div>
-        <div className="typing-dot"></div>
+        {/* Typing Indicator / Loading State - Integrated into message flow for single avatar */}
+        {(isLoading || streaming) && (
+          <div className="message-row bot typing-indicator-row">
+            <div className="avatar bot">VD</div>
+            <div className="message-bubble bot">
+              <div className="message-content bot">
+                <div className="typing-dots">
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef}></div>
       </div>
-    </div>
-  )}
-  <div ref={messagesEndRef}></div>
 
       {/* Email Prompt */}
       {emailState?.waitingForEmail && (
