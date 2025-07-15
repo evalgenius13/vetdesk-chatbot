@@ -209,10 +209,10 @@ function renderMarkdown(text) {
     .replace(/## (.*$)/gm, '<h2>$1</h2>')
     .replace(/# (.*$)/gm, '<h1>$1</h1>')
     .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, (match, url) => 
-      `<br><a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
+      <a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
     .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, (match, url) => 
       `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
-    .replace(/https?:\/\/[^\s<>"]+/g, (url) => 
+    .replace(/https?:\/\/[^\s<>"]+/g, (url) =>
       `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:underline">${url}</a>`)
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
