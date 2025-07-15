@@ -87,7 +87,6 @@
       .news-column {
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
         max-height: 100%;
       }
 
@@ -100,11 +99,18 @@
 
       .chat-column .message-container {
         flex: 1;
-        overflow-y: auto;
         padding: 20px;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        overflow-y: auto;
+        max-height: 100%;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .chat-column .message-container::-webkit-scrollbar {
+        display: none;
       }
 
       .chat-column .message {
@@ -166,6 +172,12 @@
         flex-direction: column;
         max-height: calc(100vh - 160px);
         overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .news-column::-webkit-scrollbar {
+        display: none;
       }
 
       .news-column h3 {
