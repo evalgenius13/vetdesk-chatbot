@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VetDesk - Get the Facts Fast</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -523,7 +523,7 @@ ref={textareaRef}
 className="flex-1 p-4 bg-white text-gray-900 rounded-2xl border-2 border-gray-400 focus:outline-none text-base resize-none"
 value={input}
 onChange={handleInputChange}
-onKeyPress={handleKeyPress}
+onKeyDown={handleKeyPress}
 disabled={isLoading}
 style={{ minHeight: '52px', maxHeight: '120px', overflow: 'hidden' }}
 />
@@ -586,8 +586,15 @@ How does this affect me?
 }
 
 const chatRoot = document.getElementById('chatbot-root');
-if (chatRoot && !chatRoot.hasChildNodes()) {
+if (chatRoot) {
+try {
+if (!chatRoot.hasChildNodes()) {
 ReactDOM.createRoot(chatRoot).render(<ChatbotApp />);
+}
+} catch (error) {
+console.error('Failed to render chatbot:', error);
+chatRoot.innerHTML = '<div style="padding: 20px; text-align: center;">Chatbot temporarily unavailable. Please refresh the page.</div>';
+}
 }
 })();
 </script>
