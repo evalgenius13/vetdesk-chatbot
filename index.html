@@ -406,7 +406,8 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
   const [currentTopicActions, setCurrentTopicActions] = React.useState(null);
-
+  const [urlToAnalyze, setUrlToAnalyze] = React.useState('');   
+  
   const topicQuickActions = [
     { text: "What are VA disability claims?", label: "Disability Claims", topic: "disability" },
     { text: "What are VA appeals?", label: "Appeals", topic: "appeals" },
@@ -730,8 +731,6 @@ function App() {
   const [textSize, setTextSize] = React.useState('normal');
   const [isMobileNewsOpen, setIsMobileNewsOpen] = React.useState(false);
   const streamingIntervalRef = React.useRef(null);
-  const [urlToAnalyze, setUrlToAnalyze] = React.useState('');
-
   const [emailState, setEmailState] = React.useState({
     waitingForEmail: false,
     lastBotResponse: null,
