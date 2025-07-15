@@ -163,7 +163,19 @@
 
     <!-- Chatbot Section -->
     <section class="chatbot-section">
-        <div id="chatbot-root"></div>
+        <div style="display: flex; height: 100vh; width: 100%;">
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <div id="chatbot-root"></div>
+            </div>
+            <div style="width: 400px; min-width: 400px; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column;">
+                <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
+                    <h3 style="font-weight: bold; color: #1f2937;">Recent Veterans News</h3>
+                </div>
+                <div id="news-root" style="flex: 1; overflow-y: auto; padding: 16px;">
+                    <div style="text-align: center; color: #6b7280;">Loading news...</div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <script>
@@ -482,18 +494,16 @@ return (
 };
 
 return (
-<>
-<div className="two-column-layout h-full">
-<div className="chat-column flex flex-col bg-gray-50">
-<div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+<div style={{backgroundColor: '#f9fafb', height: '100vh', display: 'flex', flexDirection: 'column'}}>
+<div style={{flex: '1', overflowY: 'auto', padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: '16px'}}>
 {messages.length === 0 && !isLoading ? (
-<div className="flex flex-col items-center justify-center h-full text-center p-6">
-<div className="mb-6">
-<h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
-<p className="text-lg text-gray-600 leading-relaxed mb-4">Get answers about your benefits or how current events will affect them.</p>
-<p className="text-sm text-gray-500 mb-4 italic">Note: For your privacy, we don't store conversations. Refreshing or leaving this page will reset your session.</p>
+<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', padding: '24px'}}>
+<div style={{marginBottom: '24px'}}>
+<h2 style={{fontSize: '24px', fontWeight: 'bold', color: '#1f2937', marginBottom: '12px'}}>Welcome to VetDesk</h2>
+<p style={{fontSize: '18px', color: '#4b5563', lineHeight: '1.75', marginBottom: '16px'}}>Get answers about your benefits or how current events will affect them.</p>
+<p style={{fontSize: '14px', color: '#6b7280', marginBottom: '16px', fontStyle: 'italic'}}>Note: For your privacy, we don't store conversations. Refreshing or leaving this page will reset your session.</p>
 </div>
-<div className="flex flex-wrap justify-center gap-2">
+<div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px'}}>
 {quickActions.map((action, idx) => (
 <button
 key={idx}
@@ -504,7 +514,16 @@ setLastMessageTime(0);
 setTimeout(() => sendMessageToGemini(action.text), 100);
 }}
 disabled={isLoading}
-className="px-3 py-2 rounded-lg text-sm transition-colors bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50"
+style={{
+padding: '12px 16px',
+borderRadius: '8px',
+fontSize: '14px',
+transition: 'all 0.3s',
+backgroundColor: '#dbeafe',
+color: '#1d4ed8',
+border: 'none',
+cursor: 'pointer'
+}}
 >
 {action.label}
 </button>
@@ -516,15 +535,15 @@ messages.map(renderMessage)
 )}
 
 {isLoading && (
-<div className="flex justify-start px-4 py-2">
-<div className="p-4 rounded-2xl bg-gray-200 text-gray-900 max-w-full">
-<div className="flex items-center space-x-3">
-<div className="flex space-x-1">
-<div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></div>
-<div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-<div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+<div style={{display: 'flex', justifyContent: 'flex-start', padding: '8px 16px'}}>
+<div style={{padding: '16px', borderRadius: '16px', backgroundColor: '#e5e7eb', color: '#1f2937', maxWidth: '100%'}}>
+<div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+<div style={{display: 'flex', gap: '4px'}}>
+<div style={{width: '10px', height: '10px', backgroundColor: '#3b82f6', borderRadius: '50%', animation: 'pulse 1.5s infinite'}}></div>
+<div style={{width: '10px', height: '10px', backgroundColor: '#3b82f6', borderRadius: '50%', animation: 'pulse 1.5s infinite', animationDelay: '0.2s'}}></div>
+<div style={{width: '10px', height: '10px', backgroundColor: '#3b82f6', borderRadius: '50%', animation: 'pulse 1.5s infinite', animationDelay: '0.4s'}}></div>
 </div>
-<span className="text-sm text-gray-600 font-medium">Thinking...</span>
+<span style={{fontSize: '14px', color: '#4b5563', fontWeight: '500'}}>Thinking...</span>
 </div>
 </div>
 </div>
@@ -532,19 +551,40 @@ messages.map(renderMessage)
 <div ref={messagesEndRef}></div>
 </div>
 
-<div className="border-t border-gray-300 bg-gray-50 p-4">
-<div className="flex space-x-3">
+<div style={{borderTop: '1px solid #d1d5db', backgroundColor: '#f9fafb', padding: '16px'}}>
+<div style={{display: 'flex', gap: '12px'}}>
 <textarea
 ref={textareaRef}
-className="flex-1 p-4 bg-white text-gray-900 rounded-2xl border-2 border-gray-400 focus:outline-none text-base resize-none"
+style={{
+flex: '1',
+padding: '16px',
+backgroundColor: 'white',
+color: '#1f2937',
+borderRadius: '16px',
+border: '2px solid #9ca3af',
+outline: 'none',
+fontSize: '16px',
+resize: 'none',
+minHeight: '52px',
+maxHeight: '120px',
+overflow: 'hidden'
+}}
 value={input}
 onChange={handleInputChange}
 onKeyDown={handleKeyPress}
 disabled={isLoading}
-style={{ minHeight: '52px', maxHeight: '120px', overflow: 'hidden' }}
 />
 <button
-className="px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-medium text-base chatbot-send-button"
+style={{
+padding: '16px 24px',
+backgroundColor: '#2563eb',
+color: 'white',
+borderRadius: '16px',
+fontWeight: '500',
+fontSize: '16px',
+border: 'none',
+cursor: 'pointer'
+}}
 onClick={handleSendMessage}
 disabled={!input.trim() || isLoading}
 >
@@ -553,51 +593,6 @@ disabled={!input.trim() || isLoading}
 </div>
 </div>
 </div>
-
-<div className="news-column flex flex-col">
-<div className="p-4 border-b border-gray-200">
-<h3 className="font-bold text-gray-800">Recent Veterans News</h3>
-</div>
-<div className="flex-1 overflow-y-auto p-4">
-{loadingNews ? (
-<div className="text-center text-gray-500">Loading news...</div>
-) : newsArticles.length > 0 ? (
-<div className="space-y-3">
-{newsArticles.map((article, index) => (
-<div key={index} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
-{article.image && (
-<img
-src={article.image}
-alt={article.title}
-className="w-full h-32 object-cover rounded-lg mb-3"
-onError={(e) => e.target.style.display = 'none'}
-/>
-)}
-<h4 className="font-semibold text-base mb-3 text-gray-800 leading-snug">
-<a href={article.link} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">
-{article.title}
-</a>
-</h4>
-<div className="flex flex-col space-y-3">
-<span className="text-sm text-gray-500">{new Date(article.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {article.source}</span>
-<button
-onClick={() => handleNewsQuestion(article)}
-className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-disabled={isLoading}
->
-How does this affect me?
-</button>
-</div>
-</div>
-))}
-</div>
-) : (
-<div className="text-center text-gray-500">No news available</div>
-)}
-</div>
-</div>
-</div>
-</>
 );
 }
 
@@ -610,6 +605,95 @@ ReactDOM.createRoot(chatRoot).render(<ChatbotApp />);
 } catch (error) {
 console.error('Failed to render chatbot:', error);
 chatRoot.innerHTML = '<div style="padding: 20px; text-align: center;">Chatbot temporarily unavailable. Please refresh the page.</div>';
+}
+}
+
+// Separate news component
+function NewsApp() {
+const [newsArticles, setNewsArticles] = useState([]);
+const [loadingNews, setLoadingNews] = useState(true);
+
+useEffect(() => {
+const loadNews = async () => {
+try {
+const newsRes = await fetch("https://vetdesk-demo2-api.vercel.app/api/va-news");
+if (newsRes.ok) {
+const newsData = await newsRes.json();
+setNewsArticles(newsData.sources || []);
+}
+} catch (error) {
+console.log("Failed to load news:", error);
+} finally {
+setLoadingNews(false);
+}
+};
+loadNews();
+}, []);
+
+const handleNewsQuestion = (article) => {
+// Scroll to chatbot and send question
+document.querySelector('#chatbot-root').scrollIntoView({ behavior: 'smooth' });
+// This would need to communicate with the chatbot - simplified for now
+alert(`You clicked on: ${article.title}`);
+};
+
+return (
+<>
+{loadingNews ? (
+<div style={{textAlign: 'center', color: '#6b7280'}}>Loading news...</div>
+) : newsArticles.length > 0 ? (
+<div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+{newsArticles.map((article, index) => (
+<div key={index} style={{border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', backgroundColor: 'white'}}>
+{article.image && (
+<img
+src={article.image}
+alt={article.title}
+style={{width: '100%', height: '128px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px'}}
+onError={(e) => e.target.style.display = 'none'}
+/>
+)}
+<h4 style={{fontWeight: '600', fontSize: '16px', marginBottom: '12px', color: '#1f2937', lineHeight: '1.4'}}>
+<a href={article.link} target="_blank" rel="noopener noreferrer" style={{color: 'inherit', textDecoration: 'none'}}>
+{article.title}
+</a>
+</h4>
+<div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+<span style={{fontSize: '14px', color: '#6b7280'}}>{new Date(article.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {article.source}</span>
+<button
+onClick={() => handleNewsQuestion(article)}
+style={{
+width: '100%',
+padding: '12px 16px',
+backgroundColor: '#2563eb',
+color: 'white',
+borderRadius: '8px',
+fontSize: '14px',
+fontWeight: '500',
+border: 'none',
+cursor: 'pointer'
+}}
+>
+How does this affect me?
+</button>
+</div>
+</div>
+))}
+</div>
+) : (
+<div style={{textAlign: 'center', color: '#6b7280'}}>No news available</div>
+)}
+</>
+);
+}
+
+const newsRoot = document.getElementById('news-root');
+if (newsRoot) {
+try {
+ReactDOM.createRoot(newsRoot).render(<NewsApp />);
+} catch (error) {
+console.error('Failed to render news:', error);
+newsRoot.innerHTML = '<div style="text-align: center; color: #6b7280;">News temporarily unavailable</div>';
 }
 }
 })();
