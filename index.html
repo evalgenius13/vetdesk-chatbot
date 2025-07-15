@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+</script>
+</body>
+</html><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -94,12 +96,114 @@
       0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
       40% { transform: scale(1); opacity: 1; }
     }
+
+    /* 4. Mobile-First Fixes */
+    @media (max-width: 768px) {
+      .message-bubble {
+        max-width: 90%;
+      }
+      
+      .news-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 300px;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      }
+      
+      .news-panel.open {
+        transform: translateX(0);
+      }
+      
+      .news-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.3);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      
+      .news-overlay.open {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      .mobile-news-toggle {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      
+      .quick-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .quick-actions button {
+        width: 100%;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      .mobile-news-toggle {
+        display: none;
+      }
+      
+      .news-overlay {
+        display: none;
+      }
+    }
+
+    /* 5. Accessibility for Veterans - Text Size Support */
+    .text-normal { font-size: 1rem; }
+    .text-large { font-size: 1.125rem; }
+    .text-large .message-content { font-size: 1.125rem; }
+    .text-large .quick-actions button { font-size: 1rem; }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-// Render Markdown
+// System Prompt - Moved outside function for optimization
+const systemPrompt = `You are a helpful expert in VA benefits and policies. Provide clear, accurate information about VA disability ratings, healthcare, education benefits, appeals processes, and other veteran services. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.`;
+
+// Render Markdown - Enhanced security
+function renderMarkdown(text) {
+  // Basic HTML escaping first
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+  
+  return escaped
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="// Render Markdown
 function renderMarkdown(text) {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -112,7 +216,56 @@ function renderMarkdown(text) {
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
+}" target="_blank" class="text-blue-600 hover:underline">// Render Markdown
+function renderMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="$&" target="_blank" class="text-blue-600 hover:underline">$&</a>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
+}</a>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
 }
+
+// 6. Development-Specific Improvements - Console Logging
+const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+function logToConsole(message, data) {
+  if (isDev) {
+    console.log(`[VetDesk] ${message}:`, data);
+  }
+}
+
+// 1. API Retry Logic and Graceful Degradation
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response;
+    } catch (error) {
+      logToConsole(`Fetch attempt ${i + 1} failed for ${url}`, error.message);
+      if (i === maxRetries - 1) {
+        throw error;
+      }
+      // Wait before retrying: 1s, 2s, 4s
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+    }
+  }
+}
+
+// 8. Quick Code Cleanup - Email Validation
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Landing Page
 function Landing({ onTryNow }) {
@@ -122,7 +275,7 @@ function Landing({ onTryNow }) {
         <div className="text-sm font-bold text-slate-600 uppercase mb-6">VETDESK™</div>
         <h1 className="text-5xl font-extrabold text-slate-900 mb-6">Get the Facts Fast.</h1>
         <p className="text-lg text-slate-700 mb-4">VetDesk breaks down VA policies, benefits, and news in real time — giving you answers that make sense.</p>
-        <p className="text-lg text-slate-700 mb-8">It’s not just information. It’s clarity. It’s control. Built for veterans who need answers — now.</p>
+        <p className="text-lg text-slate-700 mb-8">It's not just information. It's clarity. It's control. Built for veterans who need answers — now.</p>
         <button onClick={onTryNow}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-md shadow-md transition">
           Try Now
@@ -132,31 +285,67 @@ function Landing({ onTryNow }) {
   );
 }
 
-// News Panel
+// 7. News Panel Optimization
 function NewsPanel({ onAsk }) {
   const [articles, setArticles] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
+  const [newsRefresh, setNewsRefresh] = React.useState(0);
 
-  React.useEffect(() => {
+  const fetchNews = React.useCallback(() => {
+    setLoading(true);
+    logToConsole("Fetching news", { refresh: newsRefresh });
+    
     fetch("https://vetdesk-demo2-api.vercel.app/api/va-news")
       .then(res => res.json())
       .then(data => {
         setArticles(data.sources || []);
         setLoading(false);
+        logToConsole("News loaded", data.sources?.length || 0);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch(err => {
+        logToConsole("News fetch error", err);
+        setLoading(false);
+      });
+  }, [newsRefresh]);
+
+  React.useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
 
   return (
-    <aside className="w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4">
-      <h2 className="text-xl font-bold mb-4 text-slate-800">Veterans News</h2>
+    <aside className="news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-slate-800">Veterans News</h2>
+        <button 
+          onClick={() => setNewsRefresh(prev => prev + 1)}
+          className="text-sm text-blue-600 hover:text-blue-800 transition"
+          disabled={loading}
+        >
+          🔄 {loading ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
+      
       {loading ? (
-        <p className="text-slate-400 text-sm">Loading news…</p>
+        <div className="space-y-6">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="animate-pulse">
+              <div className="h-36 bg-gray-300 rounded mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded mb-1"></div>
+              <div className="h-3 bg-gray-300 rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
       ) : articles.length ? (
         articles.map((article, idx) => (
           <div key={idx} className="mb-6 pb-4 border-b last:border-none">
             {article.image && (
-              <img src={article.image} alt={article.title} className="mb-2 w-full h-36 object-cover rounded" />
+              <img 
+                src={article.image} 
+                alt={article.title} 
+                loading="lazy"
+                className="mb-2 w-full h-36 object-cover rounded" 
+                onError={(e) => e.target.style.display = 'none'}
+              />
             )}
             <h3 className="text-base font-semibold text-slate-900 mb-1">{article.title}</h3>
             <p className="text-xs text-slate-500">{new Date(article.pubDate).toLocaleDateString()} • {article.source}</p>
@@ -175,11 +364,13 @@ function NewsPanel({ onAsk }) {
   );
 }
 
-// Chatbot Panel with collapsible quick actions
-function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk }) {
+// Chatbot Panel with all improvements
+function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat }) {
   const textareaRef = React.useRef(null);
   const messagesEndRef = React.useRef(null);
   const [showQuickActions, setShowQuickActions] = React.useState(true);
+  const [loadingAction, setLoadingAction] = React.useState(null);
+  const [lastSent, setLastSent] = React.useState(0);
 
   const quickActions = [
     { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
@@ -189,7 +380,6 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
   ];
 
-  // ✅ Declare chatStarted before it's used
   const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
 
   // Auto-scroll to latest message
@@ -197,19 +387,78 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
+  // 3. Quick UX Improvements - Loading Action Reset
+  React.useEffect(() => {
+    if (!isLoading && !streaming) {
+      setLoadingAction(null);
+    }
+  }, [isLoading, streaming]);
+
+  // 3. Quick UX Improvements - Rate Limiting Protection
+  const handleSend = () => {
+    const now = Date.now();
+    if (now - lastSent < 1000) return; // 1 second cooldown
+    setLastSent(now);
+    onSend();
+  };
+
+  // 3. Quick UX Improvements - Enhanced Quick Ask
+  const handleQuickAsk = (action, idx) => {
+    setLoadingAction(idx);
+    onQuickAsk(action.text);
+  };
+
+  // Character count for long messages
+  const charCount = input.length;
+  const maxChars = 500;
+
   return (
-    <main className="flex flex-col flex-1 h-full">
-      {/* 🔹 Quick Actions — always visible, collapsible manually */}
+    <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
+      {/* 5. Accessibility for Veterans - Text Size Controls */}
+      <div className="border-b border-slate-200 bg-white px-4 py-2">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setTextSize('normal')}
+              className={`text-xs px-2 py-1 rounded transition ${textSize === 'normal' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Normal Text
+            </button>
+            <button 
+              onClick={() => setTextSize('large')}
+              className={`text-xs px-2 py-1 rounded transition ${textSize === 'large' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Large Text
+            </button>
+          </div>
+          
+          {/* Quick Wins for Veterans - Clear Chat Button */}
+          {messages.length > 0 && (
+            <button
+              onClick={onClearChat}
+              className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded transition"
+            >
+              Clear Chat
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Actions — always visible, collapsible manually */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
-        <div className="flex flex-wrap justify-center items-center gap-2 relative">
+        <div className="quick-actions flex flex-wrap justify-center items-center gap-2 relative">
           {showQuickActions && quickActions.map((action, idx) => (
             <button
               key={idx}
-              onClick={() => onQuickAsk(action.text)}
-              disabled={isLoading || streaming}
-              className="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50 font-medium transition"
+              onClick={() => handleQuickAsk(action, idx)}
+              disabled={isLoading || streaming || loadingAction === idx}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                loadingAction === idx 
+                  ? 'bg-blue-200 text-blue-500' 
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50'
+              }`}
             >
-              {action.label}
+              {loadingAction === idx ? 'Loading...' : action.label}
             </button>
           ))}
 
@@ -217,7 +466,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
             aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
-            className="ml-2 p-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+            className="ml-2 p-1 text-blue-600 hover:text-blue-800 focus:outline-none transition"
           >
             {showQuickActions ? (
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -232,26 +481,62 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       </div>
 
-      {/* 🔹 Welcome Message — Only shown before chat starts */}
-      {!chatStarted && !emailState?.waitingForEmail && (
-        <div className="flex flex-1 flex-col justify-center items-center text-center px-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
-          <p className="text-lg text-gray-600 mb-2">
-            Get clear, plain-English answers about your VA benefits and what's changing.
-          </p>
-          <p className="text-sm text-gray-500 italic">
-            This conversation isn’t saved. Don’t refresh or close the page unless you're done. (Update this message.)
+      {/* Quick Wins for Veterans - Session Warning */}
+      {messages.length > 0 && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
+          <p className="text-yellow-800">
+            💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or 
+            use the email feature to save important answers.
           </p>
         </div>
       )}
 
-      {/* 🔹 Chat Messages */}
+      {/* Welcome Message — Centered Vertically and Horizontally */}
+      {!chatStarted && !emailState?.waitingForEmail && (
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center px-6 max-w-2xl">
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
+            <p className="text-lg text-gray-600 mb-2">
+              Get clear, plain-English answers about your VA benefits and what's changing.
+            </p>
+            <p className="text-sm text-gray-500 italic">
+              This conversation isn't saved. Don't refresh or close the page unless you're done.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Messages */}
       <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.sender}`}>
             {msg.sender === "bot" && <div className="avatar bot">VD</div>}
             <div className={`message-bubble ${msg.sender}`}>
-              <div className={`message-content ${msg.sender}`} dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+              <div className={`message-content ${msg.sender}`}>
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+                {/* Quick Wins for Veterans - Copy Response Button */}
+                {msg.sender === "bot" && msg.text.length > 50 && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard?.writeText(msg.text).then(() => {
+                        // Success feedback could be added here
+                      }).catch(() => {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = msg.text;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                      });
+                    }}
+                    className="mt-2 text-xs text-blue-600 hover:text-blue-800 transition"
+                    title="Copy response"
+                  >
+                    📋 Copy
+                  </button>
+                )}
+              </div>
             </div>
             {msg.sender === "user" && <div className="avatar user">U</div>}
           </div>
@@ -270,58 +555,100 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         <div ref={messagesEndRef}></div>
       </div>
 
-      {/* 🔹 Email Prompt */}
+      {/* Email Prompt */}
       {emailState?.waitingForEmail && (
         <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200 flex flex-col gap-2">
           <span>Want this answer emailed? Enter your email and press Send.</span>
         </div>
       )}
 
-      {/* 🔹 Input Area */}
-      <div className="border-t p-4 bg-white flex gap-2">
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          rows="2"
-          className="flex-1 p-2 border border-gray-300 rounded-md resize-none"
-          placeholder={
-            emailState.waitingForEmail
-              ? "Enter your email address…"
-              : "Ask a question about your VA benefits…"
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              onSend();
+      {/* Input Area */}
+      <div className="border-t p-4 bg-white">
+        {/* Character Count */}
+        {charCount > maxChars * 0.8 && charCount <= maxChars && (
+          <div className="text-xs text-gray-500 mb-2 text-right">
+            {charCount}/{maxChars} characters
+          </div>
+        )}
+        {charCount > maxChars && (
+          <div className="text-xs text-red-500 mb-2 text-right">
+            {charCount}/{maxChars} characters - Message too long!
+          </div>
+        )}
+        
+        <div className="flex gap-2">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows="2"
+            maxLength={maxChars}
+            className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder={
+              emailState.waitingForEmail
+                ? "Enter your email address…"
+                : "Ask a question about your VA benefits… (Press Enter to send, Shift+Enter for new line)"
             }
-          }}
-          disabled={isLoading || streaming}
-        />
-        <button
-          onClick={onSend}
-          disabled={!input.trim() || isLoading || streaming}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold"
-        >
-          Send
-        </button>
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+              if (e.key === "Escape") {
+                setInput("");
+              }
+            }}
+            disabled={isLoading || streaming}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"
+          >
+            Send
+          </button>
+        </div>
       </div>
     </main>
   );
 }
+
 function App() {
   const [started, setStarted] = React.useState(false);
   const [messages, setMessages] = React.useState([]);
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [streaming, setStreaming] = React.useState(false);
-  const [lastMessageTime, setLastMessageTime] = React.useState(0);
+  const [textSize, setTextSize] = React.useState('normal');
+  const [isMobileNewsOpen, setIsMobileNewsOpen] = React.useState(false);
+  const streamingIntervalRef = React.useRef(null);
 
   const [emailState, setEmailState] = React.useState({
     waitingForEmail: false,
     lastBotResponse: null,
     lastUserQuestion: null
   });
+
+  // 4. Memory Leak Prevention - Cleanup intervals on unmount
+  React.useEffect(() => {
+    return () => {
+      if (streamingIntervalRef.current) {
+        clearInterval(streamingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // 1. Session-Only Improvements - Session Warning
+  React.useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (messages.length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [messages]);
 
   // Email subject helper
   function extractTopicFromQuestion(question) {
@@ -338,10 +665,16 @@ function App() {
   }
 
   function streamBotText(botText, originalQuestion) {
+    // Clear any existing interval
+    if (streamingIntervalRef.current) {
+      clearInterval(streamingIntervalRef.current);
+    }
+
     setStreaming(true);
     setMessages(prev => [...prev, { text: "", sender: "bot" }]);
     let index = 0;
-    const interval = setInterval(() => {
+    
+    streamingIntervalRef.current = setInterval(() => {
       index++;
       setMessages(prev => {
         const updated = [...prev];
@@ -349,12 +682,14 @@ function App() {
         return updated;
       });
       if (index >= botText.length) {
-        clearInterval(interval);
+        clearInterval(streamingIntervalRef.current);
+        streamingIntervalRef.current = null;
+        
         // offer email if needed
         if (shouldOfferEmail(botText)) {
           setMessages(prev => [...prev, { text: "Would you like me to send this to your email for future reference?", sender: "bot" }]);
           setEmailState({
-            waitingForEmail: false,
+            waitingForEmail: true, // Fixed: should be true to enable email flow
             lastBotResponse: botText,
             lastUserQuestion: originalQuestion
           });
@@ -366,16 +701,13 @@ function App() {
   }
 
   async function sendMessageToGemini(userMessage, articleContext = "") {
-    const now = Date.now();
-    if (now - lastMessageTime < 2000) return;
-    setLastMessageTime(now);
-
     // Handle email case
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailState.waitingForEmail && emailRegex.test(userMessage)) {
+    if (emailState.waitingForEmail && isValidEmail(userMessage)) {
       setIsLoading(true);
+      logToConsole("Sending email", { email: userMessage });
+      
       try {
-        const res = await fetch('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
+        const res = await fetchWithRetry('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -389,10 +721,11 @@ function App() {
         if (result?.success) {
           setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
         } else {
-          throw new Error();
+          throw new Error('Email send failed');
         }
-      } catch {
-        setMessages(prev => [...prev, { text: "Unable to send email right now. Please try again.", sender: "bot" }]);
+      } catch (err) {
+        logToConsole("Email error", err);
+        setMessages(prev => [...prev, { text: "Unable to send email right now. Please try again later, or copy the response above to save it manually.", sender: "bot" }]);
       }
       setEmailState({ waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null });
       setIsLoading(false);
@@ -401,18 +734,32 @@ function App() {
 
     // Handle normal message flow
     setIsLoading(true);
+    logToConsole("Sending message", { message: userMessage, context: !!articleContext });
+    
     try {
       let newsContext = "";
       if (userMessage.toLowerCase().includes("news")) {
-        const news = await fetch("https://vetdesk-demo2-api.vercel.app/api/va-news").then(r => r.json());
-        newsContext = news?.summary || "";
+        try {
+          const newsResponse = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/va-news");
+          const news = await newsResponse.json();
+          newsContext = news?.summary || "";
+          logToConsole("Added news context", { hasContext: !!newsContext });
+        } catch (err) {
+          logToConsole("News context fetch failed", err);
+          // Graceful degradation - continue without news context
+        }
       }
 
-      const faqData = await fetch("https://jsonblob.com/api/jsonBlob/1393450047760424960")
-        .then(res => res.json())
-        .catch(() => ({}));
+      let faqData = {};
+      try {
+        const faqResponse = await fetchWithRetry("https://jsonblob.com/api/jsonBlob/1393450047760424960");
+        faqData = await faqResponse.json();
+      } catch (err) {
+        logToConsole("FAQ data fetch failed", err);
+        // Graceful degradation - continue without FAQ data
+      }
 
-      const systemPrompt = `You are a helpful expert in VA benefits...`; // (shortened for brevity)
+      const systemPrompt = `You are a helpful expert in VA benefits and policies. Provide clear, accurate information about VA disability ratings, healthcare, education benefits, appeals processes, and other veteran services. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.`;
 
       const chatHistoryForAPI = [
         { role: "user", parts: [{ text: systemPrompt + (newsContext ? "\n\nNews Context: " + newsContext : "") + (articleContext ? "\n\nArticle Context: " + articleContext : "") }] },
@@ -424,18 +771,31 @@ function App() {
         { role: "user", parts: [{ text: userMessage }] }
       ];
 
-      const response = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatHistory: chatHistoryForAPI })
-      });
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
 
       const json = await response.json();
+      
+      // 6. Development-Specific Improvements - API Response Validation
       const botText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-      streamBotText(botText || "Sorry, I couldn't get a response.", userMessage);
+      if (!botText || botText.length < 10) {
+        throw new Error('Invalid response from API');
+      }
+      
+      logToConsole("Received response", { length: botText.length });
+      streamBotText(botText, userMessage);
+      
     } catch (err) {
+      logToConsole("Chat error", err);
+      
+      // 2. Better Error Handling for Veterans
+      const errorMessage = err.message.includes('network') || err.message.includes('fetch')
+        ? "I'm having trouble connecting right now. You can also call the VA directly at 1-800-827-1000 for immediate assistance."
+        : "I'm experiencing technical difficulties. Try again later or call VA at 1-800-827-1000.";
+      
       setMessages(prev => [...prev, {
-        text: "I'm experiencing technical difficulties. Try again later or call VA at 1-800-827-1000.",
+        text: errorMessage,
         sender: "bot"
       }]);
       setIsLoading(false);
@@ -474,9 +834,40 @@ function App() {
     onQuickAsk(text);
   }
 
+  // Quick Wins for Veterans - Clear Chat Function
+  function onClearChat() {
+    if (window.confirm("Are you sure you want to clear this conversation? This cannot be undone.")) {
+      setMessages([]);
+      setInput("");
+      setEmailState({ waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null });
+      setIsLoading(false);
+      setStreaming(false);
+      logToConsole("Chat cleared by user");
+    }
+  }
+
   return started ? (
     <div className="flex h-screen">
-      <NewsPanel onAsk={handleNewsAsk} />
+      {/* Mobile News Toggle Button */}
+      <button 
+        onClick={() => setIsMobileNewsOpen(true)}
+        className="mobile-news-toggle"
+        aria-label="Open news panel"
+      >
+        📰
+      </button>
+
+      {/* Mobile News Overlay */}
+      <div 
+        className={`news-overlay ${isMobileNewsOpen ? 'open' : ''}`}
+        onClick={() => setIsMobileNewsOpen(false)}
+      ></div>
+
+      <NewsPanel 
+        onAsk={handleNewsAsk} 
+        isMobileOpen={isMobileNewsOpen}
+        onMobileClose={() => setIsMobileNewsOpen(false)}
+      />
       <ChatbotPanel
         messages={messages}
         onSend={onSend}
@@ -486,6 +877,9 @@ function App() {
         isLoading={isLoading}
         emailState={emailState}
         onQuickAsk={onQuickAsk}
+        textSize={textSize}
+        setTextSize={setTextSize}
+        onClearChat={onClearChat}
       />
     </div>
   ) : (
@@ -499,6 +893,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <App />
   </React.StrictMode>
 );
-</script>
-</body>
-</html>
