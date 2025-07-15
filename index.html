@@ -9,7 +9,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Landing Page Styles */
         .landing-section {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: white;
@@ -21,7 +20,7 @@
             text-align: center;
             padding: 60px 20px;
         }
-        
+    
         .brand {
             font-size: 14px;
             font-weight: 500;
@@ -29,7 +28,7 @@
             letter-spacing: 2px;
             margin-bottom: 40px;
         }
-        
+    
         .headline {
             font-size: clamp(3rem, 8vw, 6rem);
             font-weight: 400;
@@ -38,7 +37,7 @@
             line-height: 1.1;
             max-width: 900px;
         }
-        
+    
         .description {
             font-size: 18px;
             color: #666;
@@ -46,7 +45,7 @@
             margin: 0 auto 40px;
             line-height: 1.7;
         }
-        
+    
         .tagline {
             font-size: 18px;
             color: #666;
@@ -54,7 +53,7 @@
             margin: 0 auto 60px;
             line-height: 1.7;
         }
-        
+    
         .cta-button {
             display: inline-block;
             background: #2563eb;
@@ -68,85 +67,97 @@
             cursor: pointer;
             border: none;
         }
-        
+    
         .cta-button:hover {
             background: #1d4ed8;
         }
-
-        /* Chatbot Section Styles */
+    
         .chatbot-section {
-            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
         }
-        
+    
         .two-column-layout {
-            display: flex !important;
-            height: 100vh !important;
-            width: 100% !important;
-            flex-direction: row !important;
+            display: flex;
+            flex: 1;
+            height: 100%;
+            width: 100%;
         }
-        
+    
         .chat-column {
-            flex: 1 !important;
-            min-width: 0 !important;
-            width: auto !important;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
         }
-        
+    
         .news-column {
-            width: 400px !important;
-            min-width: 400px !important;
-            max-width: 400px !important;
-            flex-shrink: 0 !important;
-            border-left: 1px solid #e5e7eb !important;
-            background: white !important;
-            height: 100vh !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
+            width: 400px;
+            min-width: 400px;
+            max-width: 400px;
+            flex-shrink: 0;
+            border-left: 1px solid #e5e7eb;
+            background: white;
+            display: flex;
+            flex-direction: column;
         }
-        
+    
+        #news-root {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+    
         @media (max-width: 768px) {
             .landing-section {
                 padding: 40px 20px;
             }
-            
+    
             .description, .tagline {
                 font-size: 16px;
             }
-            
+    
             .cta-button {
                 padding: 14px 28px;
                 font-size: 15px;
             }
-            
-            .two-column-layout {
-                flex-direction: column !important;
+    
+            .chatbot-section {
+                flex-direction: column;
+                height: auto;
             }
-            
+    
+            .two-column-layout {
+                flex-direction: column;
+            }
+    
             .news-column {
-                width: 100% !important;
-                min-width: 100% !important;
-                max-width: 100% !important;
-                height: 300px !important;
-                border-left: none !important;
-                border-top: 1px solid #e5e7eb !important;
+                width: 100%;
+                min-width: 100%;
+                max-width: 100%;
+                height: 300px;
+                border-left: none;
+                border-top: 1px solid #e5e7eb;
+            }
+    
+            #news-root {
+                height: 100%;
             }
         }
-
+    
         @media (min-width: 769px) {
             .two-column-layout {
-                flex-direction: row !important;
+                flex-direction: row;
             }
-            
+    
             .news-column {
-                width: 400px !important;
-                min-width: 400px !important;
-                max-width: 400px !important;
-                border-left: 1px solid #e5e7eb !important;
-                border-top: none !important;
+                border-top: none;
             }
         }
     </style>
-</head>
+    </head>
 <body>
     <!-- Landing Section -->
     <section class="landing-section">
