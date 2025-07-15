@@ -189,15 +189,17 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
   ];
 
+  // ✅ Declare chatStarted before it's used
+  const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
+
+  // Auto-scroll to latest message
   React.useEffect(() => {
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
-  const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
-
   return (
     <main className="flex flex-col flex-1 h-full">
-      {/* 🔹 Quick Actions Bar (top of chat) */}
+      {/* 🔹 Quick Actions — always visible, collapsible manually */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="flex flex-wrap justify-center items-center gap-2 relative">
           {showQuickActions && quickActions.map((action, idx) => (
@@ -210,7 +212,8 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
               {action.label}
             </button>
           ))}
-          {/* Collapse Button */}
+
+          {/* Toggle Icon Button */}
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
             aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
@@ -229,7 +232,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       </div>
 
-      {/* 🔹 Welcome Message (centered before chat starts) */}
+      {/* 🔹 Welcome Message — Only shown before chat starts */}
       {!chatStarted && !emailState?.waitingForEmail && (
         <div className="flex flex-1 flex-col justify-center items-center text-center px-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
@@ -237,7 +240,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
             Get clear, plain-English answers about your VA benefits and what's changing.
           </p>
           <p className="text-sm text-gray-500 italic">
-            This conversation isn’t saved. Don’t refresh or close the page unless you're done. (You can replace this text.)
+            This conversation isn’t saved. Don’t refresh or close the page unless you're done. (Update this message.)
           </p>
         </div>
       )}
@@ -264,7 +267,6 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
             </div>
           </div>
         )}
-
         <div ref={messagesEndRef}></div>
       </div>
 
@@ -275,7 +277,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       )}
 
-      {/* 🔹 Chat Input */}
+      {/* 🔹 Input Area */}
       <div className="border-t p-4 bg-white flex gap-2">
         <textarea
           ref={textareaRef}
