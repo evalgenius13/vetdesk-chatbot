@@ -75,21 +75,11 @@
         transform: translateY(-1px);
       }
 
-      .chat-column {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        overflow: hidden;
-        background: #f8fafc;
-        border-right: 1px solid #e2e8f0;
-      }
       .two-column-layout .chat-column,
 .two-column-layout .news-column {
-  max-height: calc(100vh - 160px); /* height minus your header/landing area */
+  max-height: calc(100vh - 160px); /* adjust as needed */
   overflow-y: auto;
 }
-
 
       .chat-column .message-container {
         flex: 1;
@@ -148,23 +138,11 @@
         cursor: pointer;
       }
 
-      .news-column {
-        width: 400px;
-        min-width: 400px;
-        max-width: 400px;
-        flex-shrink: 0;
-        border-left: 1px solid #e2e8f0;
-        background: #ffffff;
-        display: flex;
-        flex-direction: column;
-        
-      }
       .two-column-layout .chat-column,
 .two-column-layout .news-column {
-  max-height: calc(100vh - 160px); /* height minus your header/landing area */
+  max-height: calc(100vh - 160px); /* adjust as needed */
   overflow-y: auto;
 }
-
       
       .news-column h3 {
   font-size: 18px;
