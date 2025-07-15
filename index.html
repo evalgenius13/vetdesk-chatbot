@@ -21,18 +21,22 @@
 </head>
 <body>
   <!-- Landing Section -->
-  <section class="landing-section text-center py-20 px-4 bg-gradient-to-br from-slate-100 to-slate-200">
-    <div class="text-sm font-bold text-slate-600 tracking-wider uppercase mb-6">VETDESK™</div>
-    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-4">Get the Facts Fast.</h1>
-    <p class="text-lg text-slate-700 max-w-2xl mx-auto mb-4">
-      Every veteran has questions. Few get answers that make sense. VetDesk breaks down policies, benefits, and news in real time—so you see what's happening, what's changing, and what it means for you.
-    </p>
-    <p class="text-base text-slate-500 max-w-xl mx-auto mb-8 italic">
-      It's not just information. It's context. It's clarity. It's control. Built for veterans who need answers - now.
-    </p>
-    <button onclick="scrollToChatbot()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-md shadow-md transition">
-      Try Demo – It's Free
-    </button>
+  <section class="landing-section text-left py-20 px-6 bg-gradient-to-br from-slate-100 to-slate-200">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-sm font-bold text-slate-600 tracking-wider uppercase mb-6">VETDESK™</div>
+      <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+        Get the Facts Fast.
+      </h1>
+      <p class="text-lg text-slate-700 mb-4 leading-relaxed">
+        Every veteran has questions. Few get answers that make sense. VetDesk breaks down policies, benefits, and news in real time—so you see what's happening, what's changing, and what it means for you.
+      </p>
+      <p class="text-lg text-slate-700 mb-8 leading-relaxed">
+        It's not just information. It's context. It's clarity. It's control. Built for veterans who need answers – now.
+      </p>
+      <button onclick="scrollToChatbot()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-md shadow-md transition">
+        Try Demo – It's Free
+      </button>
+    </div>
   </section>
 
   <!-- Chatbot + News Section -->
@@ -69,19 +73,24 @@
       const textareaRef = useRef(null);
       const messagesEndRef = useRef(null);
 
-      const MAX_MESSAGE_LENGTH = 2000;
+      // Expose a function so NewsApp can send a message directly
+      useEffect(() => {
+        window.sendMessageFromOutside = (msg) => {
+          if (!msg || isLoading) return;
+          setMessages(prev => [...prev, { text: msg, sender: 'user' }]);
+          setInput('');
+          setIsLoading(true);
+          setTimeout(() => {
+            setMessages(prev => [...prev, { text: "Thanks for your question. We're looking into it!", sender: 'bot' }]);
+            setIsLoading(false);
+          }, 1000);
+        };
+        return () => { delete window.sendMessageFromOutside; };
+      }, [isLoading]);
 
       const handleSend = () => {
         if (!input.trim()) return;
-        setMessages(prev => [...prev, { text: input, sender: 'user' }]);
-        setInput('');
-        setIsLoading(true);
-
-        // Simulate bot response
-        setTimeout(() => {
-          setMessages(prev => [...prev, { text: "Thanks for your question. We're looking into it!", sender: 'bot' }]);
-          setIsLoading(false);
-        }, 1000);
+        window.sendMessageFromOutside(input);
       };
 
       const handleKeyPress = (e) => {
@@ -151,13 +160,10 @@
       }, []);
 
       const handleNewsQuestion = (article) => {
-        const inputBox = document.querySelector('textarea');
-        if (inputBox) {
-          inputBox.value = `How does this affect me? (${article.title})`;
-          inputBox.focus();
-          inputBox.dispatchEvent(new Event('input', { bubbles: true }));
+        const question = `How does this affect me? (${article.title})`;
+        if (typeof window.sendMessageFromOutside === "function") {
+          window.sendMessageFromOutside(question);
         }
-
         const chatbox = document.querySelector('#chatbot-root');
         if (chatbox) {
           chatbox.scrollIntoView({ behavior: 'smooth' });
