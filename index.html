@@ -9,207 +9,250 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-.landing-section {
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(to bottom right, #f8fafc, #eef2f7);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 80px 20px;
-}
+      .landing-section {
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(to bottom right, #f1f5f9, #e2e8f0);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 80px 20px;
+      }
 
-.brand {
-    font-size: 16px;
-    font-weight: 600;
-    color: #64748b;
-    letter-spacing: 1.5px;
-    margin-bottom: 32px;
-    text-transform: uppercase;
-}
+      .brand {
+        font-size: 18px;
+        font-weight: 700;
+        color: #475569;
+        letter-spacing: 1px;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+      }
 
-.headline {
-    font-size: clamp(3rem, 6vw, 5rem);
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 32px;
-    line-height: 1.2;
-    max-width: 900px;
-}
+      .headline {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 24px;
+        line-height: 1.2;
+        max-width: 800px;
+      }
 
-.description {
-    font-size: 20px;
-    color: #475569;
-    max-width: 700px;
-    margin: 0 auto 24px;
-    line-height: 1.75;
-}
+      .description {
+        font-size: 18px;
+        color: #334155;
+        max-width: 700px;
+        margin: 0 auto 20px;
+        line-height: 1.7;
+      }
 
-.tagline {
-    font-size: 18px;
-    color: #64748b;
-    max-width: 650px;
-    margin: 0 auto 40px;
-    line-height: 1.6;
-}
+      .tagline {
+        font-size: 16px;
+        color: #64748b;
+        max-width: 650px;
+        margin: 0 auto 32px;
+        line-height: 1.6;
+      }
 
-.cta-button {
-    display: inline-block;
-    background: #2563eb;
-    color: white;
-    padding: 16px 36px;
-    font-size: 18px;
-    font-weight: 600;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-}
+      .cta-button {
+        display: inline-block;
+        background: #2563eb;
+        color: white;
+        padding: 14px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+      }
 
-.cta-button:hover {
-    background: #1d4ed8;
-    transform: translateY(-2px);
-}
-    
-        .brand {
-            font-size: 14px;
-            font-weight: 500;
-            color: #999;
-            letter-spacing: 2px;
-            margin-bottom: 40px;
+      .cta-button:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+      }
+
+      .chat-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        background: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+      }
+
+      .chat-column .message-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .chat-column .message {
+        max-width: 80%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .chat-column .message.user {
+        background-color: #2563eb;
+        color: white;
+        align-self: flex-end;
+      }
+
+      .chat-column .message.bot {
+        background-color: #e2e8f0;
+        color: #1e293b;
+        align-self: flex-start;
+      }
+
+      .chat-column .input-area {
+        padding: 16px;
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        gap: 8px;
+      }
+
+      .chat-column textarea {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        resize: none;
+        font-size: 15px;
+      }
+
+      .chat-column button {
+        padding: 12px 16px;
+        border: none;
+        background-color: #2563eb;
+        color: white;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .news-column {
+        width: 400px;
+        min-width: 400px;
+        max-width: 400px;
+        flex-shrink: 0;
+        border-left: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .news-column h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+      }
+
+      #news-root {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .news-article {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #f9fafb;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .news-article img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+      }
+
+      .news-article-content {
+        padding: 12px 16px;
+      }
+
+      .news-article-content h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+
+      .news-article-content span {
+        font-size: 13px;
+        color: #64748b;
+      }
+
+      @media (max-width: 640px) {
+        .landing-section {
+          padding: 60px 16px;
         }
-    
+
         .headline {
-            font-size: clamp(3rem, 8vw, 6rem);
-            font-weight: 400;
-            color: #333;
-            margin-bottom: 60px;
-            line-height: 1.1;
-            max-width: 900px;
+          font-size: 2rem;
         }
-    
-        .description {
-            font-size: 18px;
-            color: #666;
-            max-width: 800px;
-            margin: 0 auto 40px;
-            line-height: 1.7;
-        }
-    
+
+        .description,
         .tagline {
-            font-size: 18px;
-            color: #666;
-            max-width: 700px;
-            margin: 0 auto 60px;
-            line-height: 1.7;
+          font-size: 15px;
+          padding: 0 10px;
         }
-    
+
         .cta-button {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 16px 32px;
-            font-size: 16px;
-            font-weight: 500;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: background 0.3s ease;
-            cursor: pointer;
-            border: none;
+          font-size: 15px;
+          padding: 12px 24px;
         }
-    
-        .cta-button:hover {
-            background: #1d4ed8;
+
+        .chat-column .message {
+          font-size: 14px;
+          padding: 10px 14px;
         }
-    
-        .chatbot-section {
-            height: 100vh;
-            display: flex;
-            flex-direction: row;
+
+        .chat-column textarea {
+          font-size: 14px;
         }
-    
-        .two-column-layout {
-            display: flex;
-            flex: 1;
-            height: 100%;
-            width: 100%;
-        }
-    
-        .chat-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            overflow: hidden;
-        }
-    
+
         .news-column {
-            width: 400px;
-            min-width: 400px;
-            max-width: 400px;
-            flex-shrink: 0;
-            border-left: 1px solid #e5e7eb;
-            background: white;
-            display: flex;
-            flex-direction: column;
+          width: 100%;
+          min-width: 100%;
+          max-width: 100%;
+          height: 260px;
+          border-left: none;
+          border-top: 1px solid #e2e8f0;
         }
-    
+
         #news-root {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
+          padding: 12px;
+          gap: 12px;
         }
-    
-        @media (max-width: 768px) {
-            .landing-section {
-                padding: 40px 20px;
-            }
-    
-            .description, .tagline {
-                font-size: 16px;
-            }
-    
-            .cta-button {
-                padding: 14px 28px;
-                font-size: 15px;
-            }
-    
-            .chatbot-section {
-                flex-direction: column;
-                height: auto;
-            }
-    
-            .two-column-layout {
-                flex-direction: column;
-            }
-    
-            .news-column {
-                width: 100%;
-                min-width: 100%;
-                max-width: 100%;
-                height: 300px;
-                border-left: none;
-                border-top: 1px solid #e5e7eb;
-            }
-    
-            #news-root {
-                height: 100%;
-            }
+
+        .news-article img {
+          height: 120px;
         }
-    
-        @media (min-width: 769px) {
-            .two-column-layout {
-                flex-direction: row;
-            }
-    
-            .news-column {
-                border-top: none;
-            }
+
+        .news-article-content h4 {
+          font-size: 15px;
         }
+      }
+
     </style>
     </head>
 <body>
@@ -707,51 +750,62 @@ alert(`You clicked on: ${article.title}`);
 };
 
 return (
-<>
-{loadingNews ? (
-<div style={{textAlign: 'center', color: '#6b7280'}}>Loading news...</div>
-) : newsArticles.length > 0 ? (
-<div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-{newsArticles.map((article, index) => (
-<div key={index} style={{border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', backgroundColor: 'white'}}>
-{article.image && (
-<img
-src={article.image}
-alt={article.title}
-style={{width: '100%', height: '128px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px'}}
-onError={(e) => e.target.style.display = 'none'}
-/>
-)}
-<h4 style={{fontWeight: '600', fontSize: '16px', marginBottom: '12px', color: '#1f2937', lineHeight: '1.4'}}>
-<a href={article.link} target="_blank" rel="noopener noreferrer" style={{color: 'inherit', textDecoration: 'none'}}>
-{article.title}
-</a>
-</h4>
-<div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-<span style={{fontSize: '14px', color: '#6b7280'}}>{new Date(article.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {article.source}</span>
-<button
-onClick={() => handleNewsQuestion(article)}
-style={{
-width: '100%',
-padding: '12px 16px',
-backgroundColor: '#2563eb',
-color: 'white',
-borderRadius: '8px',
-fontSize: '14px',
-fontWeight: '500',
-border: 'none',
-cursor: 'pointer'
-}}
->
-How does this affect me?
-</button>
-</div>
-</div>
-))}
-</div>
-) : (
-<div style={{textAlign: 'center', color: '#6b7280'}}>No news available</div>
-)}
+    <>
+  {loadingNews ? (
+    <div style={{ textAlign: 'center', color: '#6b7280' }}>Loading news...</div>
+  ) : newsArticles.length > 0 ? (
+    <div id="news-root">
+      {newsArticles.map((article, index) => (
+        <div className="news-article" key={index}>
+          {article.image && (
+            <img
+              src={article.image}
+              alt={article.title}
+              onError={(e) => (e.target.style.display = 'none')}
+            />
+          )}
+          <div className="news-article-content">
+            <h4>
+              <a
+                href={article.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'inherit', textDecoration: 'none' }}
+              >
+                {article.title}
+              </a>
+            </h4>
+            <span>
+              {new Date(article.pubDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })}{' '}
+              – {article.source}
+            </span>
+            <button
+              onClick={() => handleNewsQuestion(article)}
+              style={{
+                marginTop: '12px',
+                width: '100%',
+                padding: '10px 16px',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              How does this affect me?
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div style={{ textAlign: 'center', color: '#6b7280' }}>No news available</div>
+  )}
 </>
 );
 }
