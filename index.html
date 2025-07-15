@@ -187,7 +187,7 @@ const systemPrompt = `You are a knowledgeable VA benefits specialist who communi
 For follow-up questions, provide detailed answers but keep them focused and actionable. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.
 For QUICK LINK topics (disability claims, appeals, etc.): Use the structured format above with headers and ★ bullet points
 For NEWS ARTICLES: Provide detailed analysis with balanced reporting, historical context, multiple perspectives, and explain how it affects veterans. Do not use the structured format for news - write in flowing paragraphs with thorough analysis at 10th grade reading level.
-IMPORTANT: Keep responses concise and scannable. Use ★ for bullet points and clear headers. Format all lists using ★ for bullet points (not - or •). Focus on what the veteran needs to DO, not just know.`;
+IMPORTANT: Keep responses concise and scannable. Use ★ for bullet points and clear headers. Format all lists using ★ for bullet points (not - or •). Focus on what the veteran needs to DO, not just know. Only offer to email responses when the user specifically asks (like "email me this" or "can you send this to my email"). Do not automatically offer email.`;
 // Render Markdown - Enhanced security with proper regex order
 function renderMarkdown(text) {
   const escaped = text
@@ -492,7 +492,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   // Character count for long messages
   const charCount = input.length;
   const maxChars = 500;
-  
+
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
       {/* Text Size Controls */}
@@ -746,14 +746,6 @@ function App() {
         clearInterval(streamingIntervalRef.current);
         streamingIntervalRef.current = null;
         
-        if (shouldOfferEmail(botText)) {
-          setMessages(prev => [...prev, { text: "Would you like me to send this to your email for future reference?", sender: "bot" }]);
-          setEmailState({
-            waitingForEmail: true,
-            lastBotResponse: botText,
-            lastUserQuestion: originalQuestion
-          });
-        }
         setStreaming(false);
         setIsLoading(false);
       }
