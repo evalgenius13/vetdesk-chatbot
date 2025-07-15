@@ -32,11 +32,12 @@
       position: relative;
     }
     .message-content.user {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      color: white;
-      border-bottom-right-radius: 6px;
-    }
-    .message-content.bot {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  color: white;
+  border-bottom-right-radius: 6px;
+}    
+
+.message-content.bot {
       background: white;
       color: #374151;
       border: 1px solid #e5e7eb;
@@ -59,10 +60,9 @@
       color: white;
     }
     .avatar.bot {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-      color: white;
-    }
-    .message-row {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  color: white;
+}    .message-row {
       display: flex;
       align-items: flex-end;
       margin: 12px 0;
@@ -268,7 +268,8 @@ function Landing({ onTryNow }) {
         <p className="text-lg text-slate-700 mb-4">VetDesk breaks down VA policies, benefits, and news in real time — giving you answers that make sense.</p>
         <p className="text-lg text-slate-700 mb-8">It's not just information. It's clarity. It's control. Built for veterans who need answers — now.</p>
         <button onClick={onTryNow}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-md shadow-md transition">
+        className="bg-blue-800 hover:bg-blue-900 text-white font-semibold px-6 py-3 rounded-md shadow-md transition">
+
           Try Now
         </button>
       </div>
@@ -501,14 +502,14 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
           <div className="flex gap-2">
             <button 
               onClick={() => setTextSize('normal')}
-              className={`text-xs px-2 py-1 rounded transition ${textSize === 'normal' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
+              className={`text-xs px-2 py-1 rounded transition ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
               Normal Text
             </button>
             <button 
               onClick={() => setTextSize('large')}
-              className={`text-xs px-2 py-1 rounded transition ${textSize === 'large' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
+              className={`text-xs px-2 py-1 rounded transition ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
               Large Text
             </button>
           </div>
@@ -531,12 +532,9 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
               key={idx}
               onClick={() => handleTopicQuickAsk(action, idx)}
               disabled={isLoading || streaming || loadingAction === idx}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition ${
-                loadingAction === idx 
-                  ? 'bg-blue-200 text-blue-500' 
-                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50'
-              }`}
-            >
+              className={`px-3 py-2 rounded-md text-sm font-medium transition ${loadingAction === idx ? 
+              'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50'}`}
+              >
               {loadingAction === idx ? 'Loading...' : action.label}
             </button>
           ))}
@@ -544,7 +542,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
             aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
-            className="ml-2 p-1 text-blue-600 hover:text-blue-800 focus:outline-none transition"
+            className="ml-2 p-1 text-blue-800 hover:text-blue-900 focus:outline-none transition"
             title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
           >
             {showQuickActions ? (
@@ -665,15 +663,14 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"
-          >
+            className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"          >
             Send
           </button>
           <button
     onClick={() => onQuickAsk("Please email me the last response")}
     disabled={messages.length === 0 || !messages[messages.length - 1] || messages[messages.length - 1].sender !== 'bot'}
-    className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
-  >
+    className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
+    >
     Email Summary
   </button>
 </div>
