@@ -114,9 +114,9 @@
                   {new Date(article.pubDate).toLocaleDateString()} • {article.source}
                 </p>
                 <button
-                  onClick={() => onAsk(`How does this news affect my benefits: "${article.title}"`)}
-                  className="text-xs text-blue-600 hover:underline transition"
-                >
+  onClick={() => onAsk(`How does this news affect my benefits: "${article.title}"`)}
+  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md transition shadow-sm"
+>
                   How does this affect me?
                 </button>
               </div>
