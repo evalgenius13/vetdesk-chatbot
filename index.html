@@ -1,6 +1,4 @@
-</script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -10,7 +8,7 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="/favicon.png">
 
   <style>
     html, body, #root {
@@ -97,7 +95,7 @@
       40% { transform: scale(1); opacity: 1; }
     }
 
-    /* 4. Mobile-First Fixes */
+    /* Mobile-First Fixes */
     @media (max-width: 768px) {
       .message-bubble {
         max-width: 90%;
@@ -173,7 +171,7 @@
       }
     }
 
-    /* 5. Accessibility for Veterans - Text Size Support */
+    /* Accessibility - Text Size Support */
     .text-normal { font-size: 1rem; }
     .text-large { font-size: 1.125rem; }
     .text-large .message-content { font-size: 1.125rem; }
@@ -186,7 +184,7 @@
 // System Prompt - Moved outside function for optimization
 const systemPrompt = `You are a helpful expert in VA benefits and policies. Provide clear, accurate information about VA disability ratings, healthcare, education benefits, appeals processes, and other veteran services. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.`;
 
-// Render Markdown - Enhanced security
+// Render Markdown - Enhanced security with proper regex order
 function renderMarkdown(text) {
   // Basic HTML escaping first
   const escaped = text
@@ -203,9 +201,21 @@ function renderMarkdown(text) {
     .replace(/### (.*$)/gm, '<h3>$1</h3>')
     .replace(/## (.*$)/gm, '<h2>$1</h2>')
     .replace(/# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="// Render Markdown
+    // Apply specific link replacements FIRST before general URL matching
+    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, '<br><a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, '<a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    // Then apply general URL linking
+    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="// Render Markdown - Enhanced security
 function renderMarkdown(text) {
-  return text
+  // Basic HTML escaping first
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+  
+  return escaped
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
@@ -216,9 +226,17 @@ function renderMarkdown(text) {
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
-}" target="_blank" class="text-blue-600 hover:underline">// Render Markdown
+}" target="_blank" class="text-blue-600 hover:underline">// Render Markdown - Enhanced security
 function renderMarkdown(text) {
-  return text
+  // Basic HTML escaping first
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+  
+  return escaped
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
@@ -235,7 +253,7 @@ function renderMarkdown(text) {
     .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
 }
 
-// 6. Development-Specific Improvements - Console Logging
+// Development-Specific Improvements - Console Logging
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 function logToConsole(message, data) {
@@ -244,7 +262,7 @@ function logToConsole(message, data) {
   }
 }
 
-// 1. API Retry Logic and Graceful Degradation
+// API Retry Logic and Graceful Degradation
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -264,7 +282,7 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   }
 }
 
-// 8. Quick Code Cleanup - Email Validation
+// Email Validation
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Landing Page
@@ -285,27 +303,30 @@ function Landing({ onTryNow }) {
   );
 }
 
-// 7. News Panel Optimization
-function NewsPanel({ onAsk }) {
+// News Panel Optimization with Mobile Support
+function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
   const [articles, setArticles] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [newsRefresh, setNewsRefresh] = React.useState(0);
+  const [error, setError] = React.useState(null);
 
-  const fetchNews = React.useCallback(() => {
+  const fetchNews = React.useCallback(async () => {
     setLoading(true);
+    setError(null);
     logToConsole("Fetching news", { refresh: newsRefresh });
     
-    fetch("https://vetdesk-demo2-api.vercel.app/api/va-news")
-      .then(res => res.json())
-      .then(data => {
-        setArticles(data.sources || []);
-        setLoading(false);
-        logToConsole("News loaded", data.sources?.length || 0);
-      })
-      .catch(err => {
-        logToConsole("News fetch error", err);
-        setLoading(false);
-      });
+    try {
+      const response = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/va-news");
+      const data = await response.json();
+      setArticles(data.sources || []);
+      logToConsole("News loaded", data.sources?.length || 0);
+    } catch (err) {
+      logToConsole("News fetch error", err);
+      setError("Unable to load news. Please try again later.");
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
   }, [newsRefresh]);
 
   React.useEffect(() => {
@@ -313,19 +334,43 @@ function NewsPanel({ onAsk }) {
   }, [fetchNews]);
 
   return (
-    <aside className="news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4">
+    <aside className={`news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4 ${isMobileOpen ? 'open' : ''}`}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-slate-800">Veterans News</h2>
-        <button 
-          onClick={() => setNewsRefresh(prev => prev + 1)}
-          className="text-sm text-blue-600 hover:text-blue-800 transition"
-          disabled={loading}
-        >
-          🔄 {loading ? 'Loading...' : 'Refresh'}
-        </button>
+        <div className="flex gap-2 items-center">
+          <button 
+            onClick={() => setNewsRefresh(prev => prev + 1)}
+            className="text-sm text-blue-600 hover:text-blue-800 transition"
+            disabled={loading}
+          >
+            🔄 {loading ? 'Loading...' : 'Refresh'}
+          </button>
+          {isMobileOpen && (
+            <button 
+              onClick={onMobileClose}
+              className="text-slate-500 hover:text-slate-700 md:hidden"
+              aria-label="Close news panel"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
       
-      {loading ? (
+      {error ? (
+        <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
+          {error}
+          <button 
+            onClick={() => setNewsRefresh(prev => prev + 1)}
+            className="block mt-2 text-blue-600 hover:text-blue-800"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : loading ? (
         <div className="space-y-6">
           {[...Array(3)].map((_, idx) => (
             <div key={idx} className="animate-pulse">
@@ -344,13 +389,20 @@ function NewsPanel({ onAsk }) {
                 alt={article.title} 
                 loading="lazy"
                 className="mb-2 w-full h-36 object-cover rounded" 
-                onError={(e) => e.target.style.display = 'none'}
+                onError={(e) => { 
+                  e.target.style.display = 'none'; 
+                  e.target.removeAttribute('src');
+                  e.target.alt = '';
+                }}
               />
             )}
             <h3 className="text-base font-semibold text-slate-900 mb-1">{article.title}</h3>
             <p className="text-xs text-slate-500">{new Date(article.pubDate).toLocaleDateString()} • {article.source}</p>
             <button
-              onClick={() => onAsk(`How does this news affect my benefits: "${article.title}"`)}
+              onClick={() => {
+                onAsk(`How does this news affect my benefits: "${article.title}"`);
+                onMobileClose();
+              }}
               className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md transition"
             >
               How does this affect me?
@@ -358,7 +410,15 @@ function NewsPanel({ onAsk }) {
           </div>
         ))
       ) : (
-        <p className="text-slate-400 text-sm">No articles found.</p>
+        <div className="text-slate-400 text-sm text-center py-8">
+          <p>No news articles available.</p>
+          <button 
+            onClick={() => setNewsRefresh(prev => prev + 1)}
+            className="mt-2 text-blue-600 hover:text-blue-800"
+          >
+            Try Loading Again
+          </button>
+        </div>
       )}
     </aside>
   );
@@ -387,22 +447,22 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
-  // 3. Quick UX Improvements - Loading Action Reset
+  // Loading Action Reset
   React.useEffect(() => {
     if (!isLoading && !streaming) {
       setLoadingAction(null);
     }
   }, [isLoading, streaming]);
 
-  // 3. Quick UX Improvements - Rate Limiting Protection
+  // Rate Limiting Protection
   const handleSend = () => {
     const now = Date.now();
-    if (now - lastSent < 1000) return; // 1 second cooldown
+    if (now - lastSent < 1000) return;
     setLastSent(now);
     onSend();
   };
 
-  // 3. Quick UX Improvements - Enhanced Quick Ask
+  // Enhanced Quick Ask
   const handleQuickAsk = (action, idx) => {
     setLoadingAction(idx);
     onQuickAsk(action.text);
@@ -414,7 +474,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
 
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
-      {/* 5. Accessibility for Veterans - Text Size Controls */}
+      {/* Text Size Controls */}
       <div className="border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
@@ -432,7 +492,6 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
             </button>
           </div>
           
-          {/* Quick Wins for Veterans - Clear Chat Button */}
           {messages.length > 0 && (
             <button
               onClick={onClearChat}
@@ -444,7 +503,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       </div>
 
-      {/* Quick Actions — always visible, collapsible manually */}
+      {/* Quick Actions - Show based on chat state and toggle */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="quick-actions flex flex-wrap justify-center items-center gap-2 relative">
           {showQuickActions && quickActions.map((action, idx) => (
@@ -462,11 +521,11 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
             </button>
           ))}
 
-          {/* Toggle Icon Button */}
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
             aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
             className="ml-2 p-1 text-blue-600 hover:text-blue-800 focus:outline-none transition"
+            title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
           >
             {showQuickActions ? (
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -481,7 +540,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       </div>
 
-      {/* Quick Wins for Veterans - Session Warning */}
+      {/* Session Warning */}
       {messages.length > 0 && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
           <p className="text-yellow-800">
@@ -491,7 +550,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
         </div>
       )}
 
-      {/* Welcome Message — Centered Vertically and Horizontally */}
+      {/* Welcome Message — Centered */}
       {!chatStarted && !emailState?.waitingForEmail && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center px-6 max-w-2xl">
@@ -514,7 +573,6 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
             <div className={`message-bubble ${msg.sender}`}>
               <div className={`message-content ${msg.sender}`}>
                 <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-                {/* Quick Wins for Veterans - Copy Response Button */}
                 {msg.sender === "bot" && msg.text.length > 50 && (
                   <button
                     onClick={() => {
@@ -564,7 +622,6 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
 
       {/* Input Area */}
       <div className="border-t p-4 bg-white">
-        {/* Character Count */}
         {charCount > maxChars * 0.8 && charCount <= maxChars && (
           <div className="text-xs text-gray-500 mb-2 text-right">
             {charCount}/{maxChars} characters
@@ -629,7 +686,7 @@ function App() {
     lastUserQuestion: null
   });
 
-  // 4. Memory Leak Prevention - Cleanup intervals on unmount
+  // Memory Leak Prevention
   React.useEffect(() => {
     return () => {
       if (streamingIntervalRef.current) {
@@ -638,7 +695,7 @@ function App() {
     };
   }, []);
 
-  // 1. Session-Only Improvements - Session Warning
+  // Session Warning
   React.useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (messages.length > 0) {
@@ -665,7 +722,6 @@ function App() {
   }
 
   function streamBotText(botText, originalQuestion) {
-    // Clear any existing interval
     if (streamingIntervalRef.current) {
       clearInterval(streamingIntervalRef.current);
     }
@@ -685,11 +741,10 @@ function App() {
         clearInterval(streamingIntervalRef.current);
         streamingIntervalRef.current = null;
         
-        // offer email if needed
         if (shouldOfferEmail(botText)) {
           setMessages(prev => [...prev, { text: "Would you like me to send this to your email for future reference?", sender: "bot" }]);
           setEmailState({
-            waitingForEmail: true, // Fixed: should be true to enable email flow
+            waitingForEmail: true,
             lastBotResponse: botText,
             lastUserQuestion: originalQuestion
           });
@@ -746,7 +801,6 @@ function App() {
           logToConsole("Added news context", { hasContext: !!newsContext });
         } catch (err) {
           logToConsole("News context fetch failed", err);
-          // Graceful degradation - continue without news context
         }
       }
 
@@ -756,13 +810,12 @@ function App() {
         faqData = await faqResponse.json();
       } catch (err) {
         logToConsole("FAQ data fetch failed", err);
-        // Graceful degradation - continue without FAQ data
       }
 
-      const systemPrompt = `You are a helpful expert in VA benefits and policies. Provide clear, accurate information about VA disability ratings, healthcare, education benefits, appeals processes, and other veteran services. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.`;
+      const systemPromptWithContext = systemPrompt + (newsContext ? "\n\nNews Context: " + newsContext : "") + (articleContext ? "\n\nArticle Context: " + articleContext : "");
 
       const chatHistoryForAPI = [
-        { role: "user", parts: [{ text: systemPrompt + (newsContext ? "\n\nNews Context: " + newsContext : "") + (articleContext ? "\n\nArticle Context: " + articleContext : "") }] },
+        { role: "user", parts: [{ text: systemPromptWithContext }] },
         { role: "user", parts: [{ text: JSON.stringify(faqData) }] },
         ...messages.map(m => ({
           role: m.sender === "user" ? "user" : "model",
@@ -771,13 +824,18 @@ function App() {
         { role: "user", parts: [{ text: userMessage }] }
       ];
 
-      if (!response.ok) {
-        throw new Error(`API responded with status: ${response.status}`);
+      const chatResponse = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatHistory: chatHistoryForAPI })
+      });
+
+      if (!chatResponse.ok) {
+        throw new Error(`API responded with status: ${chatResponse.status}`);
       }
 
-      const json = await response.json();
+      const json = await chatResponse.json();
       
-      // 6. Development-Specific Improvements - API Response Validation
       const botText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!botText || botText.length < 10) {
         throw new Error('Invalid response from API');
@@ -789,7 +847,6 @@ function App() {
     } catch (err) {
       logToConsole("Chat error", err);
       
-      // 2. Better Error Handling for Veterans
       const errorMessage = err.message.includes('network') || err.message.includes('fetch')
         ? "I'm having trouble connecting right now. You can also call the VA directly at 1-800-827-1000 for immediate assistance."
         : "I'm experiencing technical difficulties. Try again later or call VA at 1-800-827-1000.";
@@ -834,7 +891,6 @@ function App() {
     onQuickAsk(text);
   }
 
-  // Quick Wins for Veterans - Clear Chat Function
   function onClearChat() {
     if (window.confirm("Are you sure you want to clear this conversation? This cannot be undone.")) {
       setMessages([]);
@@ -893,3 +949,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <App />
   </React.StrictMode>
 );
+</script>
+</body>
+</html>
