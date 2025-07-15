@@ -81,15 +81,19 @@
         .two-column-layout {
             display: flex;
             height: 100vh;
+            width: 100%;
         }
         
         .chat-column {
             flex: 1;
+            min-width: 0;
         }
         
         .news-column {
             width: 400px;
+            min-width: 400px;
             border-left: 1px solid #e5e7eb;
+            background: white;
         }
         
         @media (max-width: 768px) {
