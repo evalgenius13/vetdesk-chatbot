@@ -551,26 +551,6 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
       <div className={`message-bubble ${msg.sender}`}>
         <div className={`message-content ${msg.sender}`}>
           <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-          {msg.sender === "bot" && msg.text.length > 50 && (
-            <button
-              onClick={() => {
-                navigator.clipboard?.writeText(msg.text).then(() => {
-                  
-                }).catch(() => {
-                  const textArea = document.createElement('textarea');
-                  textArea.value = msg.text;
-                  document.body.appendChild(textArea);
-                  textArea.select();
-                  document.execCommand('copy');
-                  document.body.removeChild(textArea);
-                });
-              }}
-              className="mt-2 text-xs text-blue-600 hover:text-blue-800 transition"
-              title="Copy response"
-            >
-              📋 Copy
-            </button>
-          )}
         </div>
       </div>
       {msg.sender === "user" && <div className="avatar user">U</div>}
@@ -578,22 +558,17 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   ))}
 
   {(isLoading || streaming) && (
-    <div className="message-row bot typing-indicator-row">
+    <div className="typing-indicator">
       <div className="avatar bot">VD</div>
-      <div className="message-bubble bot">
-        <div className="message-content bot">
-          <div className="typing-dots">
-            <div className="typing-dot"></div>
-            <div className="typing-dot"></div>
-            <div className="typing-dot"></div>
-          </div>
-        </div>
+      <div className="typing-dots">
+        <div className="typing-dot"></div>
+        <div className="typing-dot"></div>
+        <div className="typing-dot"></div>
       </div>
     </div>
   )}
-
   <div ref={messagesEndRef}></div>
-</div>
+
       {/* Email Prompt */}
       {emailState?.waitingForEmail && (
         <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200 flex flex-col gap-2">
