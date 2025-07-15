@@ -176,17 +176,137 @@ function NewsPanel({ onAsk }) {
 }
 
 // Chatbot Panel with collapsible quick actions
-{!chatStarted && !emailState?.waitingForEmail && (
-  <div className="flex flex-1 flex-col justify-center items-center text-center px-6">
-    <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
-    <p className="text-lg text-gray-600 mb-2">
-      Get clear, plain-language answers about your VA benefits and current updates.
-    </p>
-    <p className="text-sm text-gray-500 italic">
-      [Insert your gentle privacy message here.]
-    </p>
-  </div>
-)}
+function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk }) {
+  const textareaRef = React.useRef(null);
+  const messagesEndRef = React.useRef(null);
+  const [showQuickActions, setShowQuickActions] = React.useState(true);
+
+  const quickActions = [
+    { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
+    { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
+    { text: "How do VA healthcare priority groups work, and how do I access care? When can I use non-VA providers?", label: "Healthcare Enrollment" },
+    { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
+    { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
+  ];
+
+  React.useEffect(() => {
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streaming]);
+
+  const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
+
+  return (
+    <main className="flex flex-col flex-1 h-full">
+      {/* 🔹 Quick Actions Bar (top of chat) */}
+      <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
+        <div className="flex flex-wrap justify-center items-center gap-2 relative">
+          {showQuickActions && quickActions.map((action, idx) => (
+            <button
+              key={idx}
+              onClick={() => onQuickAsk(action.text)}
+              disabled={isLoading || streaming}
+              className="px-3 py-2 rounded-md text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50 font-medium transition"
+            >
+              {action.label}
+            </button>
+          ))}
+          {/* Collapse Button */}
+          <button
+            onClick={() => setShowQuickActions(!showQuickActions)}
+            aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
+            className="ml-2 p-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+          >
+            {showQuickActions ? (
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M6 12l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* 🔹 Welcome Message (centered before chat starts) */}
+      {!chatStarted && !emailState?.waitingForEmail && (
+        <div className="flex flex-1 flex-col justify-center items-center text-center px-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
+          <p className="text-lg text-gray-600 mb-2">
+            Get clear, plain-English answers about your VA benefits and what's changing.
+          </p>
+          <p className="text-sm text-gray-500 italic">
+            This conversation isn’t saved. Don’t refresh or close the page unless you're done. (You can replace this text.)
+          </p>
+        </div>
+      )}
+
+      {/* 🔹 Chat Messages */}
+      <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`message-row ${msg.sender}`}>
+            {msg.sender === "bot" && <div className="avatar bot">VD</div>}
+            <div className={`message-bubble ${msg.sender}`}>
+              <div className={`message-content ${msg.sender}`} dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+            </div>
+            {msg.sender === "user" && <div className="avatar user">U</div>}
+          </div>
+        ))}
+
+        {(isLoading || streaming) && (
+          <div className="typing-indicator">
+            <div className="avatar bot">VD</div>
+            <div className="typing-dots">
+              <div className="typing-dot"></div>
+              <div className="typing-dot"></div>
+              <div className="typing-dot"></div>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef}></div>
+      </div>
+
+      {/* 🔹 Email Prompt */}
+      {emailState?.waitingForEmail && (
+        <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200 flex flex-col gap-2">
+          <span>Want this answer emailed? Enter your email and press Send.</span>
+        </div>
+      )}
+
+      {/* 🔹 Chat Input */}
+      <div className="border-t p-4 bg-white flex gap-2">
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          rows="2"
+          className="flex-1 p-2 border border-gray-300 rounded-md resize-none"
+          placeholder={
+            emailState.waitingForEmail
+              ? "Enter your email address…"
+              : "Ask a question about your VA benefits…"
+          }
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              onSend();
+            }
+          }}
+          disabled={isLoading || streaming}
+        />
+        <button
+          onClick={onSend}
+          disabled={!input.trim() || isLoading || streaming}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold"
+        >
+          Send
+        </button>
+      </div>
+    </main>
+  );
+}
 function App() {
   const [started, setStarted] = React.useState(false);
   const [messages, setMessages] = React.useState([]);
