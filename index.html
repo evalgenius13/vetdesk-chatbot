@@ -1,6 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 
+function ChatbotApp() {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 p-4 overflow-y-auto" id="chatbot-root">
+        <div className="text-gray-600 italic">Chatbot panel ready...</div>
+      </div>
+      <div className="p-4 border-t border-gray-200">
+        <input
+          id="chatbot-input"
+          className="w-full p-2 border border-gray-300 rounded"
+          placeholder="Ask a question..."
+        />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [showApp, setShowApp] = useState(false);
   const [newsArticles, setNewsArticles] = useState([]);
@@ -27,10 +44,13 @@ function App() {
         </div>
       ) : (
         <div className="flex h-full">
+          {/* Chat panel on left */}
           <div className="flex-1 bg-white flex flex-col">
             <ChatbotApp />
           </div>
-          <div className={`w-[28rem] bg-gray-50 border-l border-gray-200 overflow-y-auto transition-transform duration-300 ${isNewsOpen ? 'translate-x-0' : 'translate-x-full'} fixed right-0 h-full md:static md:translate-x-0`}>
+
+          {/* News panel on right */}
+          <div className={`w-[26rem] bg-gray-50 border-l border-gray-200 overflow-y-auto transition-transform duration-300 ${isNewsOpen ? 'translate-x-0' : 'translate-x-full'} fixed right-0 h-full md:static md:translate-x-0`}>
             <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white">
               <h2 className="text-lg font-semibold">VA News</h2>
               <button onClick={() => setIsNewsOpen(!isNewsOpen)} className="text-sm text-blue-600">
@@ -73,7 +93,6 @@ function App() {
   );
 }
 
-// Mount the App
 const root = document.getElementById('chatbot-root');
 if (root) {
   ReactDOM.createRoot(root).render(<App />);
