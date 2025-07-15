@@ -649,7 +649,7 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
             placeholder={
               emailState.waitingForEmail
                 ? "Enter your email address…"
-                : "Type your message here.)"
+                : "Type your message here..."
             }
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -669,9 +669,16 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
           >
             Send
           </button>
-        </div>
-      </div>
-    </main>
+          <button
+    onClick={() => onQuickAsk("Please email me the last response")}
+    disabled={messages.length === 0 || !messages[messages.length - 1] || messages[messages.length - 1].sender !== 'bot'}
+    className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
+  >
+    Email Summary
+  </button>
+</div>
+</div>
+</main>
   );
 }
 
