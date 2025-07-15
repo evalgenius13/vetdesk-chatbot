@@ -154,11 +154,12 @@
       }
 
       .news-column h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 12px;
-      }
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  padding: 0 16px;
+}
 
       #news-root {
         flex: 1;
@@ -200,6 +201,12 @@
         font-size: 13px;
         color: #64748b;
       }
+      .two-column-layout {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  margin-top: 8px; /* adjust or remove if spacing looks off */
+}
 
       @media (max-width: 640px) {
         .landing-section {
