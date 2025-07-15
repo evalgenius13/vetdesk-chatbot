@@ -480,10 +480,9 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
       {/* Quick Actions - Show based on chat state and toggle */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="quick-actions flex flex-wrap justify-center items-center gap-2 relative">
-          {showQuickActions && quickActions.map((action, idx) => (
-            <button
+          {showQuickActions && !currentTopicActions && topicQuickActions.map((action, idx) => (            <button
               key={idx}
-              onClick={() => handleQuickAsk(action, idx)}
+              onClick={() => handleTopicQuickAsk(action, idx)}
               disabled={isLoading || streaming || loadingAction === idx}
               className={`px-3 py-2 rounded-md text-sm font-medium transition ${
                 loadingAction === idx 
