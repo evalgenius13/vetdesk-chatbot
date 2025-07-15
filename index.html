@@ -657,28 +657,6 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
-
-{/* URL Analysis Section */}
-<div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-  <div className="flex gap-2 items-center">
-    <div className="flex-1">
-      <input
-        type="url"
-        placeholder="Paste a news article or VA announcement URL to analyze how it affects veterans..."
-        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={urlToAnalyze}
-        onChange={(e) => setUrlToAnalyze(e.target.value)}
-      />
-    </div>
-    <button
-      onClick={handleAnalyzeUrl}
-      disabled={!urlToAnalyze.trim() || isLoading}
-      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold transition"
-    >
-      Analyze Impact
-    </button>
-  </div>
-</div>
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows="2"
@@ -700,6 +678,29 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
             }}
             disabled={isLoading || streaming}
           />
+
+          {/* URL Analysis Section */}
+<div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+  <div className="flex gap-2 items-center">
+    <div className="flex-1">
+      <input
+        type="url"
+        placeholder="Paste a news article or VA announcement URL to analyze how it affects veterans..."
+        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        value={urlToAnalyze}
+        onChange={(e) => setUrlToAnalyze(e.target.value)}
+      />
+    </div>
+    <button
+      onClick={handleAnalyzeUrl}
+      disabled={!urlToAnalyze.trim() || isLoading}
+      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold transition"
+    >
+      Analyze Impact
+    </button>
+  </div>
+</div>
+
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
