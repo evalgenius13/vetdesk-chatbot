@@ -211,7 +211,7 @@ function renderMarkdown(text) {
     .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
 }
 
-// 6. Development-Specific Improvements - Console Logging
+// Development-Specific Improvements - Console Logging
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 function logToConsole(message, data) {
@@ -219,6 +219,16 @@ function logToConsole(message, data) {
     console.log(`[VetDesk] ${message}:`, data);
   }
 }
+
+// Add debug logging on page load
+window.addEventListener('load', () => {
+  logToConsole("Page loaded", { timestamp: new Date().toISOString() });
+});
+
+// Add debug logging for React mount
+window.addEventListener('DOMContentLoaded', () => {
+  logToConsole("DOM ready", { hasReact: typeof React !== 'undefined', hasReactDOM: typeof ReactDOM !== 'undefined' });
+});
 
 // 1. API Retry Logic and Graceful Degradation
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
@@ -930,4 +940,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
-);
+);window.addEventListener('load', () => { setTimeout(() => { const btn = document.querySelector('button'); if (btn) { console.log('Button found:', btn.textContent); btn.click(); } else { console.log('Button not found'); } }, 2000); });
