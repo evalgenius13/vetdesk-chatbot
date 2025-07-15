@@ -406,13 +406,13 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   const [lastSent, setLastSent] = React.useState(0);
   // Removed: const [copiedMessageId, setCopiedMessageId] = React.useState(null); // This state is not needed as copy feature is removed
 
-  const quickActions = [
-    { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
-    { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
-    { text: "How do VA healthcare priority groups work, and how do I access care? When can I use non-VA providers?", label: "Healthcare Enrollment" },
-    { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
-    { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
-  ];
+  const topicQuickActions = [
+  { text: "What are VA disability claims?", label: "Disability Claims", topic: "disability" },
+  { text: "What are VA appeals?", label: "Appeals", topic: "appeals" },
+  { text: "What is VA healthcare?", label: "Healthcare", topic: "healthcare" },
+  { text: "What are GI Bill benefits?", label: "Education", topic: "education" },
+  { text: "What are VA home loans?", label: "Home Loans", topic: "homeloans" }
+];
 
   const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
 
