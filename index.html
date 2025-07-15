@@ -193,6 +193,7 @@ function renderMarkdown(text) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
   
+  // Define sanitizeUrl inside renderMarkdown, as it's only used here
   const sanitizeUrl = (url) => {
     const trimmed = url.trim();
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
@@ -201,23 +202,26 @@ function renderMarkdown(text) {
     return '#';
   };
   
-  return escaped
+  // *** THIS IS THE CRUCIAL PART ***
+  return escaped // <--- Ensure 'return' is here
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
     .replace(/### (.*$)/gm, '<h3>$1</h3>')
     .replace(/## (.*$)/gm, '<h2>$1</h2>')
     .replace(/# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, (match, url) => 
-      <a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
-    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, (match, url) => 
+    // Apply specific link replacements FIRST before general URL matching
+    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, (match, url) =>
       `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
+    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, (match, url) =>
+      `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
+    // Then apply general URL linking
     .replace(/https?:\/\/[^\s<>"]+/g, (url) =>
       `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:underline">${url}</a>`)
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
-    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
-}
+    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, ''); // <--- Semicolon to end the return statement
+} // <--- This single closing brace closes the function
 // Development-Specific Improvements - Console Logging
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
