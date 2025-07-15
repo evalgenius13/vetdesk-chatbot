@@ -84,6 +84,12 @@
         background: #f8fafc;
         border-right: 1px solid #e2e8f0;
       }
+      .two-column-layout .chat-column,
+.two-column-layout .news-column {
+  max-height: calc(100vh - 160px); /* height minus your header/landing area */
+  overflow-y: auto;
+}
+
 
       .chat-column .message-container {
         flex: 1;
@@ -151,8 +157,15 @@
         background: #ffffff;
         display: flex;
         flex-direction: column;
+        
       }
+      .two-column-layout .chat-column,
+.two-column-layout .news-column {
+  max-height: calc(100vh - 160px); /* height minus your header/landing area */
+  overflow-y: auto;
+}
 
+      
       .news-column h3 {
   font-size: 18px;
   font-weight: 700;
