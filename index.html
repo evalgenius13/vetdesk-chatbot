@@ -1,6 +1,4 @@
-</script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -186,7 +184,7 @@
 // System Prompt - Moved outside function for optimization
 const systemPrompt = `You are a helpful expert in VA benefits and policies. Provide clear, accurate information about VA disability ratings, healthcare, education benefits, appeals processes, and other veteran services. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.`;
 
-// Render Markdown - Enhanced security
+// Render Markdown - Enhanced security with proper regex order
 function renderMarkdown(text) {
   // Basic HTML escaping first
   const escaped = text
@@ -203,33 +201,11 @@ function renderMarkdown(text) {
     .replace(/### (.*$)/gm, '<h3>$1</h3>')
     .replace(/## (.*$)/gm, '<h2>$1</h2>')
     .replace(/# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="// Render Markdown
-function renderMarkdown(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/### (.*$)/gm, '<h3>$1</h3>')
-    .replace(/## (.*$)/gm, '<h2>$1</h2>')
-    .replace(/# (.*$)/gm, '<h1>$1</h1>')
+    // Apply specific link replacements FIRST before general URL matching
+    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, '<br><a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, '<a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    // Then apply general URL linking
     .replace(/https?:\/\/[^\s<>"]+/g, '<a href="$&" target="_blank" class="text-blue-600 hover:underline">$&</a>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
-}" target="_blank" class="text-blue-600 hover:underline">// Render Markdown
-function renderMarkdown(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/### (.*$)/gm, '<h3>$1</h3>')
-    .replace(/## (.*$)/gm, '<h2>$1</h2>')
-    .replace(/# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="$&" target="_blank" class="text-blue-600 hover:underline">$&</a>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
-}</a>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
@@ -285,27 +261,30 @@ function Landing({ onTryNow }) {
   );
 }
 
-// 7. News Panel Optimization
-function NewsPanel({ onAsk }) {
+// News Panel Optimization with Mobile Support
+function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
   const [articles, setArticles] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [newsRefresh, setNewsRefresh] = React.useState(0);
+  const [error, setError] = React.useState(null);
 
-  const fetchNews = React.useCallback(() => {
+  const fetchNews = React.useCallback(async () => {
     setLoading(true);
+    setError(null);
     logToConsole("Fetching news", { refresh: newsRefresh });
     
-    fetch("https://vetdesk-demo2-api.vercel.app/api/va-news")
-      .then(res => res.json())
-      .then(data => {
-        setArticles(data.sources || []);
-        setLoading(false);
-        logToConsole("News loaded", data.sources?.length || 0);
-      })
-      .catch(err => {
-        logToConsole("News fetch error", err);
-        setLoading(false);
-      });
+    try {
+      const response = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/va-news");
+      const data = await response.json();
+      setArticles(data.sources || []);
+      logToConsole("News loaded", data.sources?.length || 0);
+    } catch (err) {
+      logToConsole("News fetch error", err);
+      setError("Unable to load news. Please try again later.");
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
   }, [newsRefresh]);
 
   React.useEffect(() => {
@@ -313,19 +292,43 @@ function NewsPanel({ onAsk }) {
   }, [fetchNews]);
 
   return (
-    <aside className="news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4">
+    <aside className={`news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4 ${isMobileOpen ? 'open' : ''}`}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-slate-800">Veterans News</h2>
-        <button 
-          onClick={() => setNewsRefresh(prev => prev + 1)}
-          className="text-sm text-blue-600 hover:text-blue-800 transition"
-          disabled={loading}
-        >
-          🔄 {loading ? 'Loading...' : 'Refresh'}
-        </button>
+        <div className="flex gap-2 items-center">
+          <button 
+            onClick={() => setNewsRefresh(prev => prev + 1)}
+            className="text-sm text-blue-600 hover:text-blue-800 transition"
+            disabled={loading}
+          >
+            🔄 {loading ? 'Loading...' : 'Refresh'}
+          </button>
+          {isMobileOpen && (
+            <button 
+              onClick={onMobileClose}
+              className="text-slate-500 hover:text-slate-700 md:hidden"
+              aria-label="Close news panel"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
       
-      {loading ? (
+      {error ? (
+        <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
+          {error}
+          <button 
+            onClick={() => setNewsRefresh(prev => prev + 1)}
+            className="block mt-2 text-blue-600 hover:text-blue-800"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : loading ? (
         <div className="space-y-6">
           {[...Array(3)].map((_, idx) => (
             <div key={idx} className="animate-pulse">
@@ -344,13 +347,20 @@ function NewsPanel({ onAsk }) {
                 alt={article.title} 
                 loading="lazy"
                 className="mb-2 w-full h-36 object-cover rounded" 
-                onError={(e) => e.target.style.display = 'none'}
+                onError={(e) => { 
+                  e.target.style.display = 'none'; 
+                  e.target.removeAttribute('src');
+                  e.target.alt = '';
+                }}
               />
             )}
             <h3 className="text-base font-semibold text-slate-900 mb-1">{article.title}</h3>
             <p className="text-xs text-slate-500">{new Date(article.pubDate).toLocaleDateString()} • {article.source}</p>
             <button
-              onClick={() => onAsk(`How does this news affect my benefits: "${article.title}"`)}
+              onClick={() => {
+                onAsk(`How does this news affect my benefits: "${article.title}"`);
+                onMobileClose();
+              }}
               className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md transition"
             >
               How does this affect me?
@@ -358,7 +368,15 @@ function NewsPanel({ onAsk }) {
           </div>
         ))
       ) : (
-        <p className="text-slate-400 text-sm">No articles found.</p>
+        <div className="text-slate-400 text-sm text-center py-8">
+          <p>No news articles available.</p>
+          <button 
+            onClick={() => setNewsRefresh(prev => prev + 1)}
+            className="mt-2 text-blue-600 hover:text-blue-800"
+          >
+            Try Loading Again
+          </button>
+        </div>
       )}
     </aside>
   );
@@ -689,7 +707,7 @@ function App() {
         if (shouldOfferEmail(botText)) {
           setMessages(prev => [...prev, { text: "Would you like me to send this to your email for future reference?", sender: "bot" }]);
           setEmailState({
-            waitingForEmail: true, // Fixed: should be true to enable email flow
+            waitingForEmail: false, // Wait for user to say yes first
             lastBotResponse: botText,
             lastUserQuestion: originalQuestion
           });
@@ -759,10 +777,10 @@ function App() {
         // Graceful degradation - continue without FAQ data
       }
 
-      const systemPrompt = `You are a helpful expert in VA benefits and policies. Provide clear, accurate information about VA disability ratings, healthcare, education benefits, appeals processes, and other veteran services. Use plain English and be specific about deadlines, requirements, and procedures. Always cite official VA sources when possible and remind users they can call 1-800-827-1000 for official guidance.`;
+      const systemPromptWithContext = systemPrompt + (newsContext ? "\n\nNews Context: " + newsContext : "") + (articleContext ? "\n\nArticle Context: " + articleContext : "");
 
       const chatHistoryForAPI = [
-        { role: "user", parts: [{ text: systemPrompt + (newsContext ? "\n\nNews Context: " + newsContext : "") + (articleContext ? "\n\nArticle Context: " + articleContext : "") }] },
+        { role: "user", parts: [{ text: systemPromptWithContext }] },
         { role: "user", parts: [{ text: JSON.stringify(faqData) }] },
         ...messages.map(m => ({
           role: m.sender === "user" ? "user" : "model",
@@ -770,6 +788,26 @@ function App() {
         })),
         { role: "user", parts: [{ text: userMessage }] }
       ];
+
+      const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyDWgUOVq0SXOIgp9kBIkXZD4EH1tOJMCII', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: chatHistoryForAPI,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 1,
+            topP: 1,
+            maxOutputTokens: 2048,
+          },
+          safetySettings: [
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+          ]
+        })
+      });
 
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`);
