@@ -415,14 +415,6 @@ botResponse.includes('claim')
 );
 };
 
-const handleNewsQuestion = (article) => {
-const question = `How does this news affect my benefits: "${article.title}"`;
-setMessages(prev => [...prev, { text: question, sender: 'user' }]);
-setLastMessageTime(0);
-const articleContext = `Article: "${article.title}" - ${article.source} - ${new Date(article.pubDate).toLocaleDateString()}`;
-setTimeout(() => sendMessageToGemini(question, articleContext), 100);
-};
-
 const sendMessageToGemini = async (userMessage, articleContext = "") => {
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 if (emailState.waitingForEmail && emailRegex.test(userMessage.trim())) {
