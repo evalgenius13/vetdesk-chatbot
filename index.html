@@ -621,13 +621,13 @@ function App() {
         {isNewsPanelOpen && (
           <div className="w-[320px] bg-white border-r border-gray-200 relative z-10">
             <NewsPanel
-              isMobileOpen={false}
-              onMobileClose={() => {}}
-              onAsk={(msg) => {
-                setMessages(prev => [...prev, { text: msg, sender: "user" }]);
-                sendMessageToGemini(msg);
-              }}
-            />
+  isMobileOpen={false}
+  onMobileClose={() => {}}
+  onAsk={(msg) => {
+    setMessages(prev => [...prev, { text: msg, sender: "user" }]);
+    sendMessageToGemini(msg);
+  }}
+/>
             <button
               className="absolute top-4 right-1 text-blue-600 text-xs px-2 py-1 hover:underline"
               onClick={() => setIsNewsPanelOpen(false)}
