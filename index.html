@@ -60,15 +60,29 @@
   <script type="text/babel">
 const systemPrompt = `You are a knowledgeable VA benefits specialist who communicates like a candid, helpful, and empathetic friend. ... [prompt text omitted for brevity] ... `;
 function renderMarkdown(text) {
-  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
-  const sanitizeUrl = url => { const trimmed = url.trim(); if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed; return '#'; };
-  return escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>') .replace(/### (.*$)/gm, '<h3>$1</h3>')
-    .replace(/## (.*$)/gm, '<h2>$1</h2>') .replace(/# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, (match, url) => `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
-    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, (match, url) => `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>`)
-    .replace(/https?:\/\/[^\s<>"]+/g, url => `<a href="${sanitizeUrl(url)}" target="_blank" class="text-blue-600 hover:underline">${url}</a>`)
-    .replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>').replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+
+  return escaped
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/# (.*$)/gm, '<h1>$1</h1>')
+    // Specific link patterns FIRST
+    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, '<br><a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, '<a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    // Generic URL pass-through
+    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="$&" target="_blank" class="text-blue-600 hover:underline">$&</a>')
+    // Paragraph formatting
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
 }
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 function logToConsole(message, data) { if (isDev) console.log(`[VetDesk] ${message}:`, data); }
