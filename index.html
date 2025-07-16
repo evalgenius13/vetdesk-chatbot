@@ -398,7 +398,6 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
   );
 }
 
-// Chatbot Panel with all improvements
 function ChatbotPanel({
   messages,
   input,
@@ -418,7 +417,7 @@ function ChatbotPanel({
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
   const [currentTopicActions, setCurrentTopicActions] = React.useState(null);
-  const [urlToAnalyze, setUrlToAnalyze] = React.useState('');
+  const [urlToAnalyze, setUrlToAnalyze] = React.useState(''); // ✅ Fixed here
 
   const quickActions = [
     { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
@@ -453,8 +452,9 @@ function ChatbotPanel({
   };
 
   const handleAnalyzeUrl = () => {
-    // You can later pass urlToAnalyze to a handler in App, or process it here
-    onQuickAsk(`How does this article affect veterans? ${urlToAnalyze}`);
+    if (!urlToAnalyze.trim()) return;
+    onQuickAsk(`How does the article at this link affect veterans: ${urlToAnalyze}`);
+    setUrlToAnalyze('');
   };
 
   const charCount = input.length;
@@ -462,28 +462,28 @@ function ChatbotPanel({
 
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
-      {/* Text Size Controls */}
+      
+      {/* Text Size & Clear Chat */}
       <div className="border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
             <button
               onClick={() => setTextSize('normal')}
-              className={`text-xs px-2 py-1 rounded transition ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              className={`text-xs px-2 py-1 rounded ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             >
               Normal Text
             </button>
             <button
               onClick={() => setTextSize('large')}
-              className={`text-xs px-2 py-1 rounded transition ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              className={`text-xs px-2 py-1 rounded ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             >
               Large Text
             </button>
           </div>
-
           {messages.length > 0 && (
             <button
               onClick={onClearChat}
-              className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded transition"
+              className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded"
             >
               Clear Chat
             </button>
@@ -493,7 +493,7 @@ function ChatbotPanel({
 
       {/* Quick Actions */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
-        <div className="quick-actions flex flex-wrap justify-center items-center gap-2 relative">
+        <div className="quick-actions flex flex-wrap justify-center gap-2">
           {showQuickActions && quickActions.map((action, idx) => (
             <button
               key={idx}
@@ -502,7 +502,7 @@ function ChatbotPanel({
               className={`px-3 py-2 rounded-md text-sm font-medium transition ${
                 loadingAction === idx
                   ? 'bg-blue-200 text-blue-500'
-                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
               }`}
             >
               {loadingAction === idx ? 'Loading...' : action.label}
@@ -510,23 +510,15 @@ function ChatbotPanel({
           ))}
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
-            aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
-            className="ml-2 p-1 text-blue-800 hover:text-blue-900 transition"
+            title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
+            className="p-1 text-blue-800 hover:text-blue-900"
           >
-            {showQuickActions ? (
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M6 12l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            )}
+            {showQuickActions ? '⬆️' : '⬇️'}
           </button>
         </div>
       </div>
 
-      {/* Session Warning */}
+      {/* Session Tip */}
       {messages.length > 0 && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
           <p className="text-yellow-800">
@@ -535,7 +527,7 @@ function ChatbotPanel({
         </div>
       )}
 
-      {/* Welcome Message */}
+      {/* Welcome State */}
       {!chatStarted && !emailState?.waitingForEmail && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center px-6 max-w-2xl">
@@ -550,7 +542,7 @@ function ChatbotPanel({
         </div>
       )}
 
-      {/* Chat Messages */}
+      {/* Messages */}
       <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.sender}`}>
@@ -582,48 +574,38 @@ function ChatbotPanel({
 
       {/* Email Prompt */}
       {emailState?.waitingForEmail && (
-        <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200 flex flex-col gap-2">
+        <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200">
           <span>Want this answer emailed? Enter your email and press Send.</span>
         </div>
       )}
 
       {/* Input Area */}
       <div className="border-t p-4 bg-white">
-        {charCount > maxChars * 0.8 && charCount <= maxChars && (
-          <div className="text-xs text-gray-500 mb-2 text-right">
+        {charCount > maxChars * 0.8 && (
+          <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>
             {charCount}/{maxChars} characters
-          </div>
-        )}
-        {charCount > maxChars && (
-          <div className="text-xs text-red-500 mb-2 text-right">
-            {charCount}/{maxChars} characters - Message too long!
           </div>
         )}
 
         {/* URL Analyzer */}
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 mb-2">
-          <div className="flex gap-2 items-center">
-            <div className="flex-1">
-              <input
-                type="url"
-                placeholder="Paste a news article or VA announcement URL to analyze how it affects veterans..."
-                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={urlToAnalyze}
-                onChange={(e) => setUrlToAnalyze(e.target.value)}
-                disabled={isLoading || streaming}
-              />
-            </div>
-            <button
-              onClick={handleAnalyzeUrl}
-              disabled={!urlToAnalyze.trim() || isLoading || streaming}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold transition"
-            >
-              Analyze Impact
-            </button>
-          </div>
+        <div className="mb-3">
+          <input
+            type="url"
+            placeholder="Paste a news article or VA announcement URL to analyze how it affects veterans..."
+            className="w-full p-2 border border-gray-300 rounded-md text-sm mb-2"
+            value={urlToAnalyze}
+            onChange={(e) => setUrlToAnalyze(e.target.value)}
+            disabled={isLoading || streaming}
+          />
+          <button
+            onClick={handleAnalyzeUrl}
+            disabled={!urlToAnalyze.trim() || isLoading || streaming}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-md text-sm font-semibold"
+          >
+            Analyze Impact
+          </button>
         </div>
 
-        {/* Main Textarea & Controls */}
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
@@ -638,12 +620,12 @@ function ChatbotPanel({
                 : "Ask a question about your VA benefits… (Press Enter to send, Shift+Enter for new line)"
             }
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
               }
-              if (e.key === "Escape") {
-                setInput("");
+              if (e.key === 'Escape') {
+                setInput('');
               }
             }}
             disabled={isLoading || streaming}
@@ -659,12 +641,11 @@ function ChatbotPanel({
             onClick={() => onQuickAsk("Please email me the last response")}
             disabled={
               messages.length === 0 ||
-              !messages[messages.length - 1] ||
-              messages[messages.length - 1].sender !== "bot" ||
+              messages[messages.length - 1].sender !== 'bot' ||
               isLoading ||
               streaming
             }
-            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
+            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm"
           >
             Email Summary
           </button>
