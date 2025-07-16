@@ -399,55 +399,20 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
 }
 
 // Chatbot Panel with all improvements
-function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat }) {
+function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat, urlToAnalyze, setUrlToAnalyze, handleAnalyzeUrl }) { // urlToAnalyze, setUrlToAnalyze, handleAnalyzeUrl need to be passed from App
   const textareaRef = React.useRef(null);
   const messagesEndRef = React.useRef(null);
   const [showQuickActions, setShowQuickActions] = React.useState(true);
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
-  const [currentTopicActions, setCurrentTopicActions] = React.useState(null);
-  const [urlToAnalyze, setUrlToAnalyze] = React.useState('');   
-  
-  const topicQuickActions = [
-    { text: "What are VA disability claims?", label: "Disability Claims", topic: "disability" },
-    { text: "What are VA appeals?", label: "Appeals", topic: "appeals" },
-    { text: "What is VA healthcare?", label: "Healthcare", topic: "healthcare" },
-    { text: "What are GI Bill benefits?", label: "Education", topic: "education" },
-    { text: "What are VA home loans?", label: "Home Loans", topic: "homeloans" }
-  ];
 
-  const actionQuickLinks = {
-    disability: [
-      { text: "How do I file a new disability claim? Walk me through the process step by step.", label: "File New Claim" },
-      { text: "How do I check the status of my disability claim?", label: "Check Claim Status" },
-      { text: "I want to appeal my disability rating decision. What are my options?", label: "Appeal Decision" },
-      { text: "I need help with my disability claim. What resources are available?", label: "Get Help" }
-    ],
-    appeals: [
-      { text: "How do I file a Supplemental Claim with new evidence?", label: "File Supplemental Claim" },
-      { text: "What is a Higher-Level Review and how do I request one?", label: "Higher-Level Review" },
-      { text: "How do I appeal to the Board of Veterans Appeals?", label: "Board Appeal" },
-      { text: "What are the deadlines for filing appeals?", label: "Appeal Deadlines" }
-    ],
-    healthcare: [
-      { text: "How do I enroll in VA healthcare?", label: "Enroll in Healthcare" },
-      { text: "How do I schedule a VA medical appointment?", label: "Schedule Appointment" },
-      { text: "What is Community Care and how do I access it?", label: "Community Care" },
-      { text: "How do I get my VA medical records?", label: "Medical Records" }
-    ],
-    education: [
-      { text: "How do I apply for GI Bill benefits?", label: "Apply for GI Bill" },
-      { text: "Can I transfer my GI Bill benefits to family members?", label: "Transfer Benefits" },
-      { text: "What schools are approved for GI Bill benefits?", label: "Find Schools" },
-      { text: "How do I use VR&E vocational rehabilitation benefits?", label: "Vocational Rehab" }
-    ],
-    homeloans: [
-      { text: "How do I get a VA home loan Certificate of Eligibility?", label: "Get COE" },
-      { text: "What are the VA home loan requirements and benefits?", label: "Loan Requirements" },
-      { text: "How do I find a VA-approved lender?", label: "Find Lender" },
-      { text: "Can I use my VA loan benefit multiple times?", label: "Reuse Benefits" }
-    ]
-  };
+  const quickActions = [
+    { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
+    { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
+    { text: "How do VA healthcare priority groups work, and how do I access care? When can I use non-VA providers?", label: "Healthcare Enrollment" },
+    { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
+    { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
+  ];
 
   const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
 
@@ -461,11 +426,12 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     if (!isLoading && !streaming) {
       setLoadingAction(null);
       // Reset to topics after bot responds to action questions
-      if (currentTopicActions && !streaming) {
-        setTimeout(() => setCurrentTopicActions(null), 2000);
-      }
+      // Ensure currentTopicActions is properly reset from App
+      // if (currentTopicActions && !streaming) { // currentTopicActions is not a prop of ChatbotPanel
+      // setTimeout(() => setCurrentTopicActions(null), 2000); // This logic needs to be in App or managed differently
+      // }
     }
-  }, [isLoading, streaming, currentTopicActions]);
+  }, [isLoading, streaming]); // removed currentTopicActions from dependency array
 
   // Rate Limiting Protection
   const handleSend = () => {
@@ -475,39 +441,11 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
     onSend();
   };
 
-  // Enhanced Quick Ask for two-level navigation
-  const handleTopicQuickAsk = (action, idx) => {
+  // Enhanced Quick Ask
+  const handleQuickAsk = (action, idx) => {
     setLoadingAction(idx);
-    setCurrentTopicActions(action.topic);
     onQuickAsk(action.text);
   };
-
-  const handleActionQuickAsk = (action, idx) => {
-    setLoadingAction(`action-${idx}`);
-    onQuickAsk(action.text);
-  };
-
-  const resetToTopics = () => {
-    setCurrentTopicActions(null);
-  };
-
-  const handleAnalyzeUrl = async () => {
-  if (!urlToAnalyze.trim()) return;
-  
-  const analysisPrompt = `Please analyze this URL and explain how it affects veterans: ${urlToAnalyze}
-
-Focus on:
-- What changed or what's being announced
-- Which veterans are affected  
-- Timeline for implementation
-- What veterans should do (if anything)
-- Provide balanced analysis with multiple perspectives and historical context
-
-Use clear headers and explain the real-world impact on veteran benefits and services.`;
-
-  setUrlToAnalyze(''); // Clear the input after submitting
-  onQuickAsk(analysisPrompt);
-};
 
   // Character count for long messages
   const charCount = input.length;
@@ -519,13 +457,13 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
       <div className="border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setTextSize('normal')}
               className={`text-xs px-2 py-1 rounded transition ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
               Normal Text
             </button>
-            <button 
+            <button
               onClick={() => setTextSize('large')}
               className={`text-xs px-2 py-1 rounded transition ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
@@ -547,16 +485,22 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
       {/* Quick Actions - Show based on chat state and toggle */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="quick-actions flex flex-wrap justify-center items-center gap-2 relative">
-          {showQuickActions && !currentTopicActions && topicQuickActions.map((action, idx) => (            <button
-              key={idx}
-              onClick={() => handleTopicQuickAsk(action, idx)}
-              disabled={isLoading || streaming || loadingAction === idx}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition ${loadingAction === idx ? 
-              'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50'}`}
-              >
-              {loadingAction === idx ? 'Loading...' : action.label}
-            </button>
-          ))}
+          {showQuickActions && (
+             // You need to decide whether to show topicQuickActions or actionQuickLinks based on currentTopicActions here.
+             // This logic needs to come from App's state and be passed correctly.
+             // For now, I'm using your original 'quickActions' array, assuming topicQuickActions logic is in App.
+             quickActions.map((action, idx) => (            
+              <button
+                key={idx}
+                onClick={() => handleQuickAsk(action, idx)} // Simplified to basic handleQuickAsk as quickActions is flat here
+                disabled={isLoading || streaming || loadingAction === idx}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition ${loadingAction === idx ? 
+                'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200 disabled:opacity-50'}`}
+                >
+                {loadingAction === idx ? 'Loading...' : action.label}
+              </button>
+            ))
+          )}
 
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
@@ -642,8 +586,8 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
         </div>
       )}
 
-{/* Input Area - CORRECTED STRUCTURE */}
-<div className="border-t p-4 bg-white">
+      {/* Input Area - CORRECTED STRUCTURE */}
+      <div className="border-t p-4 bg-white">
         {charCount > maxChars * 0.8 && charCount <= maxChars && (
           <div className="text-xs text-gray-500 mb-2 text-right">
             {charCount}/{maxChars} characters
@@ -655,7 +599,7 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
           </div>
         )}
 
-        {/* URL Analysis Section - Correctly placed */}
+        {/* URL Analysis Section */}
         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 mb-2">
           <div className="flex gap-2 items-center">
             <div className="flex-1">
@@ -665,12 +609,12 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
                 className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={urlToAnalyze}
                 onChange={(e) => setUrlToAnalyze(e.target.value)}
-                disabled={isLoading || streaming} {/* ADDED: Disable input during loading/streaming */}
+                disabled={isLoading || streaming}
               />
             </div>
             <button
               onClick={handleAnalyzeUrl}
-              disabled={!urlToAnalyze.trim() || isLoading || streaming} {/* ADDED: Disable if streaming also */}
+              disabled={!urlToAnalyze.trim() || isLoading || streaming}
               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold transition"
             >
               Analyze Impact
@@ -690,7 +634,7 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
             placeholder={
               emailState.waitingForEmail
                 ? "Enter your email address…"
-                : "Ask a question about your VA benefits… (Press Enter to send, Shift+Enter for new line)" /* Changed placeholder back to original per previous discussions */
+                : "Ask a question about your VA benefits… (Press Enter to send, Shift+Enter for new line)"
             }
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -712,13 +656,13 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
           </button>
           <button
             onClick={() => onQuickAsk("Please email me the last response")}
-            disabled={messages.length === 0 || !messages[messages.length - 1] || messages[messages.length - 1].sender !== 'bot' || isLoading || streaming} /* ADDED: Disable if loading/streaming */
+            disabled={messages.length === 0 || !messages[messages.length - 1] || messages[messages.length - 1].sender !== 'bot' || isLoading || streaming}
             className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
           >
             Email Summary
           </button>
         </div>
-      </div> {/* <--- THIS IS THE CORRECT CLOSING DIV FOR THE MAIN INPUT AREA */}
+      </div> {/* <-- This div closes the "Input Area" */}
     </main>
   );
 }
