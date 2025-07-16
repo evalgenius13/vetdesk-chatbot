@@ -168,7 +168,6 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
     </aside>
   );
 }
-// ChatbotPanel: Branch selection, avatar personalization, and URL handling built in
 function ChatbotPanel({
   messages,
   input,
@@ -188,7 +187,7 @@ function ChatbotPanel({
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
 
-  // ✅ Branch selector + avatars
+  // Veteran branch avatar state
   const [selectedBranch, setSelectedBranch] = React.useState(
     sessionStorage.getItem('vetBranch') || ''
   );
@@ -272,8 +271,7 @@ function ChatbotPanel({
 
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
-
-      {/* ✅ Text Size & Clear Chat */}
+      {/* Text size and clear chat */}
       <div className="border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
@@ -298,7 +296,6 @@ function ChatbotPanel({
               Large Text
             </button>
           </div>
-
           {messages.length > 0 && (
             <button
               onClick={onClearChat}
@@ -310,58 +307,74 @@ function ChatbotPanel({
         </div>
       </div>
 
-      {/* ✅ Branch Selector + Quick Launch Buttons */}
-      <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2 flex flex-wrap gap-3 items-center">
-        {/* Branch Selector */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="branch-select" className="text-sm font-semibold text-slate-600">Branch:</label>
-          <select
-            id="branch-select"
-            value={selectedBranch}
-            onChange={handleBranchChange}
-            className="text-sm px-2 py-1 border border-gray-300 rounded-md"
-          >
-            <option value="">Select Branch</option>
-            {Object.keys(branchAvatars).map((branch) => (
-              <option key={branch} value={branch}>{branch}</option>
-            ))}
-          </select>
-          {selectedBranch && branchAvatars[selectedBranch] && (
-            <img
-              src={branchAvatars[selectedBranch]}
-              alt={selectedBranch}
-              className="w-7 h-7 rounded-full border"
-              title={selectedBranch}
-              style={{ objectFit: 'cover' }}
-            />
-          )}
-        </div>
+      {/* Quick Actions Bar with Minimalist Arrow & Branch Selector */}
+      <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2 flex flex-wrap items-center justify-between gap-3 relative">
 
-        {/* Quick Actions */}
-        <div className="quick-actions flex flex-wrap items-center gap-2 flex-1">
+        {/* Quick Actions Left */}
+        <div className="quick-actions flex flex-wrap gap-2 items-center">
           {showQuickActions && quickActions.map((action, idx) => (
             <button
               key={idx}
               onClick={() => handleQuickAsk(action, idx)}
               disabled={isLoading || streaming || loadingAction === idx}
               className={`px-3 py-2 rounded-md text-sm font-medium transition ${
-                loadingAction === idx ? 'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                loadingAction === idx
+                  ? 'bg-blue-200 text-blue-500'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
               }`}
             >
               {loadingAction === idx ? 'Loading...' : action.label}
             </button>
           ))}
+
+          {/* Minimal Arrow Toggle */}
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
-            className="p-1 text-blue-800 hover:text-blue-900"
+            className="p-1 text-blue-800 hover:text-blue-900 transition"
             title={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
+            aria-label={showQuickActions ? "Hide Quick Actions" : "Show Quick Actions"}
           >
-            {showQuickActions ? '⬆️' : '⬇️'}
+            {showQuickActions ? (
+              <svg width="20" height="20" fill="none" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M6 12l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" fill="none" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
           </button>
         </div>
+
+        {/* Branch Selector (minimized with Quick Actions) */}
+        {showQuickActions && (
+          <div className="flex items-center gap-2 ml-auto">
+            <label htmlFor="branch-select" className="text-sm font-semibold text-slate-600">Branch:</label>
+            <select
+              id="branch-select"
+              value={selectedBranch}
+              onChange={handleBranchChange}
+              className="text-sm px-2 py-1 border border-gray-300 rounded-md"
+            >
+              <option value="">Select Branch</option>
+              {Object.keys(branchAvatars).map((branch) => (
+                <option key={branch} value={branch}>{branch}</option>
+              ))}
+            </select>
+            {selectedBranch && branchAvatars[selectedBranch] && (
+              <img
+                src={branchAvatars[selectedBranch]}
+                alt={selectedBranch}
+                className="w-7 h-7 rounded-full border"
+                title={selectedBranch}
+                style={{ objectFit: 'cover' }}
+              />
+            )}
+          </div>
+        )}
       </div>
 
-      {/* 💡 Tip Box */}
+      {/* Tip box */}
       {messages.length > 0 && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
           <p className="text-yellow-800">
@@ -370,20 +383,18 @@ function ChatbotPanel({
         </div>
       )}
 
-      {/* 👍 Welcome Message */}
+      {/* Welcome message */}
       {!chatStarted && !emailState?.waitingForEmail && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center px-6 max-w-2xl">
             <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
-            <p className="text-lg text-gray-600 mb-2">
-              Get plain-English answers about your VA benefits and how things are changing.
-            </p>
+            <p className="text-lg text-gray-600 mb-2">Get plain-English answers about your VA benefits and how things are changing.</p>
             <p className="text-sm text-gray-500 italic">This conversation isn't saved. Leave this tab open while using it.</p>
           </div>
         </div>
       )}
 
-      {/* 💬 Chat Messages */}
+      {/* Chat Messages */}
       <div className="flex-1 px-4 py-2 overflow-y-auto space-y-2">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.sender}`}>
@@ -425,14 +436,14 @@ function ChatbotPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 📧 Email Prompt */}
+      {/* Email Prompt */}
       {emailState?.waitingForEmail && (
         <div className="p-4 bg-yellow-50 border-t border-yellow-300 text-yellow-800 text-sm">
           Want this answer emailed? Enter your email and press Send.
         </div>
       )}
 
-      {/* 📝 Input Field */}
+      {/* Chat input */}
       <div className="border-t p-4 bg-white">
         {charCount > maxChars * 0.8 && (
           <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>
@@ -462,7 +473,7 @@ function ChatbotPanel({
             disabled={isLoading || streaming}
           />
 
-          {/* ✔️ Send Button */}
+          {/* Send Button */}
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
@@ -471,7 +482,7 @@ function ChatbotPanel({
             Send
           </button>
 
-          {/* 📧 Email Summary Button */}
+          {/* Email Summary Button */}
           <button
             onClick={() => onQuickAsk("Please email me the last response")}
             disabled={
