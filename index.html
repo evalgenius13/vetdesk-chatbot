@@ -481,61 +481,68 @@ function App() {
   }
 
   async function sendMessageToGemini(userMessage, articleContext = "") {
-    if (emailState.waitingForEmail) {
-      try {
-        const validatedEmail = validateEmail(userMessage);
-        setIsLoading(true); 
-        logToConsole("Sending email", { email: validatedEmail });
-        
-        const res = await fetchWithRetry('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: validatedEmail,
-            subject: extractTopicFromQuestion(emailState.lastUserQuestion),
-            content: emailState.lastBotResponse,
-            userName: "Veteran"
-          })
-        });
-        const result = await res.json();
-        if (result?.success) {
-          setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
-        } else { throw new Error('Email send failed'); }
-      } catch (error) {
-        logToConsole("Email error", error.message);
-        setMessages(prev => [...prev, {
-          text: "❌ Failed to send email. Please check your address and try again.",
-          sender: "bot"
-        }]);
-      } finally {
-        setIsLoading(false);
+  if (emailState.waitingForEmail) {
+    try {
+      const validatedEmail = validateEmail(userMessage);
+      setIsLoading(true); 
+      logToConsole("Sending email", { email: validatedEmail });
+
+      const res = await fetchWithRetry('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: validatedEmail,
+          subject: extractTopicFromQuestion(emailState.lastUserQuestion),
+          content: emailState.lastBotResponse,
+          userName: "Veteran"
+        })
+      });
+
+      const result = await res.json();
+      if (result?.success) {
+        setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
+      } else {
+        throw new Error("Email send failed");
+      }
+    } catch (error) {
+      logToConsole("Email error", error.message);
+      setMessages(prev => [...prev, {
+        text: "❌ Failed to send email. Please check your address and try again.",
+        sender: "bot"
+      }]);
+    } finally {
+      setIsLoading(false);
+      setEmailState({
+        waitingForEmail: false,
+        lastBotResponse: null,
+        lastUserQuestion: null
+      });
+    }
+  } else {
+    // Normal question flow
+    setIsLoading(true);
+    setMessages(prev => [...prev, { text: userMessage, sender: "user" }]);
+
+    // Simulate GPT response (replace with real integration!)
+    const fakeBotResponse = `Here's a helpful answer to your message: "${userMessage}".`;
+
+    // Mimic a delay for typing effect or load time
+    setTimeout(() => {
+      setMessages(prev => [...prev, { text: fakeBotResponse, sender: "bot" }]);
+
+      // Optionally offer to email if it's informational
+      if (shouldOfferEmail(fakeBotResponse)) {
         setEmailState({
-          waitingForEmail: false,
-          lastBotResponse: null,
-          lastUserQuestion: null
+          waitingForEmail: true,
+          lastBotResponse: fakeBotResponse,
+          lastUserQuestion: userMessage
         });
       }
-    } else {
-      // Standard question, send to Gemini or your model
-      setIsLoading(true);
-      setMessages(prev => [...prev, { text: userMessage, sender: "user" }]);
 
-      // 👉👉 Replace this with your real model API logic as needed
-      const fakeBotReply = `Thanks for your question. Here's info about: "${userMessage}"`;
-
-      // Simulate typing delay / streaming
-      setTimeout(() => {
-        setMessages(prev => [...prev, { text: fakeBotReply, sender: "bot" }]);
-        if (shouldOfferEmail(fakeBotReply)) {
-          setEmailState({
-            waitingForEmail: true,
-            lastBotResponse: fakeBotReply,
-            lastUserQuestion: userMessage
-          });
-        }
-        setIsLoading(false);
-      }, 1000);
-    }
+      setIsLoading(false);
+    }, 1000); // delay in milliseconds (1 second)
   }
+}
 
   const handleQuickAsk = (q) => {
     setMessages(prev => [...prev, { text: q, sender: 'user' }]);
