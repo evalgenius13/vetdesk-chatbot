@@ -446,18 +446,32 @@ function App() {
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [streaming, setStreaming] = React.useState(false);
-  const [textSize, setTextSize] = React.useState('normal');
-  const [isMobileNewsOpen, setIsMobileNewsOpen] = React.useState(false);
+  const [textSize, setTextSize] = React.useState("normal");
+  const [isNewsPanelOpen, setIsNewsPanelOpen] = React.useState(true);
   const streamingIntervalRef = React.useRef(null);
   const [emailState, setEmailState] = React.useState({
-    waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null
+    waitingForEmail: false,
+    lastBotResponse: null,
+    lastUserQuestion: null
   });
 
-  React.useEffect(() => { return () => { if (streamingIntervalRef.current) clearInterval(streamingIntervalRef.current); }; }, []);
   React.useEffect(() => {
-    const handleBeforeUnload = (e) => { if (messages.length > 0) { e.preventDefault(); e.returnValue = ''; } };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      if (streamingIntervalRef.current) {
+        clearInterval(streamingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (messages.length > 0) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [messages]);
 
   function extractTopicFromQuestion(question) {
@@ -468,84 +482,122 @@ function App() {
     return "VA Benefits Information";
   }
 
-  function shouldOfferEmail(botText) { return botText.length > 250 && (botText.includes("step") || botText.includes("process") || botText.includes("deadline")); }
+  function shouldOfferEmail(botText) {
+    return botText.length > 250 &&
+      (botText.includes("step") || botText.includes("process") || botText.includes("deadline"));
+  }
 
   function streamBotText(botText, originalQuestion) {
     if (streamingIntervalRef.current) clearInterval(streamingIntervalRef.current);
-    setStreaming(true); setMessages(prev => [...prev, { text: "", sender: "bot" }]); let index = 0;
+    setStreaming(true);
+    setMessages((prev) => [...prev, { text: "", sender: "bot" }]);
+
+    let index = 0;
     streamingIntervalRef.current = setInterval(() => {
-      index++; setMessages(prev => { const updated = [...prev];
-      updated[updated.length - 1] = { text: botText.slice(0, index), sender: "bot" }; return updated; });
-      if (index >= botText.length) { clearInterval(streamingIntervalRef.current); streamingIntervalRef.current = null; setStreaming(false); setIsLoading(false); }
+      index++;
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          text: botText.slice(0, index),
+          sender: "bot"
+        };
+        return updated;
+      });
+      if (index >= botText.length) {
+        clearInterval(streamingIntervalRef.current);
+        streamingIntervalRef.current = null;
+        setStreaming(false);
+        setIsLoading(false);
+      }
     }, 5);
   }
 
-  async function sendMessageToGemini(userMessage, articleContext = "") {
-  if (emailState.waitingForEmail) {
-    try {
-      const validatedEmail = validateEmail(userMessage);
-      setIsLoading(true); 
-      logToConsole("Sending email", { email: validatedEmail });
+  async function sendMessageToGemini(userMessage) {
+    if (emailState.waitingForEmail) {
+      try {
+        const validatedEmail = validateEmail(userMessage);
+        setIsLoading(true);
+        logToConsole("Sending email", { email: validatedEmail });
 
-      const res = await fetchWithRetry('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: validatedEmail,
-          subject: extractTopicFromQuestion(emailState.lastUserQuestion),
-          content: emailState.lastBotResponse,
-          userName: "Veteran"
-        })
-      });
+        const res = await fetchWithRetry("/api/send-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: validatedEmail,
+            subject: extractTopicFromQuestion(emailState.lastUserQuestion),
+            content: emailState.lastBotResponse,
+            userName: "Veteran"
+          })
+        });
 
-      const result = await res.json();
-      if (result?.success) {
-        setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
-      } else {
-        throw new Error("Email send failed");
-      }
-    } catch (error) {
-      logToConsole("Email error", error.message);
-      setMessages(prev => [...prev, {
-        text: "❌ Failed to send email. Please check your address and try again.",
-        sender: "bot"
-      }]);
-    } finally {
-      setIsLoading(false);
-      setEmailState({
-        waitingForEmail: false,
-        lastBotResponse: null,
-        lastUserQuestion: null
-      });
-    }
-  } else {
-    // Normal question flow
-    setIsLoading(true);
-    setMessages(prev => [...prev, { text: userMessage, sender: "user" }]);
+        const result = await res.json();
 
-    // Simulate GPT response (replace with real integration!)
-    const fakeBotResponse = `Here's a helpful answer to your message: "${userMessage}".`;
-
-    // Mimic a delay for typing effect or load time
-    setTimeout(() => {
-      setMessages(prev => [...prev, { text: fakeBotResponse, sender: "bot" }]);
-
-      // Optionally offer to email if it's informational
-      if (shouldOfferEmail(fakeBotResponse)) {
+        if (result?.success) {
+          setMessages(prev => [
+            ...prev,
+            { text: "✅ Summary sent to your email.", sender: "bot" }
+          ]);
+        } else {
+          throw new Error("Email send failed");
+        }
+      } catch (error) {
+        logToConsole("Email error", error.message);
+        setMessages(prev => [
+          ...prev,
+          {
+            text: "❌ Failed to send email. Please check your address and try again.",
+            sender: "bot"
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
         setEmailState({
-          waitingForEmail: true,
-          lastBotResponse: fakeBotResponse,
-          lastUserQuestion: userMessage
+          waitingForEmail: false,
+          lastBotResponse: null,
+          lastUserQuestion: null
         });
       }
 
-      setIsLoading(false);
-    }, 1000); // delay in milliseconds (1 second)
+    } else {
+      setIsLoading(true);
+      setMessages(prev => [...prev, { text: userMessage, sender: "user" }]);
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userMessage })
+        });
+
+        const data = await res.json();
+        const botReply = data.reply || "Sorry, I couldn't generate a response.";
+
+        streamBotText(botReply, userMessage);
+
+        if (shouldOfferEmail(botReply)) {
+          setEmailState({
+            waitingForEmail: true,
+            lastBotResponse: botReply,
+            lastUserQuestion: userMessage
+          });
+        }
+      } catch (error) {
+        console.error("Chat error:", error);
+        setMessages(prev => [
+          ...prev,
+          {
+            text: "❌ There was a problem getting your answer. Please try again.",
+            sender: "bot"
+          }
+        ]);
+        setIsLoading(false);
+        setStreaming(false);
+      }
+    }
   }
-}
 
   const handleQuickAsk = (q) => {
-    setMessages(prev => [...prev, { text: q, sender: 'user' }]);
+    setMessages((prev) => [...prev, { text: q, sender: "user" }]);
     sendMessageToGemini(q);
   };
 
@@ -559,47 +611,65 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full">
-      <button className="mobile-news-toggle md:hidden" onClick={() => setIsMobileNewsOpen(true)} aria-label="Open news panel">📰</button>
-      <div className={`news-overlay ${isMobileNewsOpen ? 'open' : ''}`} onClick={() => setIsMobileNewsOpen(false)}></div>
-
-      <NewsPanel
-        isMobileOpen={isMobileNewsOpen}
-        onMobileClose={() => setIsMobileNewsOpen(false)}
-        onAsk={(msg) => {
+    <div className="flex h-full">
+      {!started ? (
+        <Landing onTryNow={() => {
           setStarted(true);
-          setMessages(prev => [...prev, { text: msg, sender: "user" }]);
-          sendMessageToGemini(msg);
-        }}
-      />
+          setIsNewsPanelOpen(true);
+        }} />
+      ) : (
+        <div className="flex h-full flex-1 relative">
+          {isNewsPanelOpen && (
+            <div className="w-[320px] bg-white border-r border-gray-200 relative z-10">
+              <NewsPanel
+                isMobileOpen={false}
+                onMobileClose={() => {}}
+                onAsk={(msg) => {
+                  setMessages(prev => [...prev, { text: msg, sender: "user" }]);
+                  sendMessageToGemini(msg);
+                }}
+              />
+              <button
+                className="absolute top-4 right-1 text-blue-600 text-xs px-2 py-1 hover:underline"
+                onClick={() => setIsNewsPanelOpen(false)}
+              >
+                ← Hide
+              </button>
+            </div>
+          )}
 
-      <div className="flex-1 flex flex-col">
-        {!started ? (
-          <Landing onTryNow={() => setStarted(true)} />
-        ) : (
-          <ChatbotPanel
-            messages={messages}
-            input={input}
-            setInput={setInput}
-            onSend={msg => sendMessageToGemini(msg)}
-            streaming={streaming}
-            isLoading={isLoading}
-            emailState={emailState}
-            onQuickAsk={handleQuickAsk}
-            textSize={textSize}
-            setTextSize={setTextSize}
-            onClearChat={handleClearChat}
-          />
-        )}
-      </div>
+          {!isNewsPanelOpen && (
+            <button
+              className="absolute top-[100px] left-0 bg-blue-700 text-white text-xs px-2 py-3 rounded-r-md z-20 shadow hover:bg-blue-800 transition"
+              onClick={() => setIsNewsPanelOpen(true)}
+            >
+              📰 Show News
+            </button>
+          )}
+
+          <div className={`flex-1 transition-all duration-300 ${isNewsPanelOpen ? 'ml-0' : ''}`}>
+            <ChatbotPanel
+              messages={messages}
+              input={input}
+              setInput={setInput}
+              onSend={(msg) => sendMessageToGemini(msg)}
+              streaming={streaming}
+              isLoading={isLoading}
+              emailState={emailState}
+              onQuickAsk={handleQuickAsk}
+              textSize={textSize}
+              setTextSize={setTextSize}
+              onClearChat={handleClearChat}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// 👇 FINAL STEP: Render your App into the div#root
+// 👇 FINAL STEP: Mount the App
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
-
-      
