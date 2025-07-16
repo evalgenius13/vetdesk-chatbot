@@ -391,25 +391,21 @@ return (
           </div>
         </div>
       )}
+      {messages.map((msg, idx) => (
+  <div key={idx} className={`message-row ${msg.sender}`}>
+    <div className={`message-bubble ${msg.sender}`}><div className={`message-content ${msg.sender}`}>
+      <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+    </div></div>
+  </div>
+))}
+{(isLoading || streaming) && (
+  <div className="message-row bot typing-indicator-row">
+    <div className="message-bubble bot"><div className="message-content bot">
+      <div className="typing-dots"><div className="typing-dot"></div><div className="typing-dot"></div><div className="typing-dot"></div></div>
+    </div></div>
+  </div>
+)}          
 
-      <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`message-row ${msg.sender}`}>
-            {msg.sender === "bot" && <div className="avatar bot">VD</div>}
-            <div className={`message-bubble ${msg.sender}`}><div className={`message-content ${msg.sender}`}>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-            </div></div>
-            {msg.sender === "user" && <div className="avatar user">U</div>}
-          </div>
-        ))}
-        {(isLoading || streaming) && (
-          <div className="message-row bot typing-indicator-row">
-            <div className="avatar bot">VD</div>
-            <div className="message-bubble bot"><div className="message-content bot">
-              <div className="typing-dots"><div className="typing-dot"></div><div className="typing-dot"></div><div className="typing-dot"></div></div>
-            </div></div>
-          </div>
-        )}
         <div ref={messagesEndRef}></div>
       </div>
 
