@@ -500,7 +500,6 @@ function App() {
   function streamBotText(botText, originalQuestion) {
     if (streamingIntervalRef.current) clearInterval(streamingIntervalRef.current);
     setStreaming(true);
-    setMessages((prev) => [...prev, { text: "", sender: "bot" }]);
 
     let index = 0;
     streamingIntervalRef.current = setInterval(() => {
@@ -624,7 +623,6 @@ function App() {
 }
 
 const handleQuickAsk = (q) => {
-  setMessages((prev) => [...prev, { text: q, sender: "user" }]);
   sendMessageToGemini(q);
 };
 
