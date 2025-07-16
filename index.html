@@ -404,6 +404,8 @@ function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading,
   const [showQuickActions, setShowQuickActions] = React.useState(true);
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
+  const [currentTopicActions, setCurrentTopicActions] = React.useState(null);  
+  const [urlToAnalyze, setUrlToAnalyze] = React.useState('');  
 
   const quickActions = [
     { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
