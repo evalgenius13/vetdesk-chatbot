@@ -399,9 +399,8 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
 }
 
 // Chatbot Panel with all improvements
-function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat}) 
-  const textareaRef = React.useRef(null);
-  const messagesEndRef = React.useRef(null);
+function ChatbotPanel({ messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat}) {
+  const textareaRef = React.useRef(null);  const messagesEndRef = React.useRef(null);
   const [showQuickActions, setShowQuickActions] = React.useState(true);
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
