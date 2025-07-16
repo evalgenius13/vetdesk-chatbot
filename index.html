@@ -206,16 +206,26 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
   const [error, setError] = React.useState(null);
 
   const fetchNews = React.useCallback(async () => {
-    setLoading(true); setError(null); logToConsole("Fetching news", { refresh: newsRefresh });
+    setLoading(true);
+    setError(null);
+    logToConsole("Fetching news", { refresh: newsRefresh });
     try {
       const response = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/va-news");
-      const data = await response.json(); setArticles(data.sources || []); logToConsole("News loaded", data.sources?.length || 0);
+      const data = await response.json();
+      setArticles(data.sources || []);
+      logToConsole("News loaded", data.sources?.length || 0);
     } catch (err) {
-      logToConsole("News fetch error", err); setError("Unable to load news. Please try again later."); setArticles([]);
-    } finally { setLoading(false); }
+      logToConsole("News fetch error", err);
+      setError("Unable to load news. Please try again later.");
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
   }, [newsRefresh]);
 
-  React.useEffect(() => { fetchNews(); }, [fetchNews]);
+  React.useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
 
   return (
     <aside className={`news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4 ${isMobileOpen ? 'open' : ''}`}>
@@ -232,6 +242,7 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
           )}
         </div>
       </div>
+
       {error ? (
         <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</div>
       ) : loading ? (
@@ -245,20 +256,45 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
           ))}
         </div>
       ) : articles.length ? (
-        articles.map((article, idx) => (
-          <div key={idx} className="mb-6 pb-4 border-b last:border-none">
-            {article.image && (
-              <img src={article.image} alt={article.title} loading="lazy" className="mb-2 w-full h-36 object-cover rounded"
-                onError={e => { e.target.style.display = 'none'; e.target.removeAttribute('src'); e.target.alt = ''; }} />
-            )}
-            <h3 className="text-base font-semibold text-slate-900 mb-1">{article.title}</h3>
-            <p className="text-xs text-slate-500">{new Date(article.pubDate).toLocaleDateString()} • {article.source}</p>
-            <button onClick={() => { onAsk(`How does this news affect my benefits: "${article.title}"`); onMobileClose(); }}
-              className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md transition">
-              How does this affect me?
-            </button>
-          </div>
-        ))
+        articles.map((article, idx) => {
+          const formattedDate = new Date(article.pubDate).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+
+          return (
+            <div key={idx} className="mb-4">
+              <div className="bg-white shadow-sm hover:shadow-md rounded-lg p-4 transition duration-200 border border-slate-100">
+                {article.image && (
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    loading="lazy"
+                    className="mb-3 w-full h-40 object-cover rounded-lg border border-gray-200"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.removeAttribute('src');
+                    }}
+                  />
+                )}
+                <h3 className="text-lg font-semibold text-slate-800 mb-1 line-clamp-2">
+                  {article.title}
+                </h3>
+                <p className="text-xs text-slate-500 italic">{formattedDate} • {article.source}</p>
+                <button
+                  onClick={() => {
+                    onAsk(`How does this news affect my benefits: "${article.title}"`);
+                    onMobileClose();
+                  }}
+                  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md transition shadow-sm"
+                >
+                  How does this affect me?
+                </button>
+              </div>
+            </div>
+          );
+        })
       ) : (
         <div className="text-slate-400 text-sm text-center py-8">
           <p>No news articles available.</p>
