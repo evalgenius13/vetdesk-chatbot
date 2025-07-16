@@ -59,33 +59,117 @@
   <div id="root"></div>
   <script type="text/babel">
 const systemPrompt = `You are a knowledgeable VA benefits specialist who communicates like a candid, helpful, and empathetic friend. ... [prompt text omitted for brevity] ... `;
-function renderMarkdown(text) {
-  const escaped = text
-    .replace(/&/g, '&amp;')
+
+// ========== NEW: Security Functions ==========
+function sanitizeInput(input) {
+  return input
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .trim();
+}
 
-  return escaped
+function validateInput(input) {
+  const sanitized = sanitizeInput(input);
+  
+  if (sanitized.length > 500) {
+    throw new Error('Message too long (max 500 characters)');
+  }
+  
+  const suspiciousPatterns = [
+    /<script/i,
+    /javascript:/i,
+    /on\w+\s*=/i,
+    /data:text\/html/i,
+    /vbscript:/i
+  ];
+  
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(input)) {
+      throw new Error('Invalid content detected');
+    }
+  }
+  
+  return sanitized;
+}
+
+function validateURL(url) {
+  try {
+    const urlObj = new URL(url);
+    return ['http:', 'https:'].includes(urlObj.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const sanitized = sanitizeInput(email);
+  
+  if (!emailRegex.test(sanitized) || sanitized.length > 254) {
+    throw new Error('Invalid email format');
+  }
+  
+  return sanitized;
+}
+
+class RateLimiter {
+  constructor(maxRequests = 10, windowMs = 60000) {
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+    this.requests = [];
+  }
+  
+  isAllowed() {
+    const now = Date.now();
+    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    
+    if (this.requests.length >= this.maxRequests) {
+      return false;
+    }
+    
+    this.requests.push(now);
+    return true;
+  }
+  
+  getTimeUntilReset() {
+    if (this.requests.length === 0) return 0;
+    const oldestRequest = Math.min(...this.requests);
+    return Math.max(0, this.windowMs - (Date.now() - oldestRequest));
+  }
+}
+
+const rateLimiter = new RateLimiter(10, 60000);
+// ========== END: Security Functions ==========
+
+function renderMarkdown(text) {
+  const sanitized = sanitizeInput(text);
+
+  return sanitized
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
     .replace(/### (.*$)/gm, '<h3>$1</h3>')
     .replace(/## (.*$)/gm, '<h2>$1</h2>')
     .replace(/# (.*$)/gm, '<h1>$1</h1>')
-    // Specific link patterns FIRST
-    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, '<br><a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
-    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, '<a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
-    // Generic URL pass-through
-    .replace(/https?:\/\/[^\s<>"]+/g, '<a href="$&" target="_blank" class="text-blue-600 hover:underline">$&</a>')
-    // Paragraph formatting
+    .replace(/\(\[Source\]\((https?:\/\/[^)]+)\)\)/g, '<br><a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    .replace(/\[Read full article →\]\((https?:\/\/[^)]+)\)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline text-sm">Read full article →</a>')
+    .replace(/https?:\/\/[^\s<>"]+/g, (url) => {
+      if (validateURL(url)) {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
+      }
+      return url;
+    })
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>').replace(/<p><\/p>/g, '');
 }
+
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 function logToConsole(message, data) { if (isDev) console.log(`[VetDesk] ${message}:`, data); }
+
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -99,7 +183,9 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
     }
   }
 }
+
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 function Landing({ onTryNow }) {
   return (
     <section className="flex flex-col justify-center h-screen px-6 bg-gradient-to-br from-slate-100 to-slate-200">
@@ -113,11 +199,13 @@ function Landing({ onTryNow }) {
     </section>
   );
 }
+
 function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
   const [articles, setArticles] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [newsRefresh, setNewsRefresh] = React.useState(0);
   const [error, setError] = React.useState(null);
+
   const fetchNews = React.useCallback(async () => {
     setLoading(true); setError(null); logToConsole("Fetching news", { refresh: newsRefresh });
     try {
@@ -127,7 +215,9 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
       logToConsole("News fetch error", err); setError("Unable to load news. Please try again later."); setArticles([]);
     } finally { setLoading(false); }
   }, [newsRefresh]);
+
   React.useEffect(() => { fetchNews(); }, [fetchNews]);
+
   return (
     <aside className={`news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4 ${isMobileOpen ? 'open' : ''}`}>
       <div className="flex justify-between items-center mb-4">
@@ -182,7 +272,7 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
     </aside>
   );
 }
-// Main Chatbot Panel – accepts URLs and questions in the same input
+
 function ChatbotPanel({
   messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat
 }) {
@@ -191,7 +281,8 @@ function ChatbotPanel({
   const [showQuickActions, setShowQuickActions] = React.useState(true);
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
-  const [currentTopicActions, setCurrentTopicActions] = React.useState(null);
+  const [inputError, setInputError] = React.useState('');
+
   const quickActions = [
     { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
     { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
@@ -199,26 +290,51 @@ function ChatbotPanel({
     { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
     { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
   ];
+
   const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
   const charCount = input.length;
   const maxChars = 500;
+
   React.useEffect(() => { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages, streaming]);
   React.useEffect(() => { if (!isLoading && !streaming) setLoadingAction(null); }, [isLoading, streaming]);
+
   function handleSend() {
-    const now = Date.now();
-    if (now - lastSent < 1000) return;
-    const trimmed = input.trim();
-    if (!trimmed) return;
-    setLastSent(now);
-    const isValidUrl = /^https?:\/\/[^\s$.?#].[^\s]*$/.test(trimmed);
-    if (isValidUrl) {
-      onQuickAsk(`How does this article affect veterans: ${trimmed}`);
-    } else {
-      onSend();
+    try {
+      const now = Date.now();
+      if (now - lastSent < 1000) return;
+
+      const trimmed = input.trim();
+      if (!trimmed) return;
+
+      // Check rate limit
+      if (!rateLimiter.isAllowed()) {
+        const resetTime = Math.ceil(rateLimiter.getTimeUntilReset() / 1000);
+        setInputError(`Please wait ${resetTime} seconds before sending another message.`);
+        return;
+      }
+
+      // Validate and sanitize input
+      const sanitized = validateInput(trimmed);
+      
+      setLastSent(now);
+      setInputError('');
+
+      // Check if it's a URL
+      if (validateURL(sanitized)) {
+        onQuickAsk(`How does this article affect veterans: ${sanitized}`);
+      } else {
+        onSend(sanitized);
+      }
+      setInput("");
+
+    } catch (error) {
+      setInputError(error.message);
+      logToConsole("Input validation failed", error.message);
     }
-    setInput("");
   }
+
   const handleQuickAsk = (action, idx) => { setLoadingAction(idx); onQuickAsk(action.text); };
+
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
       <div className="border-b border-slate-200 bg-white px-4 py-2">
@@ -234,6 +350,7 @@ function ChatbotPanel({
           )}
         </div>
       </div>
+
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="quick-actions flex flex-wrap justify-center gap-2">
           {showQuickActions && quickActions.map((action, idx) => (
@@ -244,11 +361,13 @@ function ChatbotPanel({
             className="p-1 text-blue-800 hover:text-blue-900">{showQuickActions ? '⬆️' : '⬇️'}</button>
         </div>
       </div>
+
       {messages.length > 0 && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
           <p className="text-yellow-800">💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or use the email feature to save important answers.</p>
         </div>
       )}
+
       {!chatStarted && !emailState?.waitingForEmail && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center px-6 max-w-2xl">
@@ -258,6 +377,7 @@ function ChatbotPanel({
           </div>
         </div>
       )}
+
       <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.sender}`}>
@@ -278,20 +398,35 @@ function ChatbotPanel({
         )}
         <div ref={messagesEndRef}></div>
       </div>
+
       {emailState?.waitingForEmail && (
         <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200">
           <span>Want this answer emailed? Enter your email and press Send.</span>
         </div>
       )}
+
       <div className="border-t p-4 bg-white">
+        {inputError && (
+          <div className="text-red-600 text-sm mb-2 p-2 bg-red-50 rounded">
+            {inputError}
+          </div>
+        )}
         {charCount > maxChars * 0.8 && (
           <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>{charCount}/{maxChars} characters</div>
         )}
         <div className="flex gap-2">
-          <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} rows="2" maxLength={maxChars}
+          <textarea ref={textareaRef} value={input} 
+            onChange={e => {
+              setInput(e.target.value);
+              if (inputError) setInputError('');
+            }} 
+            rows="2" maxLength={maxChars}
             className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder={emailState.waitingForEmail?"Enter your email address…":"Ask about VA benefits or paste a news/article link (https://...)"}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } if (e.key === 'Escape') setInput(''); }}
+            onKeyDown={e => { 
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } 
+              if (e.key === 'Escape') setInput(''); 
+            }}
             disabled={isLoading || streaming}
           />
           <button onClick={handleSend} disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
@@ -304,6 +439,7 @@ function ChatbotPanel({
     </main>
   );
 }
+
 function App() {
   const [started, setStarted] = React.useState(false);
   const [messages, setMessages] = React.useState([]);
@@ -316,12 +452,14 @@ function App() {
   const [emailState, setEmailState] = React.useState({
     waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null
   });
+
   React.useEffect(() => { return () => { if (streamingIntervalRef.current) clearInterval(streamingIntervalRef.current); }; }, []);
   React.useEffect(() => {
     const handleBeforeUnload = (e) => { if (messages.length > 0) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [messages]);
+
   function extractTopicFromQuestion(question) {
     const q = question.toLowerCase();
     if (q.includes("claim")) return "VA Claims Process";
@@ -329,7 +467,9 @@ function App() {
     if (q.includes("disability")) return "Disability Benefits";
     return "VA Benefits Information";
   }
+
   function shouldOfferEmail(botText) { return botText.length > 250 && (botText.includes("step") || botText.includes("process") || botText.includes("deadline")); }
+
   function streamBotText(botText, originalQuestion) {
     if (streamingIntervalRef.current) clearInterval(streamingIntervalRef.current);
     setStreaming(true); setMessages(prev => [...prev, { text: "", sender: "bot" }]); let index = 0;
@@ -339,14 +479,18 @@ function App() {
       if (index >= botText.length) { clearInterval(streamingIntervalRef.current); streamingIntervalRef.current = null; setStreaming(false); setIsLoading(false); }
     }, 5);
   }
+
   async function sendMessageToGemini(userMessage, articleContext = "") {
-    if (emailState.waitingForEmail && isValidEmail(userMessage)) {
-      setIsLoading(true); logToConsole("Sending email", { email: userMessage });
+    if (emailState.waitingForEmail) {
       try {
+        const validatedEmail = validateEmail(userMessage);
+        setIsLoading(true); 
+        logToConsole("Sending email", { email: validatedEmail });
+        
         const res = await fetchWithRetry('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: userMessage,
+            email: validatedEmail,
             subject: extractTopicFromQuestion(emailState.lastUserQuestion),
             content: emailState.lastBotResponse,
             userName: "Veteran"
@@ -356,96 +500,4 @@ function App() {
         if (result?.success) {
           setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
         } else { throw new Error('Email send failed'); }
-      } catch (err) {
-        logToConsole("Email error", err);
-        setMessages(prev => [...prev, { text: "Unable to send email right now. Please try again later, or copy the response above to save it manually.", sender: "bot" }]);
       }
-      setEmailState({ waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null });
-      setIsLoading(false); return;
-    }
-    setIsLoading(true); logToConsole("Sending message", { message: userMessage, context: !!articleContext });
-    try {
-      let newsContext = "";
-      if (userMessage.toLowerCase().includes("news")) {
-        try {
-          const newsResponse = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/va-news");
-          const news = await newsResponse.json(); newsContext = news?.summary || ""; logToConsole("Added news context", { hasContext: !!newsContext });
-        } catch (err) { logToConsole("News context fetch failed", err); }
-      }
-      let faqData = {};
-      try { const faqResponse = await fetchWithRetry("https://jsonblob.com/api/jsonBlob/1393450047760424960"); faqData = await faqResponse.json(); }
-      catch (err) { logToConsole("FAQ data fetch failed", err); }
-      const systemPromptWithContext = systemPrompt + (newsContext ? "\n\nNews Context: " + newsContext : "") + (articleContext ? "\n\nArticle Context: " + articleContext : "");
-      const chatHistoryForAPI = [
-        { role: "user", parts: [{ text: systemPromptWithContext }] },
-        { role: "user", parts: [{ text: JSON.stringify(faqData) }] },
-        ...messages.map(m => ({ role: m.sender === "user" ? "user" : "model", parts: [{ text: m.text }] })),
-        { role: "user", parts: [{ text: userMessage }] }
-      ];
-      const chatResponse = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatHistory: chatHistoryForAPI })
-      });
-      if (!chatResponse.ok) throw new Error(`API responded with status: ${chatResponse.status}`);
-      const json = await chatResponse.json();
-      const botText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!botText || botText.length < 10) throw new Error('Invalid response from API');
-      logToConsole("Received response", { length: botText.length }); streamBotText(botText, userMessage);
-    } catch (err) {
-      logToConsole("Chat error", err);
-      const errorMessage = err.message.includes('network') || err.message.includes('fetch')
-        ? "I'm having trouble connecting right now. You can also call the VA directly at 1-800-827-1000 for immediate assistance."
-        : "I'm experiencing technical difficulties. Try again later or call VA at 1-800-827-1000.";
-      setMessages(prev => [...prev, { text: errorMessage, sender: "bot" }]);
-      setIsLoading(false); setStreaming(false);
-    }
-  }
-  function onSend() {
-    if (!input.trim() || isLoading || streaming) return;
-    const lower = input.toLowerCase();
-    if (lower === "yes" && emailState.lastBotResponse) {
-      setEmailState(prev => ({ ...prev, waitingForEmail: true }));
-      setMessages(prev => [...prev, { text: input, sender: "user" }, { text: "What's your email address?", sender: "bot" }]);
-      setInput(""); return;
-    }
-    if (lower === "no" && emailState.lastBotResponse) {
-      setEmailState({ waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null });
-      setMessages(prev => [...prev, { text: input, sender: "user" }, { text: "Okay, what else can I help with?", sender: "bot" }]);
-      setInput(""); return;
-    }
-    setMessages(prev => [...prev, { text: input, sender: "user" }]); sendMessageToGemini(input); setInput("");
-  }
-  function onQuickAsk(text) { setMessages(prev => [...prev, { text, sender: "user" }]); sendMessageToGemini(text); }
-  function handleNewsAsk(text) { onQuickAsk(text); }
-  function onClearChat() {
-    if (window.confirm("Are you sure you want to clear this conversation? This cannot be undone.")) {
-      setMessages([]); setInput(""); setEmailState({ waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null });
-      setIsLoading(false); setStreaming(false); logToConsole("Chat cleared by user");
-    }
-  }
-  return started ? (
-    <div className="flex h-screen">
-      <button onClick={() => setIsMobileNewsOpen(true)} className="mobile-news-toggle" aria-label="Open news panel">📰</button>
-      <div className={`news-overlay ${isMobileNewsOpen ? 'open' : ''}`} onClick={() => setIsMobileNewsOpen(false)}></div>
-      <NewsPanel onAsk={handleNewsAsk} isMobileOpen={isMobileNewsOpen} onMobileClose={() => setIsMobileNewsOpen(false)} />
-      <ChatbotPanel
-        messages={messages}
-        onSend={onSend}
-        input={input}
-        setInput={setInput}
-        streaming={streaming}
-        isLoading={isLoading}
-        emailState={emailState}
-        onQuickAsk={onQuickAsk}
-        textSize={textSize}
-        setTextSize={setTextSize}
-        onClearChat={onClearChat}
-      />
-    </div>
-  ) : (<Landing onTryNow={() => setStarted(true)} />);
-}
-ReactDOM.createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
-</script>
-</body>
-</html>
