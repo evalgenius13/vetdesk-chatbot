@@ -585,11 +585,14 @@ function App() {
 const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ userMessage: sanitized })
-});
+  body: JSON.stringify({
+  chatHistory: [
+    { role: "user", parts: [{ text: sanitized }] }
+  ]
+})
 
-        const data = await res.json();
-        const botReply = data.reply || "Sorry, I couldn't generate a response.";
+const data = await res.json();
+const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
 
         streamBotText(botReply, sanitized);
 
