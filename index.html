@@ -529,13 +529,16 @@ function App() {
   async function sendMessageToGemini(userMessage) {
   try {
     const sanitized = validateInput(userMessage);
-    
+
     if (!rateLimiter.isAllowed()) {
       const resetTime = Math.ceil(rateLimiter.getTimeUntilReset() / 1000);
-      setMessages(prev => [...prev, { 
-        text: `Please wait ${resetTime} seconds before sending another message.`, 
-        sender: "bot" 
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          text: `Please wait ${resetTime} seconds before sending another message.`,
+          sender: "bot"
+        }
+      ]);
       return;
     }
 
@@ -546,15 +549,16 @@ function App() {
         logToConsole("Sending email", { email: validatedEmail });
 
         const res = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    email: validatedEmail,
-    subject: extractTopicFromQuestion(emailState.lastUserQuestion),
-    content: emailState.lastBotResponse,
-    userName: "Veteran"
-  })
-});
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: validatedEmail,
+            subject: extractTopicFromQuestion(emailState.lastUserQuestion),
+            content: emailState.lastBotResponse,
+            userName: "Veteran"
+          })
+        });
+
         const result = await res.json();
 
         if (result?.success) {
@@ -581,18 +585,18 @@ function App() {
       setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
 
       try {
+        const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatHistory: [
+              { role: "user", parts: [{ text: sanitized }] }
+            ]
+          })
+        });
 
-const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-  chatHistory: [
-    { role: "user", parts: [{ text: sanitized }] }
-  ]
-})
-
-const data = await res.json();
-const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+        const data = await res.json();
+        const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
 
         streamBotText(botReply, sanitized);
 
@@ -618,6 +622,8 @@ const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I c
       text: "Please check your message and try again.", 
       sender: "bot" 
     }]);
+  } finally {
+    setIsLoading(false);
   }
 }
 
