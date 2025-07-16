@@ -37,12 +37,11 @@
     @keyframes typing { 0%,80%,100% { transform: scale(0.8); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
     @media (max-width: 768px) {
       .message-bubble { max-width: 90%; }
-      .news-panel { position: fixed; top: 0; left: 0; height: 100vh; width: 300px; z-index: 1000; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 2px 0 5px rgba(0,0,0,0.1);}
+      .news-panel { position: fixed; top: 0; left: 0; height: 100vh; width: 300px; z-index: 30; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 2px 0 5px rgba(0,0,0,0.1);}
       .news-panel.open { transform: translateX(0);}
-      .news-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;}
+      .news-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 20; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;}
       .news-overlay.open { opacity: 1; visibility: visible;}
-      .mobile-news-toggle { position: fixed; top: 20px; left: 20px; z-index: 1001; background: white; border: 1px solid #e5e7eb; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
-      .quick-actions { flex-direction: column; gap: 8px;}
+      .mobile-news-toggle { position: fixed; top: 20px; left: 20px; z-index: 40; background: white; border: 1px solid #e5e7eb; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}      .quick-actions { flex-direction: column; gap: 8px;}
       .quick-actions button { width: 100%; }
     }
     @media (min-width: 769px) {
@@ -269,10 +268,6 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
   );
 }
 
-
-
-
-
 function ChatbotPanel({
   messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat
 }) {
@@ -299,57 +294,40 @@ function ChatbotPanel({
   React.useEffect(() => { if (!isLoading && !streaming) setLoadingAction(null); }, [isLoading, streaming]);
 
   function handleSend() {
-    try {
-      const now = Date.now();
-      if (now - lastSent < 1000) return;
+  const now = Date.now();
+  if (now - lastSent < 1000) return;
 
-      const trimmed = input.trim();
-      if (!trimmed) return;
+  const trimmed = input.trim();
+  if (!trimmed) return;
 
-      // Check rate limit
-      if (!rateLimiter.isAllowed()) {
-        const resetTime = Math.ceil(rateLimiter.getTimeUntilReset() / 1000);
-        setInputError(`Please wait ${resetTime} seconds before sending another message.`);
-        return;
-      }
+  setLastSent(now);
+  setInputError('');
 
-      // Validate and sanitize input
-      const sanitized = validateInput(trimmed);
-      
-      setLastSent(now);
-      setInputError('');
+  onSend(trimmed);  // App will handle all validation
+  setInput("");
+}
 
-      // Check if it's a URL
-      if (validateURL(sanitized)) {
-        onQuickAsk(`How does this article affect veterans: ${sanitized}`);
-      } else {
-        onSend(sanitized);
-      }
-      setInput("");
+const handleQuickAsk = (action, idx) => {
+  setLoadingAction(idx);
+  onQuickAsk(action.text);
+};
 
-    } catch (error) {
-      setInputError(error.message);
-      logToConsole("Input validation failed", error.message);
-    }
-  }
-
-  const handleQuickAsk = (action, idx) => { setLoadingAction(idx); onQuickAsk(action.text); };
-
-  return (
-    <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
-      <div className="border-b border-slate-200 bg-white px-4 py-2">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <button onClick={() => setTextSize('normal')}
-              className={`text-xs px-2 py-1 rounded ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Normal Text</button>
-            <button onClick={() => setTextSize('large')}
-              className={`text-xs px-2 py-1 rounded ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Large Text</button>
-          </div>
-          {messages.length > 0 && (
-            <button onClick={onClearChat} className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded">Clear Chat</button>
-          )}
+return (
+  <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
+    <div className="border-b border-slate-200 bg-white px-4 py-2">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2">
+          <button onClick={() => setTextSize('normal')}
+            className={`text-xs px-2 py-1 rounded ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            Normal Text
+          </button>
+          <button onClick={() => setTextSize('large')}
+            className={`text-xs px-2 py-1 rounded ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            Large Text
+          </button>
         </div>
       </div>
+    </div>
 
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="quick-actions flex flex-wrap justify-center gap-2">
@@ -513,9 +491,21 @@ function App() {
   }
 
   async function sendMessageToGemini(userMessage) {
+  try {
+    const sanitized = validateInput(userMessage);
+    
+    if (!rateLimiter.isAllowed()) {
+      const resetTime = Math.ceil(rateLimiter.getTimeUntilReset() / 1000);
+      setMessages(prev => [...prev, { 
+        text: `Please wait ${resetTime} seconds before sending another message.`, 
+        sender: "bot" 
+      }]);
+      return;
+    }
+
     if (emailState.waitingForEmail) {
       try {
-        const validatedEmail = validateEmail(userMessage);
+        const validatedEmail = validateEmail(sanitized);
         setIsLoading(true);
         logToConsole("Sending email", { email: validatedEmail });
 
@@ -533,22 +523,16 @@ function App() {
         const result = await res.json();
 
         if (result?.success) {
-          setMessages(prev => [
-            ...prev,
-            { text: "✅ Summary sent to your email.", sender: "bot" }
-          ]);
+          setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
         } else {
           throw new Error("Email send failed");
         }
       } catch (error) {
         logToConsole("Email error", error.message);
-        setMessages(prev => [
-          ...prev,
-          {
-            text: "❌ Failed to send email. Please check your address and try again.",
-            sender: "bot"
-          }
-        ]);
+        setMessages(prev => [...prev, {
+          text: "❌ Failed to send email. Please check your address and try again.",
+          sender: "bot"
+        }]);
       } finally {
         setIsLoading(false);
         setEmailState({
@@ -557,96 +541,78 @@ function App() {
           lastUserQuestion: null
         });
       }
-
     } else {
       setIsLoading(true);
-      setMessages(prev => [...prev, { text: userMessage, sender: "user" }]);
+      setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
 
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userMessage })
+          body: JSON.stringify({ userMessage: sanitized })
         });
 
         const data = await res.json();
         const botReply = data.reply || "Sorry, I couldn't generate a response.";
 
-        streamBotText(botReply, userMessage);
+        streamBotText(botReply, sanitized);
 
         if (shouldOfferEmail(botReply)) {
           setEmailState({
             waitingForEmail: true,
             lastBotResponse: botReply,
-            lastUserQuestion: userMessage
+            lastUserQuestion: sanitized
           });
         }
       } catch (error) {
         console.error("Chat error:", error);
-        setMessages(prev => [
-          ...prev,
-          {
-            text: "❌ There was a problem getting your answer. Please try again.",
-            sender: "bot"
-          }
-        ]);
+        setMessages(prev => [...prev, {
+          text: "❌ There was a problem getting your answer. Please try again.",
+          sender: "bot"
+        }]);
         setIsLoading(false);
         setStreaming(false);
       }
     }
+  } catch (error) {
+    setMessages(prev => [...prev, { 
+      text: "Please check your message and try again.", 
+      sender: "bot" 
+    }]);
   }
+}
 
-  const handleQuickAsk = (q) => {
-    setMessages((prev) => [...prev, { text: q, sender: "user" }]);
-    sendMessageToGemini(q);
-  };
+const handleQuickAsk = (q) => {
+  setMessages((prev) => [...prev, { text: q, sender: "user" }]);
+  sendMessageToGemini(q);
+};
 
-  const handleClearChat = () => {
-    setMessages([]);
-    setEmailState({
-      waitingForEmail: false,
-      lastBotResponse: null,
-      lastUserQuestion: null
-    });
-  };
+const handleClearChat = () => {
+  setMessages([]);
+  setEmailState({
+    waitingForEmail: false,
+    lastBotResponse: null,
+    lastUserQuestion: null
+  });
+};
 
-  return (
-    !started ? (
-      <Landing onTryNow={() => {
-        setStarted(true);
-        setIsNewsPanelOpen(true);
-      }} />
+return (
+  <div className="flex flex-col h-screen w-full overflow-hidden">
+    {!started ? (
+      <div className="flex-1 overflow-auto">
+        <Landing onTryNow={() => setStarted(true)} />
+      </div>
     ) : (
-      <div className="flex h-full">
-        {isNewsPanelOpen && (
-          <div className="w-[320px] bg-white border-r border-gray-200 relative z-10">
-            <NewsPanel
-  isMobileOpen={false}
-  onMobileClose={() => {}}
-  onAsk={(msg) => {
-    setMessages(prev => [...prev, { text: msg, sender: "user" }]);
-    sendMessageToGemini(msg);
-  }}
-/>
-            <button
-              className="absolute top-4 right-1 text-blue-600 text-xs px-2 py-1 hover:underline"
-              onClick={() => setIsNewsPanelOpen(false)}
-            >
-              ← Hide
-            </button>
-          </div>
-        )}
-
-        {!isNewsPanelOpen && (
-          <button
-            className="absolute top-[100px] left-0 bg-blue-700 text-white text-xs px-2 py-3 rounded-r-md z-20 shadow hover:bg-blue-800 transition"
-            onClick={() => setIsNewsPanelOpen(true)}
-          >
-            📰 Show News
-          </button>
-        )}
-
-        <div className={`flex-1 transition-all duration-300 ${isNewsPanelOpen ? 'ml-0' : ''}`}>
+      <div className="flex h-full flex-1">
+        <NewsPanel
+          isMobileOpen={false}
+          onMobileClose={() => {}}
+          onAsk={(msg) => {
+            setMessages(prev => [...prev, { text: msg, sender: "user" }]);
+            sendMessageToGemini(msg);
+          }}
+        />
+        <div className="flex-1 overflow-hidden">
           <ChatbotPanel
             messages={messages}
             input={input}
@@ -662,10 +628,12 @@ function App() {
           />
         </div>
       </div>
-    )
-  );
-    }
+    )}
+  </div>
+);
+
+}
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
-  </body>
+</body>
 </html>
