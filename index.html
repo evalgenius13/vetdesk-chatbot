@@ -545,17 +545,16 @@ function App() {
         setIsLoading(true);
         logToConsole("Sending email", { email: validatedEmail });
 
-        const res = await fetchWithRetry("/api/send-summary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: validatedEmail,
-            subject: extractTopicFromQuestion(emailState.lastUserQuestion),
-            content: emailState.lastBotResponse,
-            userName: "Veteran"
-          })
-        });
-
+        const res = await fetchWithRetry("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: validatedEmail,
+    subject: extractTopicFromQuestion(emailState.lastUserQuestion),
+    content: emailState.lastBotResponse,
+    userName: "Veteran"
+  })
+});
         const result = await res.json();
 
         if (result?.success) {
@@ -582,11 +581,12 @@ function App() {
       setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
 
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userMessage: sanitized })
-        });
+
+const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ userMessage: sanitized })
+});
 
         const data = await res.json();
         const botReply = data.reply || "Sorry, I couldn't generate a response.";
