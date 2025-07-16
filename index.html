@@ -322,7 +322,7 @@ function ChatbotPanel({
     { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
   ];
 
-  const chatStarted = true;
+  const chatStarted = messages.length > 0;
   const charCount = input.length;
   const maxChars = 500;
 
