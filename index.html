@@ -168,9 +168,19 @@ function NewsPanel({ onAsk, isMobileOpen, onMobileClose }) {
     </aside>
   );
 }
-// Main Chatbot Panel – accepts URLs and questions in the same input
+// ChatbotPanel: Branch selection, avatar personalization, and URL handling built in
 function ChatbotPanel({
-  messages, input, setInput, onSend, streaming, isLoading, emailState, onQuickAsk, textSize, setTextSize, onClearChat
+  messages,
+  input,
+  setInput,
+  onSend,
+  streaming,
+  isLoading,
+  emailState,
+  onQuickAsk,
+  textSize,
+  setTextSize,
+  onClearChat
 }) {
   const textareaRef = React.useRef(null);
   const messagesEndRef = React.useRef(null);
@@ -178,6 +188,22 @@ function ChatbotPanel({
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
   const [currentTopicActions, setCurrentTopicActions] = React.useState(null);
+
+  // ======= Branch Selector =======
+  const [selectedBranch, setSelectedBranch] = React.useState(
+    sessionStorage.getItem('vetBranch') || ''
+  );
+
+  const branchAvatars = {
+    'Army': '/army.png',
+    'Navy': '/navy.png',
+    'Air Force': '/airforce.png',
+    'Marines': '/marines.png',
+    'Coast Guard': '/coastguard.png',
+    'Space Force': '/spaceforce.png',
+    'National Guard': '/nationalguard.png'
+  };
+
   const quickActions = [
     { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
     { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
@@ -185,17 +211,34 @@ function ChatbotPanel({
     { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
     { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
   ];
+
   const chatStarted = messages.length > 0 || input.trim() !== "" || isLoading || streaming;
   const charCount = input.length;
   const maxChars = 500;
-  React.useEffect(() => { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages, streaming]);
-  React.useEffect(() => { if (!isLoading && !streaming) setLoadingAction(null); }, [isLoading, streaming]);
+
+  React.useEffect(() => {
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streaming]);
+
+  React.useEffect(() => {
+    if (!isLoading && !streaming) setLoadingAction(null);
+  }, [isLoading, streaming]);
+
+  // Save branch selection to session storage
+  const handleBranchChange = (e) => {
+    const branch = e.target.value;
+    setSelectedBranch(branch);
+    sessionStorage.setItem('vetBranch', branch);
+  };
+
   function handleSend() {
     const now = Date.now();
     if (now - lastSent < 1000) return;
     const trimmed = input.trim();
     if (!trimmed) return;
     setLastSent(now);
+
+    // Detect if input is a valid URL (http/https)
     const isValidUrl = /^https?:\/\/[^\s$.?#].[^\s]*$/.test(trimmed);
     if (isValidUrl) {
       onQuickAsk(`How does this article affect veterans: ${trimmed}`);
@@ -204,92 +247,217 @@ function ChatbotPanel({
     }
     setInput("");
   }
-  const handleQuickAsk = (action, idx) => { setLoadingAction(idx); onQuickAsk(action.text); };
+
+  const handleQuickAsk = (action, idx) => {
+    setLoadingAction(idx);
+    onQuickAsk(action.text);
+  };
+
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
+      {/* ====== Branch Selector Dropdown Bar ====== */}
+      <div className="px-4 py-2 border-b bg-white flex items-center gap-4">
+        <label className="text-sm font-semibold text-slate-600" htmlFor="branch-select">
+          Branch:
+        </label>
+        <select
+          id="branch-select"
+          value={selectedBranch}
+          onChange={handleBranchChange}
+          className="text-sm px-3 py-1 border rounded-md"
+        >
+          <option value="">Select Branch</option>
+          {Object.keys(branchAvatars).map((branch) => (
+            <option key={branch} value={branch}>{branch}</option>
+          ))}
+        </select>
+        {selectedBranch && branchAvatars[selectedBranch] && (
+          <img
+            src={branchAvatars[selectedBranch]}
+            alt={selectedBranch}
+            className="w-7 h-7 rounded-full border ml-2"
+            title={selectedBranch}
+            style={{ objectFit: "cover" }}
+          />
+        )}
+      </div>
+
+      {/* Text Size and Clear Buttons */}
       <div className="border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <button onClick={() => setTextSize('normal')}
-              className={`text-xs px-2 py-1 rounded ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Normal Text</button>
-            <button onClick={() => setTextSize('large')}
-              className={`text-xs px-2 py-1 rounded ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Large Text</button>
+            <button
+              onClick={() => setTextSize('normal')}
+              className={`text-xs px-2 py-1 rounded ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Normal Text
+            </button>
+            <button
+              onClick={() => setTextSize('large')}
+              className={`text-xs px-2 py-1 rounded ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              Large Text
+            </button>
           </div>
           {messages.length > 0 && (
-            <button onClick={onClearChat} className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded">Clear Chat</button>
+            <button
+              onClick={onClearChat}
+              className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded"
+            >
+              Clear Chat
+            </button>
           )}
         </div>
       </div>
+
+      {/* Quick Actions */}
       <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
         <div className="quick-actions flex flex-wrap justify-center gap-2">
           {showQuickActions && quickActions.map((action, idx) => (
-            <button key={idx} onClick={() => handleQuickAsk(action, idx)} disabled={isLoading || streaming || loadingAction === idx}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition ${loadingAction === idx ? 'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>{loadingAction === idx ? 'Loading...' : action.label}</button>
+            <button
+              key={idx}
+              onClick={() => handleQuickAsk(action, idx)}
+              disabled={isLoading || streaming || loadingAction === idx}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                loadingAction === idx ? 'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              }`}
+            >
+              {loadingAction === idx ? 'Loading...' : action.label}
+            </button>
           ))}
-          <button onClick={() => setShowQuickActions(!showQuickActions)} title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
-            className="p-1 text-blue-800 hover:text-blue-900">{showQuickActions ? '⬆️' : '⬇️'}</button>
+          <button
+            onClick={() => setShowQuickActions(!showQuickActions)}
+            title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
+            className="p-1 text-blue-800 hover:text-blue-900"
+          >
+            {showQuickActions ? '⬆️' : '⬇️'}
+          </button>
         </div>
       </div>
+
+      {/* Tip */}
       {messages.length > 0 && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
-          <p className="text-yellow-800">💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or use the email feature to save important answers.</p>
+          <p className="text-yellow-800">
+            💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or use the email feature to save important answers.
+          </p>
         </div>
       )}
+
+      {/* Welcome message */}
       {!chatStarted && !emailState?.waitingForEmail && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center px-6 max-w-2xl">
             <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
-            <p className="text-lg text-gray-600 mb-2">Get clear, plain-English answers about your VA benefits and what's changing.</p>
-            <p className="text-sm text-gray-500 italic">This conversation isn't saved. Don't refresh or close the page unless you're done.</p>
+            <p className="text-lg text-gray-600 mb-2">
+              Get clear, plain-English answers about your VA benefits and what's changing.
+            </p>
+            <p className="text-sm text-gray-500 italic">
+              This conversation isn't saved. Don't refresh or close the page unless you're done.
+            </p>
           </div>
         </div>
       )}
+
+      {/* Chat Messages */}
       <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.sender}`}>
             {msg.sender === "bot" && <div className="avatar bot">VD</div>}
-            <div className={`message-bubble ${msg.sender}`}><div className={`message-content ${msg.sender}`}>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-            </div></div>
-            {msg.sender === "user" && <div className="avatar user">U</div>}
+            {msg.sender === "user" && (
+              <div className="avatar user">
+                {selectedBranch && branchAvatars[selectedBranch] ? (
+                  <img
+                    src={branchAvatars[selectedBranch]}
+                    alt={selectedBranch}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  'U'
+                )}
+              </div>
+            )}
+            <div className={`message-bubble ${msg.sender}`}>
+              <div className={`message-content ${msg.sender}`}>
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+              </div>
+            </div>
           </div>
         ))}
         {(isLoading || streaming) && (
           <div className="message-row bot typing-indicator-row">
             <div className="avatar bot">VD</div>
-            <div className="message-bubble bot"><div className="message-content bot">
-              <div className="typing-dots"><div className="typing-dot"></div><div className="typing-dot"></div><div className="typing-dot"></div></div>
-            </div></div>
+            <div className="message-bubble bot">
+              <div className="message-content bot">
+                <div className="typing-dots">
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         <div ref={messagesEndRef}></div>
       </div>
+
+      {/* Email Prompt */}
       {emailState?.waitingForEmail && (
         <div className="p-4 bg-yellow-50 text-yellow-800 text-sm border-t border-b border-yellow-200">
           <span>Want this answer emailed? Enter your email and press Send.</span>
         </div>
       )}
+
+      {/* Chat input */}
       <div className="border-t p-4 bg-white">
         {charCount > maxChars * 0.8 && (
-          <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>{charCount}/{maxChars} characters</div>
+          <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>
+            {charCount}/{maxChars} characters
+          </div>
         )}
         <div className="flex gap-2">
-          <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} rows="2" maxLength={maxChars}
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            rows="2"
+            maxLength={maxChars}
             className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder={emailState.waitingForEmail?"Enter your email address…":"Ask about VA benefits or paste a news/article link (https://...)"}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } if (e.key === 'Escape') setInput(''); }}
+            placeholder={
+              emailState.waitingForEmail
+                ? "Enter your email address…"
+                : "Ask about VA benefits or paste a news/article link (https://...)"
+            }
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+              if (e.key === 'Escape') setInput('');
+            }}
             disabled={isLoading || streaming}
           />
-          <button onClick={handleSend} disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
-            className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition">Send</button>
-          <button onClick={() => onQuickAsk("Please email me the last response")}
-            disabled={messages.length === 0 || messages[messages.length - 1].sender !== 'bot' || isLoading || streaming}
-            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm">Email Summary</button>
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
+            className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"
+          >Send</button>
+          <button
+            onClick={() => onQuickAsk("Please email me the last response")}
+            disabled={
+              messages.length === 0 ||
+              messages[messages.length - 1].sender !== 'bot' ||
+              isLoading ||
+              streaming
+            }
+            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm"
+          >Email Summary</button>
         </div>
       </div>
     </main>
   );
 }
+
 function App() {
   const [started, setStarted] = React.useState(false);
   const [messages, setMessages] = React.useState([]);
