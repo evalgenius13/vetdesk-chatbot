@@ -77,81 +77,6 @@ const branchAvatars = {
   "Space Force": "/spaceforce.png",
   "National Guard": "/nationalguard.png"
 };
-function NewsPanel({ articles, loading, error, newsVisible, setNewsVisible, onAsk, isMobileOpen, onMobileClose }) {
-  return (
-    <aside className={`news-panel w-full md:w-[400px] border-r border-slate-200 bg-white h-full overflow-y-auto p-4 ${isMobileOpen ? 'open' : ''}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-slate-800">Veterans News</h2>
-        <div className="flex gap-2 items-center">
-          <button
-            onClick={() => setNewsVisible(v => !v)}
-            className="text-sm text-blue-600 hover:text-blue-800 transition"
-            title={newsVisible ? "Hide News Feed" : "Show News Feed"}
-            aria-label={newsVisible ? "Hide News Feed" : "Show News Feed"}
-          >
-            {newsVisible ? '✖ Hide' : '📋 Show News'}
-          </button>
-          {isMobileOpen && (
-            <button
-              onClick={onMobileClose}
-              className="text-slate-500 hover:text-slate-700 md:hidden"
-              aria-label="Close news panel"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-      {newsVisible ? (
-        error ? (
-          <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
-            {error}
-          </div>
-        ) : loading ? (
-          <div className="space-y-6">
-            {[...Array(3)].map((_, idx) => (
-              <div key={idx} className="animate-pulse">
-                <div className="h-36 bg-gray-300 rounded mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded mb-1"></div>
-                <div className="h-3 bg-gray-300 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        ) : articles.length ? (
-          articles.map((article, idx) => (
-            <div key={idx} className="mb-6 pb-4 border-b last:border-none">
-              {article.image && (
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  loading="lazy"
-                  className="mb-2 w-full h-36 object-cover rounded"
-                  onError={e => { e.target.style.display = 'none'; e.target.removeAttribute('src'); e.target.alt = ''; }}
-                />
-              )}
-              <h3 className="text-base font-semibold text-slate-900 mb-1">{article.title}</h3>
-              <p className="text-xs text-slate-500">{new Date(article.pubDate).toLocaleDateString()} • {article.source}</p>
-              <button
-                onClick={() => { onAsk(`How does this news affect my benefits: "${article.title}"`); onMobileClose(); }}
-                className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md transition"
-              >How does this affect me?
-              </button>
-            </div>
-          ))
-        ) : (
-          <div className="text-slate-400 text-sm text-center py-8">
-            <p>No news articles available.</p>
-          </div>
-        )
-      ) : (
-        <div className="text-center text-gray-400 pt-8">News feed hidden. Click "📋 Show News" to display.</div>
-      )}
-    </aside>
-  );
-}
 function ChatbotPanel({
   messages,
   input,
@@ -182,12 +107,8 @@ function ChatbotPanel({
   const chatStarted = messages.length > 0 || input.trim() !== '' || isLoading || streaming;
   const charCount = input.length;
   const maxChars = 500;
-  React.useEffect(() => {
-    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streaming]);
-  React.useEffect(() => {
-    if (!isLoading && !streaming) setLoadingAction(null);
-  }, [isLoading, streaming]);
+  React.useEffect(() => { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [messages, streaming]);
+  React.useEffect(() => { if (!isLoading && !streaming) setLoadingAction(null); }, [isLoading, streaming]);
   function handleBranchChange(e) {
     const branch = e.target.value;
     setSelectedBranch(branch);
@@ -416,26 +337,18 @@ function App() {
   const [emailState, setEmailState] = React.useState({
     waitingForEmail: false, lastBotResponse: null, lastUserQuestion: null
   });
-  const [articles, setArticles] = React.useState([]);
-  const [loadingNews, setLoadingNews] = React.useState(true);
-  const [newsError, setNewsError] = React.useState(null);
 
-  // Example placeholder async news fetch (replace with your own logic or API)
-  React.useEffect(() => {
-    setLoadingNews(true);
-    setTimeout(() => {
-      setArticles([
-        { title: 'VA aims to streamline health benefits', image: '', pubDate: new Date(), source: 'VA.gov' },
-        { title: 'New PTSD tools for rural veterans', image: '', pubDate: new Date(), source: 'Stars & Stripes' }
-      ]);
-      setLoadingNews(false);
-      setNewsError(null);
-    }, 800);
-  }, []);
+  // For demonstration, the news feed and API can be customized; see your original implementation for actual fetching
+  const articles = [
+    { title: 'VA aims to streamline health benefits', image: '', pubDate: new Date(), source: 'VA.gov' },
+    { title: 'New PTSD tools for rural veterans', image: '', pubDate: new Date(), source: 'Stars & Stripes' },
+    // Add more demo articles if needed
+  ];
+  const loadingNews = false;
+  const newsError = null;
 
   function onQuickAsk(text) {
     setMessages(prev => [...prev, { text, sender: "user" }]);
-    // Replace with actual bot logic
     setTimeout(() => setMessages(prev => [...prev, { text: "This is a sample chatbot answer.", sender: "bot" }]), 800);
   }
   function onSend() {
@@ -452,18 +365,7 @@ function App() {
   }
   return started ? (
     <div className="flex h-screen">
-      <button onClick={() => setIsMobileNewsOpen(true)} className="mobile-news-toggle" aria-label="Open news panel">📰</button>
-      <div className={`news-overlay ${isMobileNewsOpen ? 'open' : ''}`} onClick={() => setIsMobileNewsOpen(false)}></div>
-      <NewsPanel
-        articles={articles}
-        loading={loadingNews}
-        error={newsError}
-        newsVisible={newsVisible}
-        setNewsVisible={setNewsVisible}
-        onAsk={onQuickAsk}
-        isMobileOpen={isMobileNewsOpen}
-        onMobileClose={() => setIsMobileNewsOpen(false)}
-      />
+      {/* Optionally include your news panel here, or remove/hide as you wish */}
       <ChatbotPanel
         messages={messages}
         onSend={onSend}
