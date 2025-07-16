@@ -500,4 +500,99 @@ function App() {
         if (result?.success) {
           setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
         } else { throw new Error('Email send failed'); }
+      } catch (error) {
+        logToConsole("Email error", error.message);
+        setMessages(prev => [...prev, {
+          text: "❌ Failed to send email. Please check your address and try again.",
+          sender: "bot"
+        }]);
+      } finally {
+        setIsLoading(false);
+        setEmailState({
+          waitingForEmail: false,
+          lastBotResponse: null,
+          lastUserQuestion: null
+        });
       }
+    } else {
+      // Standard question, send to Gemini or your model
+      setIsLoading(true);
+      setMessages(prev => [...prev, { text: userMessage, sender: "user" }]);
+
+      // 👉👉 Replace this with your real model API logic as needed
+      const fakeBotReply = `Thanks for your question. Here's info about: "${userMessage}"`;
+
+      // Simulate typing delay / streaming
+      setTimeout(() => {
+        setMessages(prev => [...prev, { text: fakeBotReply, sender: "bot" }]);
+        if (shouldOfferEmail(fakeBotReply)) {
+          setEmailState({
+            waitingForEmail: true,
+            lastBotResponse: fakeBotReply,
+            lastUserQuestion: userMessage
+          });
+        }
+        setIsLoading(false);
+      }, 1000);
+    }
+  }
+
+  const handleQuickAsk = (q) => {
+    setMessages(prev => [...prev, { text: q, sender: 'user' }]);
+    sendMessageToGemini(q);
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
+    setEmailState({
+      waitingForEmail: false,
+      lastBotResponse: null,
+      lastUserQuestion: null
+    });
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row h-full">
+      <button className="mobile-news-toggle md:hidden" onClick={() => setIsMobileNewsOpen(true)} aria-label="Open news panel">📰</button>
+      <div className={`news-overlay ${isMobileNewsOpen ? 'open' : ''}`} onClick={() => setIsMobileNewsOpen(false)}></div>
+
+      <NewsPanel
+        isMobileOpen={isMobileNewsOpen}
+        onMobileClose={() => setIsMobileNewsOpen(false)}
+        onAsk={(msg) => {
+          setStarted(true);
+          setMessages(prev => [...prev, { text: msg, sender: "user" }]);
+          sendMessageToGemini(msg);
+        }}
+      />
+
+      <div className="flex-1 flex flex-col">
+        {!started ? (
+          <Landing onTryNow={() => setStarted(true)} />
+        ) : (
+          <ChatbotPanel
+            messages={messages}
+            input={input}
+            setInput={setInput}
+            onSend={msg => sendMessageToGemini(msg)}
+            streaming={streaming}
+            isLoading={isLoading}
+            emailState={emailState}
+            onQuickAsk={handleQuickAsk}
+            textSize={textSize}
+            setTextSize={setTextSize}
+            onClearChat={handleClearChat}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 👇 FINAL STEP: Render your App into the div#root
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
+
+      
