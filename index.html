@@ -648,10 +648,7 @@ return (
         <NewsPanel
           isMobileOpen={false}
           onMobileClose={() => {}}
-          onAsk={(msg) => {
-            setMessages(prev => [...prev, { text: msg, sender: "user" }]);
-            sendMessageToGemini(msg);
-          }}
+          onAsk={handleQuickAsk}
         />
         <div className="flex-1 overflow-hidden">
           <ChatbotPanel
