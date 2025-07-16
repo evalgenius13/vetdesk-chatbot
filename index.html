@@ -642,8 +642,8 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="border-t p-4 bg-white">
+{/* Input Area - CORRECTED STRUCTURE */}
+<div className="border-t p-4 bg-white">
         {charCount > maxChars * 0.8 && charCount <= maxChars && (
           <div className="text-xs text-gray-500 mb-2 text-right">
             {charCount}/{maxChars} characters
@@ -654,31 +654,31 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
             {charCount}/{maxChars} characters - Message too long!
           </div>
         )}
-        )}
 
-{/* URL Analysis Section */}
-<div className="border-b border-slate-200 bg-slate-50 px-4 py-3 mb-2">
-  <div className="flex gap-2 items-center">
-    <div className="flex-1">
-      <input
-        type="url"
-        placeholder="Paste a news article or VA announcement URL to analyze how it affects veterans..."
-        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={urlToAnalyze}
-        onChange={(e) => setUrlToAnalyze(e.target.value)}
-      />
-    </div>
-    <button
-      onClick={handleAnalyzeUrl}
-      disabled={!urlToAnalyze.trim() || isLoading}
-      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold transition"
-    >
-      Analyze Impact
-    </button>
-  </div>
-</div>
+        {/* URL Analysis Section - Correctly placed */}
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 mb-2">
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
+              <input
+                type="url"
+                placeholder="Paste a news article or VA announcement URL to analyze how it affects veterans..."
+                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={urlToAnalyze}
+                onChange={(e) => setUrlToAnalyze(e.target.value)}
+                disabled={isLoading || streaming} {/* ADDED: Disable input during loading/streaming */}
+              />
+            </div>
+            <button
+              onClick={handleAnalyzeUrl}
+              disabled={!urlToAnalyze.trim() || isLoading || streaming} {/* ADDED: Disable if streaming also */}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold transition"
+            >
+              Analyze Impact
+            </button>
+          </div>
+        </div>
 
-<div className="flex gap-2">
+        {/* Main Textarea and Send Buttons - Single flex container */}
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
@@ -690,7 +690,7 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
             placeholder={
               emailState.waitingForEmail
                 ? "Enter your email address…"
-                : "Type your message here..."
+                : "Ask a question about your VA benefits… (Press Enter to send, Shift+Enter for new line)" /* Changed placeholder back to original per previous discussions */
             }
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -706,19 +706,20 @@ Use clear headers and explain the real-world impact on veteran benefits and serv
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
-            className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"          >
+            className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"
+          >
             Send
           </button>
           <button
-    onClick={() => onQuickAsk("Please email me the last response")}
-    disabled={messages.length === 0 || !messages[messages.length - 1] || messages[messages.length - 1].sender !== 'bot'}
-    className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
-    >
-    Email Summary
-  </button>
-</div>
-</div>
-</main>
+            onClick={() => onQuickAsk("Please email me the last response")}
+            disabled={messages.length === 0 || !messages[messages.length - 1] || messages[messages.length - 1].sender !== 'bot' || isLoading || streaming} /* ADDED: Disable if loading/streaming */
+            className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm transition"
+          >
+            Email Summary
+          </button>
+        </div>
+      </div> {/* <--- THIS IS THE CORRECT CLOSING DIV FOR THE MAIN INPUT AREA */}
+    </main>
   );
 }
 
