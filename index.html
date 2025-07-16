@@ -187,7 +187,7 @@ function ChatbotPanel({
   const [loadingAction, setLoadingAction] = React.useState(null);
   const [lastSent, setLastSent] = React.useState(0);
 
-  // Veteran branch avatar state
+  // Branch selector + avatars
   const [selectedBranch, setSelectedBranch] = React.useState(
     sessionStorage.getItem('vetBranch') || ''
   );
@@ -203,26 +203,11 @@ function ChatbotPanel({
   };
 
   const quickActions = [
-    {
-      text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?",
-      label: "Disability Ratings"
-    },
-    {
-      text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?",
-      label: "Appeals Process"
-    },
-    {
-      text: "How do VA healthcare priority groups work, and how do I access care? When can I use non-VA providers?",
-      label: "Healthcare Enrollment"
-    },
-    {
-      text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?",
-      label: "Eligibility"
-    },
-    {
-      text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?",
-      label: "Forms & Online Tools"
-    }
+    { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
+    { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
+    { text: "How do VA healthcare priority groups work, and how do I access care? When can I use non-VA providers?", label: "Healthcare Enrollment" },
+    { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
+    { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
   ];
 
   const chatStarted = messages.length > 0 || input.trim() !== '' || isLoading || streaming;
@@ -248,19 +233,15 @@ function ChatbotPanel({
   function handleSend() {
     const now = Date.now();
     if (now - lastSent < 1000) return;
-
     const trimmed = input.trim();
     if (!trimmed) return;
-
     setLastSent(now);
-
     const isValidUrl = /^https?:\/\/[^\s$.?#].[^\s]*$/.test(trimmed);
     if (isValidUrl) {
       onQuickAsk(`How does this article affect veterans: ${trimmed}`);
     } else {
       onSend();
     }
-
     setInput('');
   }
 
@@ -271,7 +252,8 @@ function ChatbotPanel({
 
   return (
     <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
-      {/* Text size and clear chat */}
+
+      {/* Text Size and Clear Chat */}
       <div className="border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
@@ -282,9 +264,7 @@ function ChatbotPanel({
                   ? 'bg-blue-800 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-            >
-              Normal Text
-            </button>
+            >Normal Text</button>
             <button
               onClick={() => setTextSize('large')}
               className={`text-xs px-2 py-1 rounded transition ${
@@ -292,26 +272,20 @@ function ChatbotPanel({
                   ? 'bg-blue-800 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-            >
-              Large Text
-            </button>
+            >Large Text</button>
           </div>
           {messages.length > 0 && (
             <button
               onClick={onClearChat}
               className="text-xs px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded transition"
-            >
-              Clear Chat
-            </button>
+            >Clear Chat</button>
           )}
         </div>
       </div>
 
-      {/* Quick Actions Bar with Minimalist Arrow & Branch Selector */}
-      <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2 flex flex-wrap items-center justify-between gap-3 relative">
-
-        {/* Quick Actions Left */}
-        <div className="quick-actions flex flex-wrap gap-2 items-center">
+      {/* Quick Actions Bar: flex-1 on buttons+arrow, branch all the way right */}
+      <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2 flex items-center justify-between gap-3 relative">
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           {showQuickActions && quickActions.map((action, idx) => (
             <button
               key={idx}
@@ -326,8 +300,6 @@ function ChatbotPanel({
               {loadingAction === idx ? 'Loading...' : action.label}
             </button>
           ))}
-
-          {/* Minimal Arrow Toggle */}
           <button
             onClick={() => setShowQuickActions(!showQuickActions)}
             className="p-1 text-blue-800 hover:text-blue-900 transition"
@@ -345,10 +317,8 @@ function ChatbotPanel({
             )}
           </button>
         </div>
-
-        {/* Branch Selector (minimized with Quick Actions) */}
         {showQuickActions && (
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-4">
             <label htmlFor="branch-select" className="text-sm font-semibold text-slate-600">Branch:</label>
             <select
               id="branch-select"
@@ -472,8 +442,6 @@ function ChatbotPanel({
             }}
             disabled={isLoading || streaming}
           />
-
-          {/* Send Button */}
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
@@ -481,8 +449,6 @@ function ChatbotPanel({
           >
             Send
           </button>
-
-          {/* Email Summary Button */}
           <button
             onClick={() => onQuickAsk("Please email me the last response")}
             disabled={
