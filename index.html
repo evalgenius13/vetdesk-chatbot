@@ -459,6 +459,7 @@
     const [loadingAction, setLoadingAction] = React.useState(null);
     const [lastSent, setLastSent] = React.useState(0);
     const [inputError, setInputError] = React.useState('');
+    const [showStartupTip, setShowStartupTip] = React.useState(true);
   
     const quickActions = [
       { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
@@ -604,20 +605,26 @@ React.useEffect(() => {
             </div>
           )}
           <div className="flex gap-2">
-            <textarea ref={textareaRef} value={input}
-              onChange={e => {
-                setInput(e.target.value);
-                if (inputError) setInputError('');
-              }}
-              rows="2" maxLength={maxChars}
-              className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={emailState.waitingForEmail ? "Enter your email address…" : "Type your question here..."}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-                if (e.key === 'Escape') setInput('');
-              }}
-              disabled={isLoading || streaming}
-            />
+<textarea
+  ref={textareaRef}
+  value={input}
+  onChange={e => {
+    setInput(e.target.value);
+    if (inputError) setInputError('');
+    if (showStartupTip && e.target.value.trim().length > 0) {
+      setShowStartupTip(false);
+    }
+  }}
+  rows="2"
+  maxLength={maxChars}
+  className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+  placeholder={emailState.waitingForEmail ? "Enter your email address..." : "Type your question..."}
+  onKeyDown={e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    if (e.key === 'Escape') setInput('');
+  }}
+  disabled={isLoading || streaming}
+/>
             <button onClick={handleSend} disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
               className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition">
               Send
