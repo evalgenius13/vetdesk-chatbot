@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -584,6 +584,7 @@ function App() {
           lastUserQuestion: null
         });
       }
+    
     } else {
       setIsLoading(true);
       setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
