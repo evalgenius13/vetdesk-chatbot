@@ -335,8 +335,8 @@
         <div className="max-w-4xl mx-auto">
           <div className="text-sm font-bold text-slate-600 uppercase mb-6">VETDESK™</div>
           <h1 className="text-5xl font-extrabold text-slate-900 mb-6">Get the Facts Fast.</h1>
-          <p className="text-lg text-slate-700 mb-4">VetDesk breaks down veteran benefits and the policies that affect them - giving you immediate answers that make sense.</p>
-          <p className="text-lg text-slate-700 mb-8">It's not just information. It's clarity and control. Built for veterans who need answers — not more questions.</p>
+          <p className="text-lg text-slate-700 mb-4">VetDesk breaks down veteran benefits and the policies that affect them - giving you immediate answers that make sense without creating an account.</p>
+          <p className="text-lg text-slate-700 mb-8">It's clarity, confidence, and control. Built for veterans who need answers - not more questions.</p>
           <button onClick={onTryNow} className="bg-blue-800 hover:bg-blue-900 text-white font-semibold px-6 py-3 rounded-md shadow-md transition">
             Try Now
           </button>
@@ -483,13 +483,18 @@
         .replace(/\n/g, '<br>');
     }
   
-    React.useEffect(() => { 
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); 
-      }
-    }, [messages, streaming]);
-  
-    React.useEffect(() => { 
+React.useEffect(() => {
+  const container = messagesEndRef.current?.parentNode;
+  if (!container) return;
+
+  const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+  if (nearBottom) {
+    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+}, [messages, streaming]);
+
+React.useEffect(() => { 
       if (!isLoading && !streaming) setLoadingAction(null); 
     }, [isLoading, streaming]);
   
