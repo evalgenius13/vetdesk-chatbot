@@ -688,23 +688,26 @@ React.useEffect(() => {
       setStreaming(true);
   
       let index = 0;
-      streamingIntervalRef.current = setInterval(() => {
-        index++;
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            text: botText.slice(0, index),
-            sender: "bot"
-          };
-          return updated;
-        });
-        if (index >= botText.length) {
-          clearInterval(streamingIntervalRef.current);
-          streamingIntervalRef.current = null;
-          setStreaming(false);
-          setIsLoading(false);
-        }
-      }, 5);
+function typeNextChar() {
+  index++;
+  setMessages((prev) => {
+    const updated = [...prev];
+    updated[updated.length - 1] = {
+      text: botText.slice(0, index),
+      sender: "bot"
+    };
+    return updated;
+  });
+
+  if (index < botText.length) {
+    streamingIntervalRef.current = setTimeout(typeNextChar, 5);
+  } else {
+    streamingIntervalRef.current = null;
+    setStreaming(false);
+    setIsLoading(false);
+  }
+}
+typeNextChar();
     }
   
     async function sendMessageToGemini(userMessage) {
