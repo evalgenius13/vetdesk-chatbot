@@ -559,17 +559,13 @@ React.useEffect(() => {
           </div>
         )}
   
-        {(chatStarted || emailState?.waitingForEmail) && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm border-t border-b border-yellow-200">
-            <p className="text-yellow-800">
-              💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or use the email feature to save important answers.
-            </p>
-            {emailState?.waitingForEmail && (
-              <p className="mt-2 text-yellow-800">Want this answer emailed? Enter your email and press Send.</p>
-            )}
-          </div>
-        )}
-  
+{chatStarted && !emailState?.waitingForEmail && (
+  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm border-t border-b border-yellow-200">
+    <p className="text-yellow-800">
+      💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or use the email button to save important answers.
+    </p>
+  </div>
+)}
         <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
           {messages.map((msg, idx) => (
             <div key={idx} className={`message-row ${msg.sender}`}>
@@ -615,7 +611,7 @@ React.useEffect(() => {
               }}
               rows="2" maxLength={maxChars}
               className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={emailState.waitingForEmail ? "Enter your email address…" : "Ask about VA benefits or paste a news/article link (https://...)"}
+              placeholder={emailState.waitingForEmail ? "Enter your email address…" : "Type your question here..."}
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
                 if (e.key === 'Escape') setInput('');
