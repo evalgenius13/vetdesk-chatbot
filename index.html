@@ -553,14 +553,6 @@ return (
       </div>
     )}
 
-    {chatStarted && !emailState?.waitingForEmail && (
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm border-t border-b border-yellow-200">
-        <p className="text-yellow-800">
-          💡 <strong>Tip:</strong> This conversation isn't saved. Keep this tab open or use the email button to save important answers.
-        </p>
-      </div>
-    )}
-
     <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
       {messages.map((msg, idx) => (
         <div key={idx} className={`message-row ${msg.sender}`}>
