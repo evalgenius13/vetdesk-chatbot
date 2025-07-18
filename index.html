@@ -819,9 +819,9 @@ function App() {
     lastBotResponse: null,
     lastUserQuestion: null
   });
+  const [hasError, setHasError] = React.useState(false);
 
-  // ...rest of your App component...
-}
+  // Clean up streaming interval on unmount
   React.useEffect(() => {
     return () => {
       if (streamingIntervalRef.current) {
@@ -830,6 +830,7 @@ function App() {
     };
   }, []);
 
+  // Warn user before unloading if chat active
   React.useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (messages.length > 0) {
@@ -841,19 +842,17 @@ function App() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [messages]);
 
-  function extractTopicFromQuestion(question) {
-    const q = question.toLowerCase();
-    if (q.includes("claim")) return "VA Claims Process";
-    if (q.includes("appeal")) return "VA Appeals Process";
-    if (q.includes("disability")) return "Disability Benefits";
-    return "VA Benefits Information";
-  }
+  // Global error handler
+  React.useEffect(() => {
+    const handleError = (error) => {
+      console.error('App error:', error);
+      setHasError(true);
+    };
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
-  function shouldOfferEmail(botText) {
-    return botText.length > 250 &&
-      (botText.includes("step") || botText.includes("process") || botText.includes("deadline"));
-  }
-
+  // Streaming bot typing effect
   function streamBotText(botText, originalQuestion) {
     if (streamingIntervalRef.current) clearTimeout(streamingIntervalRef.current);
     setStreaming(true);
@@ -881,6 +880,16 @@ function App() {
     typeNextChar();
   }
 
+  // Email subject extraction
+  function extractTopicFromQuestion(question) {
+    const q = question ? question.toLowerCase() : "";
+    if (q.includes("claim")) return "VA Claims Process";
+    if (q.includes("appeal")) return "VA Appeals Process";
+    if (q.includes("disability")) return "Disability Benefits";
+    return "VA Benefits Information";
+  }
+
+  // Main Gemini chat/email logic
   async function sendMessageToGemini(userMessage) {
     try {
       const sanitized = validateInput(userMessage);
@@ -898,22 +907,23 @@ function App() {
       }
 
       if (emailState.waitingForEmail) {
+        // Email mode
         try {
           const validatedEmail = validateEmail(sanitized);
           setIsLoading(true);
           logToConsole("Sending email", { email: validatedEmail });
 
-const extractTopic = extractTopicFromQuestion;
-const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    email: validatedEmail,
-    subject: extractTopic(emailState.lastUserQuestion),
-    content: emailState.lastBotResponse,
-    userName: "Veteran"
-  })
-});
+          const subject = extractTopicFromQuestion(emailState.lastUserQuestion);
+          const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: validatedEmail,
+              subject,
+              content: emailState.lastBotResponse,
+              userName: "Veteran"
+            })
+          });
           const result = await res.json();
 
           if (!res.ok || !result.success) {
@@ -937,9 +947,9 @@ const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary",
           setIsLoading(false);
         }
       } else {
+        // Normal chat mode
         setIsLoading(true);
         setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
-
         try {
           const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
             method: "POST",
@@ -975,12 +985,13 @@ const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary",
     }
   }
 
+  // Handle quick ask events
   const handleQuickAsk = (questionText) => {
     if (!questionText || isLoading || streaming) return;
-    console.log('Quick ask clicked:', questionText);
-    console.log('Current messages count:', messages.length);
+    logToConsole('Quick ask clicked:', questionText);
+    logToConsole('Current messages count:', messages.length);
 
-    if (questionText.includes("email me")) {
+    if (questionText.toLowerCase().includes("email me")) {
       const lastBotMessage = messages.slice().reverse().find(m => m.sender === "bot");
       if (lastBotMessage) {
         setEmailState({
@@ -1005,30 +1016,19 @@ const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary",
     sendMessageToGemini(questionText);
   };
 
+  // Clear chat and reset state
   const handleClearChat = () => {
     setMessages([]);
-    localStorage.removeItem('vetdesk-messages');
     setEmailState({
       waitingForEmail: false,
       lastBotResponse: null,
       lastUserQuestion: null
     });
     setStarted(false); // Ensures app resets to landing page
-    console.log('Chat cleared');
+    logToConsole('Chat cleared');
   };
 
-  const [hasError, setHasError] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleError = (error) => {
-      console.error('App error:', error);
-      setHasError(true);
-    };
-
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-
+  // Error boundary UI
   if (hasError) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -1048,6 +1048,7 @@ const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary",
     );
   }
 
+  // Main UI
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden">
       {!started ? (
@@ -1066,7 +1067,6 @@ const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary",
               messages={messages || []}
               input={input}
               setInput={setInput}
-              // Enhanced onSend: trims, checks non-empty before sending
               onSend={(msg) => {
                 const trimmed = (msg ?? "").trim();
                 if (trimmed) sendMessageToGemini(trimmed);
@@ -1084,8 +1084,7 @@ const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary",
       )}
     </div>
   );
-}  
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+}ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
 </html>
