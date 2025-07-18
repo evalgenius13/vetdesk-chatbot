@@ -293,9 +293,36 @@ Your responses should always be attentive, respectful, and honest—even if the 
       return Math.max(0, this.windowMs - (Date.now() - oldestRequest));
     }
   }
-  
   const rateLimiter = new RateLimiter(10, 60000);
   // ========== END: Security Functions ==========
+const rateLimiter = new RateLimiter(10, 60000);
+// ========== END: Security Functions ==========
+
+// ========== Chat History Management ==========
+function buildChatHistory(messages, userMessage, maxTokens = 6000) {
+  const estimatedTokenLength = (text) => Math.ceil(text.length / 4); // rough estimate
+  const system = { role: "system", parts: [{ text: systemPrompt }] };
+  const newUser = { role: "user", parts: [{ text: userMessage }] };
+  let totalTokens = estimatedTokenLength(systemPrompt) + estimatedTokenLength(userMessage);
+  const history = [];
+  
+  // Walk backward through messages
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.sender !== "user" && msg.sender !== "bot") continue;
+    const role = msg.sender === "user" ? "user" : "model";
+    const content = msg.text;
+    const tokenCount = estimatedTokenLength(content);
+    
+    if (totalTokens + tokenCount > maxTokens) break;
+    
+    history.unshift({ role, parts: [{ text: content }] });
+    totalTokens += tokenCount;
+  }
+  
+  return [system, ...history, newUser];
+}
+// ========== END: Chat History Management ==========  
     
   function renderMarkdown(text) {
     const sanitized = sanitizeInput(text);
@@ -787,12 +814,9 @@ typeNextChar();
             const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chatHistory: [
-                  { role: "user", parts: [{ text: sanitized }] }
-                ]
-              })
-            });
+            body: JSON.stringify({
+              chatHistory: buildChatHistory(messages, sanitized)              
+})            });
   
             const data = await res.json();
             const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
