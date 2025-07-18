@@ -172,14 +172,19 @@
 
     // ====== Friendly, Veteran-Focused Chatbot Responses ======
     async function getBotReply(userText) {
+      // Handle news feed "How does this affect me?" only if it's from a news item
+      if (/how does this affect me\? \(regarding: ".+"\)/i.test(userText)) {
+        return "Happy to break it down for you as a veteran. This news could impact your VA benefits, eligibility, or next steps. Would you like a personal assessment or specific advice?";
+      }
+      // Transportation/rides support
+      if (/ride|transport|shuttle|travel.*appointment|how.*get.*appointment/i.test(userText)) {
+        return "Yes, the VA offers transportation services for eligible veterans to get to medical appointments. You may qualify for the Beneficiary Travel program or the Veterans Transportation Service (VTS), which provide rides or travel reimbursements. Would you like help checking your eligibility or booking a ride?";
+      }
       // Email feature: if user requests email, simulate a reply
       if (/email( me| this)?/i.test(userText)) {
         return "Of course! Just let me know your email address and I’ll send this right over to you, veteran.";
       }
-      // "How does this affect me?" reply simulation
-      if (/how does this affect me\?/i.test(userText)) {
-        return "Happy to break it down for you. This news could impact your current VA benefits, eligibility, or next steps. Want a personal assessment or specific advice?";
-      }
+      // Canned answers for quick actions
       if (/disability ratings/i.test(userText)) {
         return "Absolutely! VA disability ratings reflect the severity of your service-connected condition. I can help explain what your rating might mean or how to apply—let me know what you need!";
       }
