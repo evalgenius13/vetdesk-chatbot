@@ -952,13 +952,6 @@ Your responses should always be attentive, respectful, and honest—even if the 
   
             streamBotText(botReply, sanitized);
   
-            if (shouldOfferEmail(botReply)) {
-              setEmailState({
-                waitingForEmail: true,
-                lastBotResponse: botReply,
-                lastUserQuestion: sanitized
-              });
-            }
           } catch (error) {
             console.error("Chat error:", error);
             setMessages(prev => [...prev, {
