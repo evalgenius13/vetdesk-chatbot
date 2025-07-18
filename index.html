@@ -356,107 +356,111 @@ function extractTopic(text) {
   
   return null;
 }
+
 const initialQuickActions = [
-    { text: "What are VA disability ratings?", label: "Disability Ratings", topic: "disability" },
-    { text: "How do VA appeals work?", label: "Appeals Process", topic: "appeals" },
-    { text: "What is VA healthcare coverage?", label: "Healthcare", topic: "healthcare" },
-    { text: "What VA benefits am I eligible for?", label: "Eligibility", topic: "eligibility" },
-    { text: "How do I file VA claims online?", label: "Filing Claims", topic: "filing" }
-  ];
+  { text: "What are VA disability ratings?", label: "Disability Ratings", topic: "disability" },
+  { text: "How do VA appeals work?", label: "Appeals Process", topic: "appeals" },
+  { text: "What is VA healthcare coverage?", label: "Healthcare", topic: "healthcare" },
+  { text: "What VA benefits am I eligible for?", label: "Eligibility", topic: "eligibility" },
+  { text: "How do I file VA claims online?", label: "Filing Claims", topic: "filing" }
+];
 
-  // Level 2: Follow-up actions based on topic
-  function getFollowUpActions(topic) {
-    const followUpMap = {
-      disability: [
-        { text: "How is the combined rating calculated?", label: "Rating Math" },
-        { text: "What counts as service-connected?", label: "Service Connection" },
-        { text: "How do I increase my rating?", label: "Rating Increase" },
-        { text: "What is P&T status?", label: "P&T Status" }
-      ],
-      appeals: [
-        { text: "What are the appeal deadlines?", label: "Deadlines" },
-        { text: "Which appeal lane should I choose?", label: "Appeal Options" },
-        { text: "What evidence do I need for appeals?", label: "Evidence" },
-        { text: "How long do appeals take?", label: "Timeline" }
-      ],
-      healthcare: [
-        { text: "What are the priority groups?", label: "Priority Groups" },
-        { text: "How do I enroll in VA healthcare?", label: "Enrollment" },
-        { text: "Can I use non-VA providers?", label: "Community Care" },
-        { text: "What about mental health services?", label: "Mental Health" }
-      ],
-      eligibility: [
-        { text: "What are the service requirements?", label: "Service Requirements" },
-        { text: "What benefits do family members get?", label: "Family Benefits" },
-        { text: "How does discharge status affect benefits?", label: "Discharge Status" },
-        { text: "What if I was National Guard or Reserve?", label: "Guard/Reserve" }
-      ],
-      filing: [
-        { text: "What forms do I need to file?", label: "Required Forms" },
-        { text: "How do I use VA.gov?", label: "VA.gov Guide" },
-        { text: "What evidence should I submit?", label: "Evidence" },
-        { text: "How do I track my claim status?", label: "Track Claims" }
-      ],
-      education: [
-        { text: "How does the GI Bill work?", label: "GI Bill Basics" },
-        { text: "What schools are approved?", label: "Approved Schools" },
-        { text: "Can I transfer benefits to family?", label: "Transfer Benefits" },
-        { text: "What about vocational training?", label: "Vocational Training" }
-      ],
-      housing: [
-        { text: "How do VA home loans work?", label: "Home Loans" },
-        { text: "What are the eligibility requirements?", label: "Loan Eligibility" },
-        { text: "Do I need a down payment?", label: "Down Payment" },
-        { text: "What about refinancing?", label: "Refinancing" }
-      ]
-    };
-    
-    return followUpMap[topic] || [];
-  }
-
-  // Level 3: Deep dive actions (always available)
-  const deepDiveActions = [
-    { text: "Show me the step-by-step process", label: "Step-by-Step" },
-    { text: "What are common mistakes to avoid?", label: "Avoid Mistakes" },
-    { text: "What resources can help me?", label: "Resources" },
-    { text: "Email me this information", label: "Email Summary" }
-  ];
-
-  // Main function to get current quick actions
-  function getCurrentQuickActions(messages, showDeepDive = true) {
-    if (messages.length === 0) {
-      return initialQuickActions;
-    }
-    
-    // Get the last bot response to determine follow-ups
-    const lastBotMessage = messages.slice().reverse().find(m => m.sender === "bot");
-    const lastUserMessage = messages.slice().reverse().find(m => m.sender === "user");
-    
-    if (!lastBotMessage || !lastUserMessage) {
-      return initialQuickActions;
-    }
-    
-    // Extract topic from the conversation
-    const topic = extractTopic(lastUserMessage.text) || extractTopic(lastBotMessage.text);
-    
-    if (topic) {
-      const followUps = getFollowUpActions(topic);
-      
-      if (showDeepDive && followUps.length > 0) {
-        return [
-          ...followUps,
-          { text: "Ask about something else", label: "New Topic", action: "reset" },
-          ...deepDiveActions.slice(0, 2) // Show first 2 deep dive options
-        ];
-      }
-      
-      return followUps.length > 0 ? followUps : initialQuickActions;
-    }
-    
-    return initialQuickActions;
-  }
-  // ========== END: Progressive Quick Actions System ==========
+// ========== PROGRESSIVE QUICK ACTIONS COMMENTED OUT ==========
+// // Level 2: Follow-up actions based on topic
+// function getFollowUpActions(topic) {
+//   const followUpMap = {
+//     disability: [
+//       { text: "How is the combined rating calculated?", label: "Rating Math" },
+//       { text: "What counts as service-connected?", label: "Service Connection" },
+//       { text: "How do I increase my rating?", label: "Rating Increase" },
+//       { text: "What is P&T status?", label: "P&T Status" }
+//     ],
+//     appeals: [
+//       { text: "What are the appeal deadlines?", label: "Deadlines" },
+//       { text: "Which appeal lane should I choose?", label: "Appeal Options" },
+//       { text: "What evidence do I need for appeals?", label: "Evidence" },
+//       { text: "How long do appeals take?", label: "Timeline" }
+//     ],
+//     healthcare: [
+//       { text: "What are the priority groups?", label: "Priority Groups" },
+//       { text: "How do I enroll in VA healthcare?", label: "Enrollment" },
+//       { text: "Can I use non-VA providers?", label: "Community Care" },
+//       { text: "What about mental health services?", label: "Mental Health" }
+//     ],
+//     eligibility: [
+//       { text: "What are the service requirements?", label: "Service Requirements" },
+//       { text: "What benefits do family members get?", label: "Family Benefits" },
+//       { text: "How does discharge status affect benefits?", label: "Discharge Status" },
+//       { text: "What if I was National Guard or Reserve?", label: "Guard/Reserve" }
+//     ],
+//     filing: [
+//       { text: "What forms do I need to file?", label: "Required Forms" },
+//       { text: "How do I use VA.gov?", label: "VA.gov Guide" },
+//       { text: "What evidence should I submit?", label: "Evidence" },
+//       { text: "How do I track my claim status?", label: "Track Claims" }
+//     ],
+//     education: [
+//       { text: "How does the GI Bill work?", label: "GI Bill Basics" },
+//       { text: "What schools are approved?", label: "Approved Schools" },
+//       { text: "Can I transfer benefits to family?", label: "Transfer Benefits" },
+//       { text: "What about vocational training?", label: "Vocational Training" }
+//     ],
+//     housing: [
+//       { text: "How do VA home loans work?", label: "Home Loans" },
+//       { text: "What are the eligibility requirements?", label: "Loan Eligibility" },
+//       { text: "Do I need a down payment?", label: "Down Payment" },
+//       { text: "What about refinancing?", label: "Refinancing" }
+//     ]
+//   };
   
+//   return followUpMap[topic] || [];
+// }
+
+// // Level 3: Deep dive actions (always available)
+// const deepDiveActions = [
+//   { text: "Show me the step-by-step process", label: "Step-by-Step" },
+//   { text: "What are common mistakes to avoid?", label: "Avoid Mistakes" },
+//   { text: "What resources can help me?", label: "Resources" },
+//   { text: "Email me this information", label: "Email Summary" }
+// ];
+
+// // Main function to get current quick actions
+// function getCurrentQuickActions(messages, showDeepDive = true) {
+//   if (messages.length === 0) {
+//     return initialQuickActions;
+//   }
+  
+//   // Get the last bot response to determine follow-ups
+//   const lastBotMessage = messages.slice().reverse().find(m => m.sender === "bot");
+//   const lastUserMessage = messages.slice().reverse().find(m => m.sender === "user");
+  
+//   if (!lastBotMessage || !lastUserMessage) {
+//     return initialQuickActions;
+//   }
+  
+//   // Extract topic from the conversation
+//   const topic = extractTopic(lastUserMessage.text) || extractTopic(lastBotMessage.text);
+  
+//   if (topic) {
+//     const followUps = getFollowUpActions(topic);
+    
+//     if (showDeepDive && followUps.length > 0) {
+//       return [
+//         ...followUps,
+//         { text: "Ask about something else", label: "New Topic", action: "reset" },
+//         ...deepDiveActions.slice(0, 2) // Show first 2 deep dive options
+//       ];
+//     }
+    
+//     return followUps.length > 0 ? followUps : initialQuickActions;
+//   }
+  
+//   return initialQuickActions;
+// }
+// ========== END: Progressive Quick Actions System ==========
+
+// Export only the initial quick actions for MVP
+export { initialQuickActions, extractTopic };  
 function renderMarkdown(text) {
   try {
     const sanitized = sanitizeInput(text);
