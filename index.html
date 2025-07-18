@@ -903,17 +903,17 @@ function App() {
           setIsLoading(true);
           logToConsole("Sending email", { email: validatedEmail });
 
-          const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: validatedEmail,
-              subject: extractTopicFromQuestion(emailState.lastUserQuestion),
-              content: emailState.lastBotResponse,
-              userName: "Veteran"
-            })
-          });
-
+const extractTopic = extractTopicFromQuestion;
+const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: validatedEmail,
+    subject: extractTopic(emailState.lastUserQuestion),
+    content: emailState.lastBotResponse,
+    userName: "Veteran"
+  })
+});
           const result = await res.json();
 
           if (!res.ok || !result.success) {
