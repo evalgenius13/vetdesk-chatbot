@@ -309,7 +309,7 @@ Stay concise and helpful.`;
   const rateLimiter = new RateLimiter(10, 60000);
   // ========== END: Security Functions ==========
 
-  // ========== Chat History Management ==========
+// ========== Chat History Management ==========
 function buildChatHistory(messages, userMessage, maxTokens = 6000) {
   const estimatedTokenLength = (text) => Math.ceil(text.length / 4);
   let totalTokens = estimatedTokenLength(userMessage) + estimatedTokenLength(systemPrompt);
@@ -348,36 +348,8 @@ function buildChatHistory(messages, userMessage, maxTokens = 6000) {
   });
 
   return history;
-}// First conversation - include system prompt as part of user message
-  return [systemAsUser];
-}  // ========== END: Chat History Management ==========
-
-  // ========== Progressive Quick Actions System ==========
-  // Topic keyword mapping for better synonym handling
-  const topicKeywords = {
-    disability: ["disability", "rating", "compensation", "condition", "service-connected", "impairment", "p&t", "permanent", "total"],
-    appeals: ["appeal", "decision", "review", "disagree", "overturn", "contest", "reconsider", "board", "court"],
-    healthcare: ["healthcare", "medical", "hospital", "doctor", "treatment", "clinic", "priority", "enrollment", "community care"],
-    eligibility: ["eligible", "qualify", "requirements", "entitled", "criteria", "service", "discharge", "character"],
-    filing: ["claim", "file", "submit", "application", "paperwork", "forms", "va.gov", "evidence", "track"],
-    education: ["education", "gi bill", "school", "college", "training", "tuition", "yellow ribbon", "vocational"],
-    housing: ["housing", "home loan", "mortgage", "va loan", "property", "refinance", "down payment", "certificate"]
-  };
-
-  // Extract topic from user question or bot response
-  function extractTopic(text) {
-    const lowerText = text.toLowerCase();
-    
-    for (const [topic, keywords] of Object.entries(topicKeywords)) {
-      if (keywords.some(keyword => lowerText.includes(keyword))) {
-        return topic;
-      }
-    }
-    
-    return null;
-  }
-
-  // Level 1: Simple overview questions
+}
+// ========== END: Chat History Management ==========  // Level 1: Simple overview questions
   const initialQuickActions = [
     { text: "What are VA disability ratings?", label: "Disability Ratings", topic: "disability" },
     { text: "How do VA appeals work?", label: "Appeals Process", topic: "appeals" },
