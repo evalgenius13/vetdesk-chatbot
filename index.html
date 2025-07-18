@@ -807,11 +807,8 @@ function App() {
   const [streaming, setStreaming] = React.useState(false);
   const [textSize, setTextSize] = React.useState("large");
   const streamingIntervalRef = React.useRef(null);
-  const [emailState, setEmailState] = React.useState({
-    waitingForEmail: false,
-    lastBotResponse: null,
-    lastUserQuestion: null
-  });
+  const [waitingForEmail, setWaitingForEmail] = React.useState(false);
+  const [pendingEmailSummary, setPendingEmailSummary] = React.useState(null); // { text: botText, question: userQuestion }
   const [hasError, setHasError] = React.useState(false);
 
   // Clean up streaming interval on unmount
@@ -823,7 +820,6 @@ function App() {
     };
   }, []);
 
-  // Warn user before unloading if chat active
   React.useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (messages.length > 0) {
@@ -835,7 +831,6 @@ function App() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [messages]);
 
-  // Global error handler
   React.useEffect(() => {
     const handleError = (error) => {
       console.error('App error:', error);
@@ -845,7 +840,6 @@ function App() {
     return () => window.removeEventListener('error', handleError);
   }, []);
 
-  // Streaming bot typing effect
   function streamBotText(botText, originalQuestion) {
     if (streamingIntervalRef.current) clearTimeout(streamingIntervalRef.current);
     setStreaming(true);
@@ -873,7 +867,6 @@ function App() {
     typeNextChar();
   }
 
-  // Email subject extraction
   function extractTopicFromQuestion(question) {
     const q = question ? question.toLowerCase() : "";
     if (q.includes("claim")) return "VA Claims Process";
@@ -882,152 +875,147 @@ function App() {
     return "VA Benefits Information";
   }
 
-  // Main Gemini chat/email logic
   async function sendMessageToGemini(userMessage) {
     try {
       const sanitized = validateInput(userMessage);
 
-      if (!rateLimiter.isAllowed()) {
-        const resetTime = Math.ceil(rateLimiter.getTimeUntilReset() / 1000);
-        setMessages(prev => [
-          ...prev,
-          {
-            text: `Please wait ${resetTime} seconds before sending another message.`,
-            sender: "bot"
+      // Handle user-initiated email summary flow
+      if (waitingForEmail) {
+        // If user enters a valid email, send summary
+        if (isValidEmail(sanitized)) {
+          try {
+            const validatedEmail = validateEmail(sanitized);
+            setIsLoading(true);
+            logToConsole("Sending email", { email: validatedEmail });
+
+            const subject = extractTopicFromQuestion(pendingEmailSummary?.question);
+            const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: validatedEmail,
+                subject,
+                content: pendingEmailSummary?.text,
+                userName: "Veteran"
+              })
+            });
+            const result = await res.json();
+
+            if (!res.ok || !result.success) {
+              throw new Error(result.error || "Email send failed");
+            }
+
+            setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
+          } catch (error) {
+            console.error("Email send error:", error);
+            setMessages(prev => [...prev, {
+              text: "❌ Failed to send email. Please check your address and try again in a moment.",
+              sender: "bot"
+            }]);
+          } finally {
+            setWaitingForEmail(false);
+            setPendingEmailSummary(null);
+            setIsLoading(false);
           }
-        ]);
-        return;
+          return;
+        } else {
+          // Not an email: treat as a normal question and exit email mode
+          setWaitingForEmail(false);
+          setPendingEmailSummary(null);
+          // No return: continue to normal chat flow below
+        }
       }
 
-      if (emailState.waitingForEmail) {
-        // Email mode
-        try {
-          const validatedEmail = validateEmail(sanitized);
-          setIsLoading(true);
-          logToConsole("Sending email", { email: validatedEmail });
-
-          const subject = extractTopicFromQuestion(emailState.lastUserQuestion);
-          const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/send-summary", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: validatedEmail,
-              subject,
-              content: emailState.lastBotResponse,
-              userName: "Veteran"
-            })
-          });
-          const result = await res.json();
-
-          if (!res.ok || !result.success) {
-            throw new Error(result.error || "Email send failed");
-          }
-
-          setMessages(prev => [...prev, { text: "✅ Summary sent to your email.", sender: "bot" }]);
-          setEmailState({
-            waitingForEmail: false,
-            lastBotResponse: null,
-            lastUserQuestion: null
-          });
-
-        } catch (error) {
-          console.error("Email send error:", error);
-          setMessages(prev => [...prev, {
-            text: "❌ Failed to send email. Please check your address and try again in a moment.",
-            sender: "bot"
-          }]);
-        } finally {
-          setIsLoading(false);
+      // Did user ask for email summary?
+      if (/email( me)?( this| summary)?/i.test(sanitized)) {
+        // Only offer if there's a previous bot message to summarize
+        const lastBotMsg = messages.slice().reverse().find(m => m.sender === "bot");
+        const lastUserMsg = messages.slice().reverse().find(m => m.sender === "user");
+        if (lastBotMsg && lastUserMsg) {
+          setWaitingForEmail(true);
+          setPendingEmailSummary({ text: lastBotMsg.text, question: lastUserMsg.text });
+          setMessages(prev => [
+            ...prev,
+            { text: sanitized, sender: "user" },
+            { text: "Please enter your email address to receive the summary.", sender: "bot" }
+          ]);
+          return;
+        } else {
+          setMessages(prev => [
+            ...prev,
+            { text: sanitized, sender: "user" },
+            { text: "There's nothing to summarize and email yet. Please ask me a question first.", sender: "bot" }
+          ]);
+          return;
         }
-      } else {
-        // Normal chat mode
-        setIsLoading(true);
-        setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
-        try {
-          const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chatHistory: buildChatHistory(messages, sanitized)              
-            })
-          });
+      }
 
-          const data = await res.json();
-          const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+      setIsLoading(true);
+      setMessages(prev => [...prev, { text: sanitized, sender: "user" }]);
+      try {
+        const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatHistory: buildChatHistory(messages, sanitized)
+          })
+        });
 
-          setMessages(prev => [...prev, { text: "", sender: "bot" }]);
-          streamBotText(botReply, sanitized);
+        const data = await res.json();
+        const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
 
-        } catch (error) {
-          console.error("Chat error:", error);
-          setMessages(prev => [...prev, {
-            text: "❌ There was a problem getting your answer. Please try again.",
-            sender: "bot"
-          }]);
-          setIsLoading(false);
-          setStreaming(false);
-        }
+        setMessages(prev => [...prev, { text: "", sender: "bot" }]);
+        streamBotText(botReply, sanitized);
+
+      } catch (error) {
+        console.error("Chat error:", error);
+        setMessages(prev => [...prev, {
+          text: "❌ There was a problem getting your answer. Please try again.",
+          sender: "bot"
+        }]);
+        setIsLoading(false);
+        setStreaming(false);
       }
     } catch (error) {
       console.error("Message processing error:", error);
-      setMessages(prev => [...prev, { 
-        text: "Please check your message and try again.", 
-        sender: "bot" 
+      setMessages(prev => [...prev, {
+        text: "Please check your message and try again.",
+        sender: "bot"
       }]);
       setIsLoading(false);
     }
   }
 
-  // Handle quick ask events
+  // Quick ask handler (no more email quick actions here)
   const handleQuickAsk = (questionText) => {
     if (!questionText || isLoading || streaming) return;
     logToConsole('Quick ask clicked:', questionText);
-    logToConsole('Current messages count:', messages.length);
-
-    if (questionText.toLowerCase().includes("email me")) {
-      const lastBotMessage = messages.slice().reverse().find(m => m.sender === "bot");
-      if (lastBotMessage) {
-        setEmailState({
-          waitingForEmail: true,
-          lastBotResponse: lastBotMessage.text,
-          lastUserQuestion: questionText
-        });
-        setMessages(prev => [...prev, 
-          { text: questionText, sender: "user" },
-          { text: "Please enter your email address to receive the summary.", sender: "bot" }
-        ]);
-        return;
-      } else {
-        setMessages(prev => [...prev, 
-          { text: questionText, sender: "user" },
-          { text: "I don't have any information to email yet. Please ask me a question first!", sender: "bot" }
-        ]);
-        return;
-      }
-    }
-    
     sendMessageToGemini(questionText);
   };
+
+  // Show Email Summary button only after a bot message
+  const showEmailSummaryButton =
+    messages.length > 0 &&
+    messages[messages.length - 1].sender === "bot" &&
+    !isLoading &&
+    !streaming &&
+    !waitingForEmail;
 
   // Clear chat and reset state
   const handleClearChat = () => {
     setMessages([]);
-    setEmailState({
-      waitingForEmail: false,
-      lastBotResponse: null,
-      lastUserQuestion: null
-    });
+    setWaitingForEmail(false);
+    setPendingEmailSummary(null);
     setStarted(false); // Ensures app resets to landing page
     logToConsole('Chat cleared');
   };
 
-  // Error boundary UI
   if (hasError) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <h2 className="text-xl font-bold mb-4">Something went wrong</h2>
-          <button 
+          <button
             onClick={() => {
               setHasError(false);
               handleClearChat();
@@ -1041,6 +1029,63 @@ function App() {
     );
   }
 
+  return (
+    <div className="flex flex-col h-screen w-full overflow-hidden">
+      {!started ? (
+        <div className="flex-1 overflow-auto">
+          <Landing onTryNow={() => setStarted(true)} />
+        </div>
+      ) : (
+        <div className="flex h-full flex-1">
+          <NewsPanel
+            isMobileOpen={false}
+            onMobileClose={() => {}}
+            onAsk={handleQuickAsk}
+          />
+          <div className="flex-1 overflow-hidden">
+            <ChatbotPanel
+              messages={messages || []}
+              input={input}
+              setInput={setInput}
+              onSend={(msg) => {
+                const trimmed = (msg ?? "").trim();
+                if (trimmed) sendMessageToGemini(trimmed);
+              }}
+              streaming={streaming}
+              isLoading={isLoading}
+              waitingForEmail={waitingForEmail}
+              textSize={textSize}
+              setTextSize={setTextSize}
+              onClearChat={handleClearChat}
+              extraActions={
+                showEmailSummaryButton ? (
+                  <button
+                    onClick={() => {
+                      const lastBotMsg = messages.slice().reverse().find(m => m.sender === "bot");
+                      const lastUserMsg = messages.slice().reverse().find(m => m.sender === "user");
+                      if (lastBotMsg && lastUserMsg) {
+                        setWaitingForEmail(true);
+                        setPendingEmailSummary({ text: lastBotMsg.text, question: lastUserMsg.text });
+                        setMessages(prev => [
+                          ...prev,
+                          { text: "Email me this summary", sender: "user" },
+                          { text: "Please enter your email address to receive the summary.", sender: "bot" }
+                        ]);
+                      }
+                    }}
+                    className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded-md text-sm ml-2"
+                  >
+                    Email Summary
+                  </button>
+                ) : null
+              }
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
   // Main UI
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden">
