@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>VetDesk MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Minimal Tailwind CSS via CDN for prototype (switch to local build for prod) -->
+  <!-- Minimal Tailwind CSS via CDN for prototype -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
@@ -12,48 +12,46 @@
   <!-- Header -->
   <header class="bg-blue-900 text-white p-4 flex items-center justify-between">
     <h1 class="text-2xl font-bold">VetDesk</h1>
-    <span class="text-sm font-medium">VA Benefits Companion</span>
+    <span class="text-sm font-medium">Your Friendly VA Benefits Companion</span>
   </header>
 
   <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
 
     <!-- News Feed -->
     <section class="w-full md:w-1/3 bg-white border-r border-gray-200 overflow-y-auto p-4 flex flex-col" style="min-width:300px;">
-      <h2 class="text-xl font-semibold mb-3">News Feed</h2>
-      <ul id="news-feed" class="space-y-4 flex-1">
-        <!-- News items will be inserted here -->
-      </ul>
+      <h2 class="text-xl font-semibold mb-3">Veteran News Feed</h2>
+      <ul id="news-feed" class="space-y-4 flex-1"></ul>
     </section>
 
     <!-- Chat Section -->
     <section class="flex-1 flex flex-col h-full bg-gray-50">
+      <!-- Welcome Message -->
+      <div id="welcome-message" class="p-4 text-base text-gray-700 bg-white border-b border-gray-200">
+        <span>👋 Hi there, and welcome! I’m here to help you get the most out of your VA benefits. Just ask a question, click a quick link, or select a news story for personalized support.</span>
+      </div>
       <!-- Quick Actions -->
-      <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200">
-        <!-- Buttons inserted by JS -->
-      </div>
+      <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
       <!-- Chat History -->
-      <div id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4">
-        <!-- Messages inserted by JS -->
-      </div>
+      <div id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
       <!-- Chat Input -->
       <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
-        <input id="chat-input" type="text" class="flex-1 border rounded px-3 py-2 focus:outline-blue-600" placeholder="Type your message..." autocomplete="off" required />
+        <input id="chat-input" type="text" class="flex-1 border rounded px-3 py-2 focus:outline-blue-600" placeholder="Ask me anything about VA benefits..." autocomplete="off" required />
         <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition">Send</button>
       </form>
     </section>
   </main>
 
   <script>
-    // ====== Main Quick Actions (static) ======
+    // ====== Main Quick Actions (static, friendly) ======
     const quickActions = [
-      { text: "What are VA disability ratings?", label: "Disability Ratings" },
-      { text: "How do VA appeals work?", label: "Appeals Process" },
-      { text: "What is VA healthcare coverage?", label: "Healthcare" },
-      { text: "What VA benefits am I eligible for?", label: "Eligibility" },
-      { text: "How do I file VA claims online?", label: "Filing Claims" }
+      { text: "Can you explain VA disability ratings for me?", label: "Disability Ratings" },
+      { text: "How do VA appeals work and what should I expect?", label: "Appeals Process" },
+      { text: "What healthcare options do I have through the VA?", label: "VA Healthcare" },
+      { text: "What benefits might I be eligible for as a veteran?", label: "Benefit Eligibility" },
+      { text: "How do I get started filing a VA claim online?", label: "File a Claim" }
     ];
 
-    // ====== Example News Feed Data (replace with live fetch as needed) ======
+    // ====== Example News Feed Data ======
     const newsItems = [
       {
         title: "VA Announces New Policy Updates",
@@ -79,15 +77,27 @@
     function renderNewsFeed() {
       const feed = document.getElementById('news-feed');
       feed.innerHTML = "";
-      newsItems.forEach(item => {
+      newsItems.forEach((item, idx) => {
         const li = document.createElement('li');
         li.className = "p-3 bg-gray-50 border rounded shadow-sm";
         li.innerHTML = `
           <a href="${item.url}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener">${item.title}</a>
           <div class="text-xs text-gray-500 mb-1">${item.date}</div>
-          <div>${item.summary}</div>
+          <div class="mb-2">${item.summary}</div>
+          <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 transition text-sm font-medium" data-news-idx="${idx}">
+            How does this affect me?
+          </button>
         `;
         feed.appendChild(li);
+      });
+
+      // Attach event listeners for "How does this affect me?" buttons
+      document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const idx = this.getAttribute('data-news-idx');
+          const news = newsItems[idx];
+          addUserMessageToChat(`How does this affect me? (regarding: "${news.title}")`);
+        });
       });
     }
 
@@ -101,8 +111,8 @@
         btn.className = "bg-blue-100 text-blue-900 px-3 py-1 rounded hover:bg-blue-200 transition text-sm font-medium";
         btn.textContent = action.label;
         btn.onclick = () => {
-          document.getElementById('chat-input').value = action.text;
-          document.getElementById('chat-input').focus();
+          // Auto-send the quick action as a message
+          addUserMessageToChat(action.text);
         };
         qa.appendChild(btn);
       });
@@ -111,48 +121,93 @@
     // ====== Chat State ======
     let chatMessages = [];
 
-    // ====== Render Chat History ======
-    function renderChatHistory() {
+    // ====== Render Chat History with Streaming Effect ======
+    async function renderChatHistory() {
       const ch = document.getElementById('chat-history');
       ch.innerHTML = "";
-      chatMessages.forEach(msg => {
+      for (let i = 0; i < chatMessages.length; i++) {
+        const msg = chatMessages[i];
         const div = document.createElement('div');
         div.className = "flex";
         if (msg.sender === "user") {
           div.className += " justify-end";
           div.innerHTML = `<div class="bg-blue-600 text-white px-4 py-2 rounded-lg max-w-md text-right ml-auto">${msg.text}</div>`;
-        } else {
-          div.innerHTML = `<div class="bg-gray-200 text-gray-900 px-4 py-2 rounded-lg max-w-md">${msg.text}</div>`;
+          ch.appendChild(div);
+        } else if (msg.sender === "bot") {
+          // Streaming effect for most recent bot message only
+          if (i === chatMessages.length - 1 && msg.streaming) {
+            const botBubble = document.createElement('div');
+            botBubble.className = "bg-gray-200 text-gray-900 px-4 py-2 rounded-lg max-w-md";
+            div.appendChild(botBubble);
+            ch.appendChild(div);
+
+            // Animate the message one character at a time
+            await streamBotText(msg.text, botBubble);
+            msg.streaming = false; // Mark as done so it won't re-stream
+          } else {
+            div.innerHTML = `<div class="bg-gray-200 text-gray-900 px-4 py-2 rounded-lg max-w-md">${msg.text}</div>`;
+            ch.appendChild(div);
+          }
         }
-        ch.appendChild(div);
-      });
+      }
       ch.scrollTop = ch.scrollHeight;
     }
 
-    // ====== Simulated Chatbot (replace with API integration) ======
+    // Streaming effect helper
+    function streamBotText(text, container, delay=18) {
+      return new Promise(resolve => {
+        let i = 0;
+        function typeChar() {
+          container.textContent = text.slice(0, i + 1);
+          i++;
+          if (i < text.length) {
+            setTimeout(typeChar, delay);
+          } else {
+            resolve();
+          }
+        }
+        typeChar();
+      });
+    }
+
+    // ====== Friendly, Veteran-Focused Chatbot Responses ======
     async function getBotReply(userText) {
       // Email feature: if user requests email, simulate a reply
       if (/email( me| this)?/i.test(userText)) {
-        return "Sure! Please provide your email address so I can send you the information.";
+        return "Of course! Just let me know your email address and I’ll send this right over to you, veteran.";
       }
-      // Simulated answers for quick actions
+      // "How does this affect me?" reply simulation
+      if (/how does this affect me\?/i.test(userText)) {
+        return "Happy to break it down for you. This news could impact your current VA benefits, eligibility, or next steps. Want a personal assessment or specific advice?";
+      }
       if (/disability ratings/i.test(userText)) {
-        return "VA disability ratings are assigned based on the severity of your service-connected condition. Would you like more details?";
+        return "Absolutely! VA disability ratings reflect the severity of your service-connected condition. I can help explain what your rating might mean or how to apply—let me know what you need!";
       }
       if (/appeals/i.test(userText)) {
-        return "The VA appeals process allows you to challenge a decision about your benefits. There are several appeal lanes. Would you like a step-by-step overview?";
+        return "If you need to appeal a VA decision, I’ll walk you through your options and what to expect. It can feel overwhelming, but I’m here to support you every step of the way.";
       }
       if (/healthcare/i.test(userText)) {
-        return "VA healthcare provides a range of medical services to eligible veterans. Coverage varies depending on priority group and service history.";
+        return "VA healthcare offers a wide range of medical services for veterans. If you’re unsure what you qualify for, I can check your eligibility or help you get started.";
       }
       if (/eligible for/i.test(userText)) {
-        return "Eligibility for VA benefits depends on your service history, discharge status, and other factors. Tell me more about your situation for a personalized overview.";
+        return "Every veteran’s situation is unique. I can help you quickly find out which VA benefits and programs match your service record. Want to tell me a bit about your service?";
       }
       if (/file.*claim/i.test(userText)) {
-        return "You can file a VA claim online through VA.gov. Do you need a step-by-step guide or help gathering required forms?";
+        return "Filing a VA claim online is easier than ever. I can guide you step by step, help you gather documents, or answer any questions you have along the way!";
       }
-      // Default reply
-      return "I'm here to help with VA benefits questions. Please ask anything!";
+      // Default friendly reply
+      return "I'm always here to help you, veteran. If you have questions about VA benefits, healthcare, education, or anything else, just ask!";
+    }
+
+    // ====== Add User Message to Chat (from news feed, quick action, or input) ======
+    function addUserMessageToChat(text) {
+      chatMessages.push({ sender: "user", text });
+      renderChatHistory();
+      // Simulate bot thinking
+      setTimeout(async () => {
+        chatMessages.push({ sender: "bot", text: await getBotReply(text), streaming: true });
+        await renderChatHistory();
+      }, 600);
     }
 
     // ====== Handle Chat Submission ======
@@ -161,22 +216,15 @@
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
-      // Add user message
-      chatMessages.push({ sender: "user", text });
-      renderChatHistory();
+      addUserMessageToChat(text);
       input.value = "";
-      // Simulate bot thinking
-      setTimeout(async () => {
-        const reply = await getBotReply(text);
-        chatMessages.push({ sender: "bot", text: reply });
-        renderChatHistory();
-      }, 600);
     });
 
     // ====== Initialize UI ======
     renderNewsFeed();
     renderQuickActions();
     renderChatHistory();
+
   </script>
 </body>
 </html>
