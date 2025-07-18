@@ -807,22 +807,8 @@ function renderMarkdown(text) {
   }
 
 function App() {
-  const [messages, setMessages] = React.useState(() => {
-    try {
-      const saved = localStorage.getItem('vetdesk-messages');
-      return saved ? JSON.parse(saved) : [];
-    } catch (error) {
-      console.error('Error loading saved messages:', error);
-      return [];
-    }
-  });
-
+  const [messages, setMessages] = React.useState([]);
   const [started, setStarted] = React.useState(false);
-
-  React.useEffect(() => {
-    if (messages.length > 0) setStarted(true);
-  }, [messages]);
-
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [streaming, setStreaming] = React.useState(false);
@@ -834,14 +820,8 @@ function App() {
     lastUserQuestion: null
   });
 
-  React.useEffect(() => {
-    try {
-      localStorage.setItem('vetdesk-messages', JSON.stringify(messages));
-    } catch (error) {
-      console.error('Error saving messages:', error);
-    }
-  }, [messages]);
-
+  // ...rest of your App component...
+}
   React.useEffect(() => {
     return () => {
       if (streamingIntervalRef.current) {
