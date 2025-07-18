@@ -118,8 +118,9 @@
       });
     }
 
-    // ====== Chat State ======
+    // ====== Chat State & Context ======
     let chatMessages = [];
+    let lastBotIntent = null; // Track the last bot topic
 
     // ====== Render Chat History with Streaming Effect ======
     async function renderChatHistory() {
@@ -170,37 +171,54 @@
       });
     }
 
-    // ====== Friendly, Veteran-Focused Chatbot Responses ======
+    // ====== Friendly, Veteran-Focused Chatbot Responses with Context ======
     async function getBotReply(userText) {
+      // Handle context-dependent "yes" response
+      if (/^(yes|yeah|yep|please|that would be great|sure)$/i.test(userText.trim())) {
+        if (lastBotIntent === "rides") {
+          lastBotIntent = null;
+          return "Great! To help you check your eligibility or schedule a VA ride, could you tell me which VA facility your appointment is at, and the date and time? I can direct you to the right transportation contact or booking form.";
+        }
+      }
+
       // Handle news feed "How does this affect me?" only if it's from a news item
       if (/how does this affect me\? \(regarding: ".+"\)/i.test(userText)) {
+        lastBotIntent = null;
         return "Happy to break it down for you as a veteran. This news could impact your VA benefits, eligibility, or next steps. Would you like a personal assessment or specific advice?";
       }
       // Transportation/rides support
       if (/ride|transport|shuttle|travel.*appointment|how.*get.*appointment/i.test(userText)) {
+        lastBotIntent = "rides";
         return "Yes, the VA offers transportation services for eligible veterans to get to medical appointments. You may qualify for the Beneficiary Travel program or the Veterans Transportation Service (VTS), which provide rides or travel reimbursements. Would you like help checking your eligibility or booking a ride?";
       }
       // Email feature: if user requests email, simulate a reply
       if (/email( me| this)?/i.test(userText)) {
+        lastBotIntent = null;
         return "Of course! Just let me know your email address and I’ll send this right over to you, veteran.";
       }
       // Canned answers for quick actions
       if (/disability ratings/i.test(userText)) {
+        lastBotIntent = null;
         return "Absolutely! VA disability ratings reflect the severity of your service-connected condition. I can help explain what your rating might mean or how to apply—let me know what you need!";
       }
       if (/appeals/i.test(userText)) {
+        lastBotIntent = null;
         return "If you need to appeal a VA decision, I’ll walk you through your options and what to expect. It can feel overwhelming, but I’m here to support you every step of the way.";
       }
       if (/healthcare/i.test(userText)) {
+        lastBotIntent = null;
         return "VA healthcare offers a wide range of medical services for veterans. If you’re unsure what you qualify for, I can check your eligibility or help you get started.";
       }
       if (/eligible for/i.test(userText)) {
+        lastBotIntent = null;
         return "Every veteran’s situation is unique. I can help you quickly find out which VA benefits and programs match your service record. Want to tell me a bit about your service?";
       }
       if (/file.*claim/i.test(userText)) {
+        lastBotIntent = null;
         return "Filing a VA claim online is easier than ever. I can guide you step by step, help you gather documents, or answer any questions you have along the way!";
       }
       // Default friendly reply
+      lastBotIntent = null;
       return "I'm always here to help you, veteran. If you have questions about VA benefits, healthcare, education, or anything else, just ask!";
     }
 
