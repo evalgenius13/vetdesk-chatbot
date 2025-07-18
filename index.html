@@ -197,7 +197,7 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-const systemPrompt = `You are a knowledgeable VA benefits specialist who communicates like a helpful, candid, and empathetic friend. Your job is to translate complex VA news and policy into plain English, giving veterans a realistic and compassionate understanding of how changes may impact them. Answers should be on a 10th grade level.
+  const systemPrompt = `You are a knowledgeable VA benefits specialist who communicates like a helpful, candid, and empathetic friend. Your job is to translate complex VA news and policy into plain English, giving veterans a realistic and compassionate understanding of how changes may impact them. Answers should be on a 10th grade level.
 When asked about news or policy changes:
 Always acknowledge the user's concerns or feelings before providing information.
 Thank veterans sincerely when they identify themselves, and express appreciation for their service.
@@ -211,7 +211,7 @@ Keep answers conversational but informative (2–4 sentences). Use **bold** for 
 End responses naturally. Don't always ask 'What else can I help you with?' For follow-up questions, just end normally or ask 'Make sense?' For news articles, you can ask 'Want me to check another article?' Keep it conversational, not robotic.
 Your responses should always be attentive, respectful, and honest—even if the truth is uncomfortable. Veterans rely on you for clarity, empathy, and actionable support—not just reassurance. Don't say 'thank you for your service' unless someone specifically mentions they're a veteran. Focus on answering their question.`;
 
-// ========== Security Functions ==========
+  // ========== Security Functions ==========
   function sanitizeInput(input) {
     if (!input || typeof input !== 'string') return '';
     
@@ -293,35 +293,163 @@ Your responses should always be attentive, respectful, and honest—even if the 
       return Math.max(0, this.windowMs - (Date.now() - oldestRequest));
     }
   }
+
   const rateLimiter = new RateLimiter(10, 60000);
   // ========== END: Security Functions ==========
 
-// ========== Chat History Management ==========
-function buildChatHistory(messages, userMessage, maxTokens = 6000) {
-  const estimatedTokenLength = (text) => Math.ceil(text.length / 4); // rough estimate
-  const system = { role: "system", parts: [{ text: systemPrompt }] };
-  const newUser = { role: "user", parts: [{ text: userMessage }] };
-  let totalTokens = estimatedTokenLength(systemPrompt) + estimatedTokenLength(userMessage);
-  const history = [];
-  
-  // Walk backward through messages
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.sender !== "user" && msg.sender !== "bot") continue;
-    const role = msg.sender === "user" ? "user" : "model";
-    const content = msg.text;
-    const tokenCount = estimatedTokenLength(content);
+  // ========== Chat History Management ==========
+  function buildChatHistory(messages, userMessage, maxTokens = 6000) {
+    const estimatedTokenLength = (text) => Math.ceil(text.length / 4); // rough estimate
+    const system = { role: "system", parts: [{ text: systemPrompt }] };
+    const newUser = { role: "user", parts: [{ text: userMessage }] };
+    let totalTokens = estimatedTokenLength(systemPrompt) + estimatedTokenLength(userMessage);
+    const history = [];
     
-    if (totalTokens + tokenCount > maxTokens) break;
+    // Walk backward through messages
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.sender !== "user" && msg.sender !== "bot") continue;
+      const role = msg.sender === "user" ? "user" : "model";
+      const content = msg.text;
+      const tokenCount = estimatedTokenLength(content);
+      
+      if (totalTokens + tokenCount > maxTokens) break;
+      
+      history.unshift({ role, parts: [{ text: content }] });
+      totalTokens += tokenCount;
+    }
     
-    history.unshift({ role, parts: [{ text: content }] });
-    totalTokens += tokenCount;
+    return [system, ...history, newUser];
   }
-  
-  return [system, ...history, newUser];
-}
-// ========== END: Chat History Management ==========  
+  // ========== END: Chat History Management ==========
+
+  // ========== Progressive Quick Actions System ==========
+  // Topic keyword mapping for better synonym handling
+  const topicKeywords = {
+    disability: ["disability", "rating", "compensation", "condition", "service-connected", "impairment", "p&t", "permanent", "total"],
+    appeals: ["appeal", "decision", "review", "disagree", "overturn", "contest", "reconsider", "board", "court"],
+    healthcare: ["healthcare", "medical", "hospital", "doctor", "treatment", "clinic", "priority", "enrollment", "community care"],
+    eligibility: ["eligible", "qualify", "requirements", "entitled", "criteria", "service", "discharge", "character"],
+    filing: ["claim", "file", "submit", "application", "paperwork", "forms", "va.gov", "evidence", "track"],
+    education: ["education", "gi bill", "school", "college", "training", "tuition", "yellow ribbon", "vocational"],
+    housing: ["housing", "home loan", "mortgage", "va loan", "property", "refinance", "down payment", "certificate"]
+  };
+
+  // Extract topic from user question or bot response
+  function extractTopic(text) {
+    const lowerText = text.toLowerCase();
     
+    for (const [topic, keywords] of Object.entries(topicKeywords)) {
+      if (keywords.some(keyword => lowerText.includes(keyword))) {
+        return topic;
+      }
+    }
+    
+    return null;
+  }
+
+  // Level 1: Simple overview questions
+  const initialQuickActions = [
+    { text: "What are VA disability ratings?", label: "Disability Ratings", topic: "disability" },
+    { text: "How do VA appeals work?", label: "Appeals Process", topic: "appeals" },
+    { text: "What is VA healthcare coverage?", label: "Healthcare", topic: "healthcare" },
+    { text: "What VA benefits am I eligible for?", label: "Eligibility", topic: "eligibility" },
+    { text: "How do I file VA claims online?", label: "Filing Claims", topic: "filing" }
+  ];
+
+  // Level 2: Follow-up actions based on topic
+  function getFollowUpActions(topic) {
+    const followUpMap = {
+      disability: [
+        { text: "How is the combined rating calculated?", label: "Rating Math" },
+        { text: "What counts as service-connected?", label: "Service Connection" },
+        { text: "How do I increase my rating?", label: "Rating Increase" },
+        { text: "What is P&T status?", label: "P&T Status" }
+      ],
+      appeals: [
+        { text: "What are the appeal deadlines?", label: "Deadlines" },
+        { text: "Which appeal lane should I choose?", label: "Appeal Options" },
+        { text: "What evidence do I need for appeals?", label: "Evidence" },
+        { text: "How long do appeals take?", label: "Timeline" }
+      ],
+      healthcare: [
+        { text: "What are the priority groups?", label: "Priority Groups" },
+        { text: "How do I enroll in VA healthcare?", label: "Enrollment" },
+        { text: "Can I use non-VA providers?", label: "Community Care" },
+        { text: "What about mental health services?", label: "Mental Health" }
+      ],
+      eligibility: [
+        { text: "What are the service requirements?", label: "Service Requirements" },
+        { text: "What benefits do family members get?", label: "Family Benefits" },
+        { text: "How does discharge status affect benefits?", label: "Discharge Status" },
+        { text: "What if I was National Guard or Reserve?", label: "Guard/Reserve" }
+      ],
+      filing: [
+        { text: "What forms do I need to file?", label: "Required Forms" },
+        { text: "How do I use VA.gov?", label: "VA.gov Guide" },
+        { text: "What evidence should I submit?", label: "Evidence" },
+        { text: "How do I track my claim status?", label: "Track Claims" }
+      ],
+      education: [
+        { text: "How does the GI Bill work?", label: "GI Bill Basics" },
+        { text: "What schools are approved?", label: "Approved Schools" },
+        { text: "Can I transfer benefits to family?", label: "Transfer Benefits" },
+        { text: "What about vocational training?", label: "Vocational Training" }
+      ],
+      housing: [
+        { text: "How do VA home loans work?", label: "Home Loans" },
+        { text: "What are the eligibility requirements?", label: "Loan Eligibility" },
+        { text: "Do I need a down payment?", label: "Down Payment" },
+        { text: "What about refinancing?", label: "Refinancing" }
+      ]
+    };
+    
+    return followUpMap[topic] || [];
+  }
+
+  // Level 3: Deep dive actions (always available)
+  const deepDiveActions = [
+    { text: "Show me the step-by-step process", label: "Step-by-Step" },
+    { text: "What are common mistakes to avoid?", label: "Avoid Mistakes" },
+    { text: "What resources can help me?", label: "Resources" },
+    { text: "Email me this information", label: "Email Summary" }
+  ];
+
+  // Main function to get current quick actions
+  function getCurrentQuickActions(messages, showDeepDive = true) {
+    if (messages.length === 0) {
+      return initialQuickActions;
+    }
+    
+    // Get the last bot response to determine follow-ups
+    const lastBotMessage = messages.slice().reverse().find(m => m.sender === "bot");
+    const lastUserMessage = messages.slice().reverse().find(m => m.sender === "user");
+    
+    if (!lastBotMessage || !lastUserMessage) {
+      return initialQuickActions;
+    }
+    
+    // Extract topic from the conversation
+    const topic = extractTopic(lastUserMessage.text) || extractTopic(lastBotMessage.text);
+    
+    if (topic) {
+      const followUps = getFollowUpActions(topic);
+      
+      if (showDeepDive && followUps.length > 0) {
+        return [
+          ...followUps,
+          { text: "Ask about something else", label: "New Topic", action: "reset" },
+          ...deepDiveActions.slice(0, 2) // Show first 2 deep dive options
+        ];
+      }
+      
+      return followUps.length > 0 ? followUps : initialQuickActions;
+    }
+    
+    return initialQuickActions;
+  }
+  // ========== END: Progressive Quick Actions System ==========
+
   function renderMarkdown(text) {
     const sanitized = sanitizeInput(text);
   
@@ -492,190 +620,192 @@ function buildChatHistory(messages, userMessage, maxTokens = 6000) {
   }) {
     const textareaRef = React.useRef(null);
     const messagesEndRef = React.useRef(null);
-    const [showQuickActions, setShowQuickActions] = React.useState(true);
-    const [loadingAction, setLoadingAction] = React.useState(null);
     const [lastSent, setLastSent] = React.useState(0);
     const [inputError, setInputError] = React.useState('');
     const [showStartupTip, setShowStartupTip] = React.useState(true);
-  
-    const quickActions = [
-      { text: "How does the VA calculate disability ratings, and what counts as service-connected? How does the combined rating formula work?", label: "Disability Ratings" },
-      { text: "What are my options for appealing a VA decision? What are the different appeal lanes and their deadlines?", label: "Appeals Process" },
-      { text: "How do VA healthcare priority groups work, and how do I access care? When can I use non-VA providers?", label: "Healthcare Enrollment" },
-      { text: "What are the eligibility requirements for VA benefits, and how do I know which programs or family benefits I qualify for?", label: "Eligibility" },
-      { text: "Which forms do I need to file for my situation, and how do I use VA.gov or My HealtheVet to track my claim or upload documents?", label: "Forms & Online Tools" }
-    ];
-  
+
+    // Progressive Quick Actions State
+    const [currentActions, setCurrentActions] = React.useState(initialQuickActions);
+    const [showQuickActions, setShowQuickActions] = React.useState(true);
+    const [loadingAction, setLoadingAction] = React.useState(null);
+
     const chatStarted = messages.length > 0;
     const charCount = input.length;
     const maxChars = 500;
-  
-    // Simple markdown renderer function (add this if not defined elsewhere)
-    function renderMarkdown(text) {
-      if (!text) return '';
-      
-      return text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code>$1</code>')
-        .replace(/\n/g, '<br>');
-    }
-  
-React.useEffect(() => {
-  const container = messagesEndRef.current?.parentNode;
-  if (!container) return;
 
-  const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    // Update actions based on conversation context
+    React.useEffect(() => {
+      const newActions = getCurrentQuickActions(messages);
+      setCurrentActions(newActions);
+    }, [messages]);
 
-  if (nearBottom) {
-    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }
-}, [messages, streaming]);
+    React.useEffect(() => {
+      const container = messagesEndRef.current?.parentNode;
+      if (!container) return;
 
-React.useEffect(() => { 
+      const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+      if (nearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, [messages, streaming]);
+
+    React.useEffect(() => { 
       if (!isLoading && !streaming) setLoadingAction(null); 
     }, [isLoading, streaming]);
-  
+
     function handleSend() {
       const now = Date.now();
       if (now - lastSent < 1000) return;
-  
+
       const trimmed = input.trim();
       if (!trimmed) return;
-  
+
       setLastSent(now);
       setInputError('');
-  
+
       onSend(trimmed);  // App will handle all validation
       setInput("");
     }
-  
+
     const handleQuickAsk = (action, idx) => {
       setLoadingAction(idx);
+      
+      if (action.action === "reset") {
+        setCurrentActions(initialQuickActions);
+        return;
+      }
+      
       onQuickAsk(action.text);
     };
-  
-return (
-  <main className="flex flex-col flex-1 h-full text-large">
 
-    <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
-      <div className="quick-actions flex flex-wrap justify-center gap-2">
-        {showQuickActions && quickActions.map((action, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleQuickAsk(action, idx)}
-            disabled={isLoading || streaming || loadingAction === idx}
-            className={`px-3 py-2 rounded-md text-sm font-medium transition ${loadingAction === idx ? 'bg-blue-200 text-blue-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-          >
-            {loadingAction === idx ? 'Loading...' : action.label}
-          </button>
-        ))}
-        <button
-          onClick={() => setShowQuickActions(!showQuickActions)}
-          title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
-          className="p-1 text-blue-800 hover:text-blue-900"
-        >
-          {showQuickActions ? '⬆️' : '⬇️'}
-        </button>
-      </div>
-    </div>
-
-    {!chatStarted && !emailState?.waitingForEmail && (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center px-6 max-w-2xl">
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
-          <p className="text-lg text-gray-600 mb-2">Get clear, plain-English answers about your VA benefits and what's changing.</p>
-          <p className="text-sm text-gray-500 italic">This conversation isn't saved. Don't refresh or close the page unless you're done.</p>
-        </div>
-      </div>
-    )}
-
-    <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
-      {messages.map((msg, idx) => (
-        <div key={idx} className={`message-row ${msg.sender}`}>
-          <div className={`message-bubble ${msg.sender}`}>
-            <div className={`message-content ${msg.sender}`}>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-            </div>
+    return (
+      <main className="flex flex-col flex-1 h-full text-large">
+        <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
+          <div className="quick-actions flex flex-wrap justify-center gap-2">
+            {showQuickActions && currentActions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleQuickAsk(action, idx)}
+                disabled={isLoading || streaming || loadingAction === idx}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                  loadingAction === idx 
+                    ? 'bg-blue-200 text-blue-500' 
+                    : action.action === 'reset'
+                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                {loadingAction === idx ? 'Loading...' : action.label}
+              </button>
+            ))}
+            <button
+              onClick={() => setShowQuickActions(!showQuickActions)}
+              title={showQuickActions ? "Hide quick actions" : "Show quick actions"}
+              className="p-1 text-blue-800 hover:text-blue-900"
+            >
+              {showQuickActions ? '⬆️' : '⬇️'}
+            </button>
           </div>
         </div>
-      ))}
-      {(isLoading || streaming) && (
-        <div className="message-row bot typing-indicator-row">
-          <div className="message-bubble bot">
-            <div className="message-content bot">
-              <div className="typing-dots">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
+
+        {!chatStarted && !emailState?.waitingForEmail && (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center px-6 max-w-2xl">
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to VetDesk</h2>
+              <p className="text-lg text-gray-600 mb-2">Get clear, plain-English answers about your VA benefits and what's changing.</p>
+              <p className="text-sm text-gray-500 italic">This conversation isn't saved. Don't refresh or close the page unless you're done.</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 px-4 py-2 space-y-2 overflow-y-auto">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`message-row ${msg.sender}`}>
+              <div className={`message-bubble ${msg.sender}`}>
+                <div className={`message-content ${msg.sender}`}>
+                  <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
+                </div>
               </div>
             </div>
+          ))}
+          {(isLoading || streaming) && (
+            <div className="message-row bot typing-indicator-row">
+              <div className="message-bubble bot">
+                <div className="message-content bot">
+                  <div className="typing-dots">
+                    <div className="typing-dot"></div>
+                    <div className="typing-dot"></div>
+                    <div className="typing-dot"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef}></div>
+        </div>
+
+        <div className="border-t p-4 bg-white">
+          {inputError && (
+            <div className="text-red-600 text-sm mb-2 p-2 bg-red-50 rounded">
+              {inputError}
+            </div>
+          )}
+          {charCount > maxChars * 0.8 && (
+            <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>
+              {charCount}/{maxChars} characters
+            </div>
+          )}
+          {showStartupTip && (
+            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+              💡 <strong>Quick Start:</strong>This conversation isn't saved. Refreshing or closing the page will erase your information.
+            </div>
+          )}
+          <div className="flex gap-2">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={e => {
+                setInput(e.target.value);
+                if (inputError) setInputError('');
+                if (showStartupTip && e.target.value.trim().length > 0) {
+                  setShowStartupTip(false);
+                }
+              }}
+              rows="2"
+              maxLength={maxChars}
+              className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={emailState.waitingForEmail ? "Enter your email address..." : "Type your question..."}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+                if (e.key === 'Escape') setInput('');
+              }}
+              disabled={isLoading || streaming}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
+              className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"
+            >
+              Send
+            </button>
+            <button
+              onClick={() => onQuickAsk("Please email me the last response")}
+              disabled={
+                messages.length === 0 ||
+                messages[messages.length - 1].sender !== 'bot' ||
+                isLoading || streaming
+              }
+              className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm"
+            >
+              Email Summary
+            </button>
           </div>
         </div>
-      )}
-      <div ref={messagesEndRef}></div>
-    </div>
-
-<div className="border-t p-4 bg-white">
-  {inputError && (
-    <div className="text-red-600 text-sm mb-2 p-2 bg-red-50 rounded">
-      {inputError}
-    </div>
-  )}
-  {charCount > maxChars * 0.8 && (
-    <div className={`text-xs text-right mb-1 ${charCount > maxChars ? 'text-red-500' : 'text-gray-500'}`}>
-      {charCount}/{maxChars} characters
-    </div>
-  )}
-  {showStartupTip && (
-    <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-      💡 <strong>Quick Start:</strong>This conversation isn’t saved. Refreshing or closing the page will erase your information.
-    </div>
-  )}
-  <div className="flex gap-2">
-    <textarea
-      ref={textareaRef}
-      value={input}
-      onChange={e => {
-        setInput(e.target.value);
-        if (inputError) setInputError('');
-        if (showStartupTip && e.target.value.trim().length > 0) {
-          setShowStartupTip(false);
-        }
-      }}
-      rows="2"
-      maxLength={maxChars}
-      className="flex-1 p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-      placeholder={emailState.waitingForEmail ? "Enter your email address..." : "Type your question..."}
-      onKeyDown={e => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-        if (e.key === 'Escape') setInput('');
-      }}
-      disabled={isLoading || streaming}
-    />
-    <button
-      onClick={handleSend}
-      disabled={!input.trim() || isLoading || streaming || charCount > maxChars}
-      className="bg-blue-800 hover:bg-blue-900 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-semibold transition"
-    >
-      Send
-    </button>
-    <button
-      onClick={() => onQuickAsk("Please email me the last response")}
-      disabled={
-        messages.length === 0 ||
-        messages[messages.length - 1].sender !== 'bot' ||
-        isLoading || streaming
-      }
-      className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-300 text-white px-3 py-2 rounded-md text-sm"
-    >
-      Email Summary
-    </button>
-  </div>
-</div>
-  </main>
-);
+      </main>
+    );
   }
+
   function App() {
     const [started, setStarted] = React.useState(false);
     const [messages, setMessages] = React.useState([]);
@@ -728,26 +858,26 @@ return (
       setStreaming(true);
   
       let index = 0;
-function typeNextChar() {
-  index++;
-  setMessages((prev) => {
-    const updated = [...prev];
-    updated[updated.length - 1] = {
-      text: botText.slice(0, index),
-      sender: "bot"
-    };
-    return updated;
-  });
+      function typeNextChar() {
+        index++;
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            text: botText.slice(0, index),
+            sender: "bot"
+          };
+          return updated;
+        });
 
-  if (index < botText.length) {
-    streamingIntervalRef.current = setTimeout(typeNextChar, 5);
-  } else {
-    streamingIntervalRef.current = null;
-    setStreaming(false);
-    setIsLoading(false);
-  }
-}
-typeNextChar();
+        if (index < botText.length) {
+          streamingIntervalRef.current = setTimeout(typeNextChar, 5);
+        } else {
+          streamingIntervalRef.current = null;
+          setStreaming(false);
+          setIsLoading(false);
+        }
+      }
+      typeNextChar();
     }
   
     async function sendMessageToGemini(userMessage) {
@@ -812,9 +942,10 @@ typeNextChar();
             const res = await fetch("https://vetdesk-demo2-api.vercel.app/api/chat", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chatHistory: buildChatHistory(messages, sanitized)              
-})            });
+              body: JSON.stringify({
+                chatHistory: buildChatHistory(messages, sanitized)              
+              })
+            });
   
             const data = await res.json();
             const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
@@ -893,7 +1024,7 @@ typeNextChar();
         )}
       </div>
     );
-  }  
+  }
 
   ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
