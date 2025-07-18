@@ -519,21 +519,7 @@ React.useEffect(() => {
     };
   
     return (
-      <main className={`flex flex-col flex-1 h-full ${textSize === 'large' ? 'text-large' : 'text-normal'}`}>
-        <div className="border-b border-slate-200 bg-white px-4 py-2">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
-              <button onClick={() => setTextSize('normal')}
-                className={`text-xs px-2 py-1 rounded ${textSize === 'normal' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                Normal Text
-              </button>
-              <button onClick={() => setTextSize('large')}
-                className={`text-xs px-2 py-1 rounded ${textSize === 'large' ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                Large Text
-              </button>
-            </div>
-          </div>
-        </div>
+      <main className="flex flex-col flex-1 h-full text-large">
   
         <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
           <div className="quick-actions flex flex-wrap justify-center gap-2">
@@ -604,6 +590,7 @@ React.useEffect(() => {
               {charCount}/{maxChars} characters
             </div>
           )}
+          {showStartupTip && (
           <div className="flex gap-2">
 <textarea
   ref={textareaRef}
@@ -645,7 +632,7 @@ React.useEffect(() => {
     const [input, setInput] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [streaming, setStreaming] = React.useState(false);
-    const [textSize, setTextSize] = React.useState("normal");
+    const [textSize, setTextSize] = React.useState("large");
     const [isNewsPanelOpen, setIsNewsPanelOpen] = React.useState(true);
     const streamingIntervalRef = React.useRef(null);
     const [emailState, setEmailState] = React.useState({
