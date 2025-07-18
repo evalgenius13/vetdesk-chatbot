@@ -312,36 +312,46 @@ Stay concise and helpful.`;
   // ========== Chat History Management ==========
 function buildChatHistory(messages, userMessage, maxTokens = 6000) {
   const estimatedTokenLength = (text) => Math.ceil(text.length / 4);
-  const newUser = { role: "user", parts: [{ text: userMessage }] };
-  let totalTokens = estimatedTokenLength(userMessage);
+  let totalTokens = estimatedTokenLength(userMessage) + estimatedTokenLength(systemPrompt);
   const history = [];
   
-  // Walk backward through messages
+  // Always start with system prompt for first conversation
+  if (messages.length === 0) {
+    history.push({ 
+      role: "user", 
+      parts: [{ text: systemPrompt }] 
+    });
+    history.push({ 
+      role: "model", 
+      parts: [{ text: "I understand. I'll help you with VA benefits using simple, friendly language. What would you like to know?" }] 
+    });
+  }
+  
+  // Walk backward through messages to build context
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.sender !== "user" && msg.sender !== "bot") continue;
+    
     const role = msg.sender === "user" ? "user" : "model";
     const content = msg.text;
     const tokenCount = estimatedTokenLength(content);
     
     if (totalTokens + tokenCount > maxTokens) break;
     
-    history.unshift({ role, parts: [{ text: content }] });
+    history.push({ role, parts: [{ text: content }] });
     totalTokens += tokenCount;
   }
   
-  // Add system prompt as first USER message with instructions
-  const systemAsUser = { 
+  // Always add the current user message as the last entry
+  history.push({ 
     role: "user", 
-    parts: [{ text: `${systemPrompt}\n\nNow please answer this question: ${userMessage}` }] 
-  };
+    parts: [{ text: userMessage }] 
+  });
   
-  // If we have conversation history, use it normally
-  if (history.length > 0) {
-    return [...history, newUser];
-  }
-  
-  // First conversation - include system prompt as part of user message
+  return history;
+}  
+
+// First conversation - include system prompt as part of user message
   return [systemAsUser];
 }  // ========== END: Chat History Management ==========
 
