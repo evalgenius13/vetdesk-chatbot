@@ -794,13 +794,26 @@ function renderMarkdown(text) {
   }
 
 function App() {
+  const [messages, setMessages] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('vetdesk-messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading saved messages:', error);
+      return [];
+    }
+  });
+
   const [started, setStarted] = React.useState(false);
-  const [messages, setMessages] = React.useState([]);
+
+  React.useEffect(() => {
+    if (messages.length > 0) setStarted(true);
+  }, [messages]);
+
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [streaming, setStreaming] = React.useState(false);
   const [textSize, setTextSize] = React.useState("large");
-  const [isNewsPanelOpen, setIsNewsPanelOpen] = React.useState(true);
   const streamingIntervalRef = React.useRef(null);
   const [emailState, setEmailState] = React.useState({
     waitingForEmail: false,
@@ -809,9 +822,17 @@ function App() {
   });
 
   React.useEffect(() => {
+    try {
+      localStorage.setItem('vetdesk-messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Error saving messages:', error);
+    }
+  }, [messages]);
+
+  React.useEffect(() => {
     return () => {
       if (streamingIntervalRef.current) {
-        clearInterval(streamingIntervalRef.current);
+        clearTimeout(streamingIntervalRef.current);
       }
     };
   }, []);
@@ -841,7 +862,7 @@ function App() {
   }
 
   function streamBotText(botText, originalQuestion) {
-    if (streamingIntervalRef.current) clearInterval(streamingIntervalRef.current);
+    if (streamingIntervalRef.current) clearTimeout(streamingIntervalRef.current);
     setStreaming(true);
 
     let index = 0;
@@ -938,6 +959,7 @@ function App() {
           const data = await res.json();
           const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
 
+          setMessages(prev => [...prev, { text: "", sender: "bot" }]);
           streamBotText(botReply, sanitized);
 
         } catch (error) {
@@ -951,6 +973,7 @@ function App() {
         }
       }
     } catch (error) {
+      console.error("Message processing error:", error);
       setMessages(prev => [...prev, { 
         text: "Please check your message and try again.", 
         sender: "bot" 
@@ -959,18 +982,78 @@ function App() {
     }
   }
 
-  const handleQuickAsk = (q) => {
-    sendMessageToGemini(q);
+  const handleQuickAsk = (questionText) => {
+    if (!questionText || isLoading || streaming) return;
+    console.log('Quick ask clicked:', questionText);
+    console.log('Current messages count:', messages.length);
+
+    if (questionText.includes("email me")) {
+      const lastBotMessage = messages.slice().reverse().find(m => m.sender === "bot");
+      if (lastBotMessage) {
+        setEmailState({
+          waitingForEmail: true,
+          lastBotResponse: lastBotMessage.text,
+          lastUserQuestion: questionText
+        });
+        setMessages(prev => [...prev, 
+          { text: questionText, sender: "user" },
+          { text: "Please enter your email address to receive the summary.", sender: "bot" }
+        ]);
+        return;
+      } else {
+        setMessages(prev => [...prev, 
+          { text: questionText, sender: "user" },
+          { text: "I don't have any information to email yet. Please ask me a question first!", sender: "bot" }
+        ]);
+        return;
+      }
+    }
+    
+    sendMessageToGemini(questionText);
   };
 
   const handleClearChat = () => {
     setMessages([]);
+    localStorage.removeItem('vetdesk-messages');
     setEmailState({
       waitingForEmail: false,
       lastBotResponse: null,
       lastUserQuestion: null
     });
+    setStarted(false); // Ensures app resets to landing page
+    console.log('Chat cleared');
   };
+
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleError = (error) => {
+      console.error('App error:', error);
+      setHasError(true);
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-4">Something went wrong</h2>
+          <button 
+            onClick={() => {
+              setHasError(false);
+              handleClearChat();
+            }}
+            className="bg-blue-800 text-white px-4 py-2 rounded-md"
+          >
+            Reset App
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden">
@@ -987,10 +1070,14 @@ function App() {
           />
           <div className="flex-1 overflow-hidden">
             <ChatbotPanel
-              messages={messages}
+              messages={messages || []}
               input={input}
               setInput={setInput}
-              onSend={(msg) => sendMessageToGemini(msg)}
+              // Enhanced onSend: trims, checks non-empty before sending
+              onSend={(msg) => {
+                const trimmed = (msg ?? "").trim();
+                if (trimmed) sendMessageToGemini(trimmed);
+              }}
               streaming={streaming}
               isLoading={isLoading}
               emailState={emailState}
@@ -1004,8 +1091,8 @@ function App() {
       )}
     </div>
   );
-}
-  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+}  
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
 </html>
