@@ -315,19 +315,10 @@ function buildChatHistory(messages, userMessage, maxTokens = 6000) {
   let totalTokens = estimatedTokenLength(userMessage) + estimatedTokenLength(systemPrompt);
   const history = [];
 
-  // If this is the first conversation, start with system prompt and model intro
-  if (messages.length === 0) {
-    history.push({
-      role: "user",
-      parts: [{ text: systemPrompt }]
-    });
-    history.push({
-      role: "model",
-      parts: [{ text: "I understand. I'll help you with VA benefits using simple, friendly language. What would you like to know?" }]
-    });
-  }
+  // Optionally add system prompt first, if your API supports it.
+  // history.push({ role: "system", parts: [{ text: systemPrompt }] });
 
-  // Walk backward through messages to build context
+  // Add previous chat history (if any), but never let the first be a model
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.sender !== "user" && msg.sender !== "bot") continue;
@@ -347,8 +338,10 @@ function buildChatHistory(messages, userMessage, maxTokens = 6000) {
     parts: [{ text: userMessage }]
   });
 
-  return history;
+  // Reverse if needed (depending on your API's expected order)
+  return history.reverse();
 }
+
 // ========== END: Chat History Management ==========  // Level 1: Simple overview questions
 function extractTopic(text) {
   const lowerText = text.toLowerCase();
