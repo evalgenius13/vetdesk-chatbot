@@ -350,7 +350,20 @@ function buildChatHistory(messages, userMessage, maxTokens = 6000) {
   return history;
 }
 // ========== END: Chat History Management ==========  // Level 1: Simple overview questions
-  const initialQuickActions = [
+function extractTopic(text) {
+  const lowerText = text.toLowerCase();
+  
+  if (lowerText.includes('claim') || lowerText.includes('file')) return 'filing';
+  if (lowerText.includes('appeal') || lowerText.includes('decision')) return 'appeals';
+  if (lowerText.includes('disability') || lowerText.includes('rating')) return 'disability';
+  if (lowerText.includes('healthcare') || lowerText.includes('hospital')) return 'healthcare';
+  if (lowerText.includes('education') || lowerText.includes('gi bill')) return 'education';
+  if (lowerText.includes('home') || lowerText.includes('loan')) return 'housing';
+  if (lowerText.includes('eligib') || lowerText.includes('qualify')) return 'eligibility';
+  
+  return null;
+}
+const initialQuickActions = [
     { text: "What are VA disability ratings?", label: "Disability Ratings", topic: "disability" },
     { text: "How do VA appeals work?", label: "Appeals Process", topic: "appeals" },
     { text: "What is VA healthcare coverage?", label: "Healthcare", topic: "healthcare" },
