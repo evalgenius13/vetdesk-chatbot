@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>VetDesk Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:;">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
+  <script src="https://cdn.tailwindcss.com" integrity="sha384-VyPj8xm0LjO8XgdU9jzm9eO5DV3h6FZ+c6nHyLfOzJnFfJ+Y9VF0h8VHZQi2bWEq" crossorigin="anonymous"></script>
   <style>
     @media (max-width: 768px) {
       #news-feed-section {
@@ -121,7 +121,7 @@
     // Configuration
     const CONFIG = {
       API_URL: 'https://vetdesk-demo2-api.vercel.app/api/chat',
-      FRONTEND_SECRET: 'vetdesk_secure_2025_kx9mR7pL3wQ8nF2vB6jC', // UPDATE THIS to match your backend
+      FRONTEND_SECRET: 'your-secret-key-here', // UPDATE THIS to match your backend
       MAX_MESSAGE_LENGTH: 2000,
       MAX_CONVERSATION_LENGTH: 50
     };
