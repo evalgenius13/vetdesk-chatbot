@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>VetDesk Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:;">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @media (max-width: 768px) {
@@ -75,6 +76,16 @@
     .message-container {
       margin-bottom: 1.5rem;
     }
+
+    /* Error styling */
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
@@ -100,13 +111,21 @@
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
       <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
       <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
-        <input id="chat-input" type="text" class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ask me anything about VA benefits..." autocomplete="off" required aria-label="Chat input" />
-        <button type="submit" class="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200">Send</button>
+        <input id="chat-input" type="text" class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ask me anything about VA benefits..." autocomplete="off" required aria-label="Chat input" maxlength="2000" />
+        <button type="submit" id="send-button" class="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
       </form>
     </section>
   </main>
 
   <script>
+    // Configuration
+    const CONFIG = {
+      API_URL: 'https://vetdesk-demo2-api.vercel.app/api/chat',
+      FRONTEND_SECRET: 'your-secret-key-here', // UPDATE THIS to match your backend
+      MAX_MESSAGE_LENGTH: 2000,
+      MAX_CONVERSATION_LENGTH: 50
+    };
+
     // ====== Main Quick Actions ======
     const quickActions = [
       { text: "Can you explain VA disability ratings for me?", label: "Disability Ratings" },
@@ -145,10 +164,16 @@
       newsItems.forEach((item, idx) => {
         const li = document.createElement('li');
         li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
+        
+        // Sanitize content before rendering
+        const titleText = escapeHtml(item.title);
+        const summaryText = escapeHtml(item.summary);
+        const dateText = escapeHtml(item.date);
+        
         li.innerHTML = `
-          <a href="${item.url}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener">${item.title}</a>
-          <div class="text-xs text-gray-500 mb-1">${item.date}</div>
-          <div class="mb-2 text-sm">${item.summary}</div>
+          <a href="${item.url}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener">${titleText}</a>
+          <div class="text-xs text-gray-500 mb-1">${dateText}</div>
+          <div class="mb-2 text-sm">${summaryText}</div>
           <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
             How does this affect me?
           </button>
@@ -159,9 +184,11 @@
       // Attach event listeners for "How does this affect me?" buttons
       document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-          const idx = this.getAttribute('data-news-idx');
+          const idx = parseInt(this.getAttribute('data-news-idx'));
           const news = newsItems[idx];
-          addUserMessageToChat(`How does this affect me? (regarding: "${news.title}")`);
+          if (news) {
+            addUserMessageToChat(`How does this affect me? (regarding: "${news.title}")`);
+          }
         });
       });
     }
@@ -182,18 +209,43 @@
       });
     }
 
+    // ====== Security Helper Functions ======
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function validateMessageLength(text) {
+      return text && text.trim().length > 0 && text.length <= CONFIG.MAX_MESSAGE_LENGTH;
+    }
+
     // ====== Chat State ======
     let chatMessages = [];
     let botIsLoading = false;
+    let rateLimitWarning = false;
+
+    // ====== Error Handling ======
+    function showError(message) {
+      const ch = document.getElementById('chat-history');
+      const errorDiv = document.createElement('div');
+      errorDiv.className = "message-container";
+      errorDiv.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
+      ch.appendChild(errorDiv);
+      ch.scrollTop = ch.scrollHeight;
+    }
 
     // ====== Format Bot Message with Paragraphs ======
     function formatBotMessage(text) {
+      // Sanitize the text first
+      const sanitized = escapeHtml(text);
+      
       // Split on double line breaks and create paragraphs
-      const paragraphs = text.split('\n\n').filter(p => p.trim());
+      const paragraphs = sanitized.split('\\n\\n').filter(p => p.trim());
       if (paragraphs.length > 1) {
         return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
       }
-      return text;
+      return sanitized;
     }
 
     // ====== Render Chat History with ChatGPT-style Formatting ======
@@ -208,7 +260,7 @@
 
         if (msg.sender === "user") {
           messageDiv.className += " flex justify-end";
-          messageDiv.innerHTML = `<div class="chat-bubble-user">${msg.text}</div>`;
+          messageDiv.innerHTML = `<div class="chat-bubble-user">${escapeHtml(msg.text)}</div>`;
           ch.appendChild(messageDiv);
         } else if (msg.sender === "bot") {
           messageDiv.className += " flex justify-start";
@@ -245,15 +297,13 @@
       return new Promise(resolve => {
         const formattedText = formatBotMessage(text);
         let i = 0;
-        const delay = 3; // Very fast for better UX
+        const delay = 3;
         
         function typeChar() {
           if (formattedText.includes('<p>')) {
-            // If formatted with paragraphs, show instantly to preserve formatting
             container.innerHTML = formattedText;
             resolve();
           } else {
-            // Regular streaming for simple text
             container.textContent = text.slice(0, i + 1);
             i++;
             if (i < text.length) {
@@ -267,21 +317,44 @@
       });
     }
 
-    // ====== API Integration ======
+    // ====== Secure API Integration ======
     async function getBotReply() {
       try {
+        // Validate conversation length
+        if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
+          throw new Error('Conversation too long. Please start a new conversation.');
+        }
+
         const history = chatMessages.map(m => ({
           role: m.sender === "user" ? "user" : "model",
           parts: [{ text: m.text }]
         }));
         
-        const response = await fetch('https://vetdesk-demo2-api.vercel.app/api/chat', {
+        const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}` // Add authentication
+          },
           body: JSON.stringify({ chatHistory: history })
         });
         
-        if (!response.ok) throw new Error('API error');
+        if (response.status === 429) {
+          if (!rateLimitWarning) {
+            rateLimitWarning = true;
+            setTimeout(() => { rateLimitWarning = false; }, 60000); // Reset after 1 minute
+          }
+          throw new Error('Too many requests. Please wait a moment before trying again.');
+        }
+        
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please refresh the page.');
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Server error (${response.status}). Please try again later.`);
+        }
+        
         const data = await response.json();
         
         return (
@@ -289,43 +362,107 @@
           "Sorry, I couldn't get an answer right now."
         );
       } catch (e) {
-        return "Sorry, I'm having trouble connecting. Please try again later.";
+        console.error('API Error:', e);
+        
+        if (e.message.includes('fetch')) {
+          return "Sorry, I'm having trouble connecting. Please check your internet connection and try again.";
+        }
+        
+        return e.message || "Sorry, something went wrong. Please try again later.";
       }
     }
 
-    // ====== Chat Functions ======
+    // ====== Chat Functions with Validation ======
     function addUserMessageToChat(text) {
-      chatMessages.push({ sender: "user", text });
+      const trimmedText = text.trim();
+      
+      if (!validateMessageLength(trimmedText)) {
+        showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+        return;
+      }
+
+      if (chatMessages.length >= CONFIG.MAX_CONVERSATION_LENGTH) {
+        showError('Conversation limit reached. Please refresh to start a new conversation.');
+        return;
+      }
+
+      if (botIsLoading) {
+        showError('Please wait for the current response to finish.');
+        return;
+      }
+
+      chatMessages.push({ sender: "user", text: trimmedText });
       renderChatHistory();
       addBotReplyToChat();
     }
 
     async function addBotReplyToChat() {
       botIsLoading = true;
+      const sendButton = document.getElementById('send-button');
+      const chatInput = document.getElementById('chat-input');
+      
+      // Disable input during processing
+      sendButton.disabled = true;
+      chatInput.disabled = true;
+      
       await renderChatHistory();
       
       const botReply = await getBotReply();
+      
       botIsLoading = false;
+      sendButton.disabled = false;
+      chatInput.disabled = false;
+      
+      // Focus back to input
+      chatInput.focus();
       
       chatMessages.push({ sender: "bot", text: botReply, streaming: true });
       await renderChatHistory();
     }
 
-    // ====== Form Handler ======
+    // ====== Form Handler with Validation ======
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
+      
       if (!text) return;
+      
+      if (!validateMessageLength(text)) {
+        showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+        return;
+      }
       
       addUserMessageToChat(text);
       input.value = "";
+    });
+
+    // ====== Input Validation ======
+    document.getElementById('chat-input').addEventListener('input', function(e) {
+      const length = e.target.value.length;
+      const button = document.getElementById('send-button');
+      
+      if (length > CONFIG.MAX_MESSAGE_LENGTH) {
+        e.target.value = e.target.value.substring(0, CONFIG.MAX_MESSAGE_LENGTH);
+      }
+      
+      button.disabled = e.target.value.trim().length === 0 || botIsLoading;
     });
 
     // ====== Initialize UI ======
     renderNewsFeed();
     renderQuickActions();
     renderChatHistory();
+
+    // Focus on input
+    document.getElementById('chat-input').focus();
+
+    // Add keyboard shortcut (Ctrl+Enter to send)
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+      }
+    });
 
   </script>
 </body>
