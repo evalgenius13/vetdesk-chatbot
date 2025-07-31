@@ -181,7 +181,7 @@
           })),
           { role: "user", parts: [{ text: userText }] }
         ];
-        const response = await fetch('https://vetdesk-demo2-api.vercel.app/api/va-newsapi/chat', {
+        const response = await fetch('https://vetdesk-demo2-api.vercel.app/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chatHistory: history })
