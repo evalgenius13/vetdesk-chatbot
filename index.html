@@ -6,9 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @media (max-width: 768px) {
@@ -132,14 +130,7 @@
 
     <!-- News Feed -->
     <section id="news-feed-section" class="w-full md:w-1/3 bg-white border-r border-gray-200 overflow-y-auto p-4 flex flex-col min-w-[0]">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-xl font-semibold">Latest VA News</h2>
-        <button id="refresh-news" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1" title="Refresh news">
-          <span>↻</span>
-          <span class="hidden sm:inline">Refresh</span>
-        </button>
-      </div>
-      <div id="news-status" class="text-xs text-gray-500 mb-3"></div>
+      <h2 class="text-xl font-semibold mb-3">Veteran News Feed</h2>
       <ul id="news-feed" class="space-y-4 flex-1"></ul>
     </section>
 
@@ -183,13 +174,10 @@
       if (newsLoading) return;
       
       newsLoading = true;
-      const newsStatus = document.getElementById('news-status');
       const newsFeed = document.getElementById('news-feed');
       
       try {
-        if (!forceRefresh) {
-          showNewsLoading();
-        }
+        showNewsLoading();
         
         const response = await fetch(CONFIG.NEWS_API_URL, {
           method: 'GET',
@@ -209,13 +197,6 @@
         }
         
         newsItems = data.articles || [];
-        
-        // Update status
-        const statusText = data.cached 
-          ? `Cached data from ${formatLastUpdated(data.lastUpdated)}` 
-          : `Updated ${formatLastUpdated(data.lastUpdated)}`;
-        newsStatus.textContent = statusText;
-        
         renderNewsFeed();
         
       } catch (error) {
@@ -228,29 +209,12 @@
 
     function showNewsLoading() {
       const feed = document.getElementById('news-feed');
-      feed.innerHTML = '<li class="news-loading"><div class="spinner"></div><p class="mt-2">Loading latest VA news...</p></li>';
+      feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
     }
 
     function showNewsError(message) {
       const feed = document.getElementById('news-feed');
-      feed.innerHTML = `<li class="news-error">Unable to load news: ${escapeHtml(message)}</li>`;
-    }
-
-    function formatLastUpdated(isoString) {
-      if (!isoString) return 'unknown';
-      
-      try {
-        const date = new Date(isoString);
-        const now = new Date();
-        const diffMinutes = Math.floor((now - date) / (1000 * 60));
-        
-        if (diffMinutes < 1) return 'just now';
-        if (diffMinutes < 60) return `${diffMinutes}m ago`;
-        if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
-        return date.toLocaleDateString();
-      } catch {
-        return 'unknown';
-      }
+      feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
     }
 
     function renderNewsFeed() {
@@ -264,17 +228,17 @@
       
       newsItems.forEach((item, idx) => {
         const li = document.createElement('li');
-        li.className = "news-item p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
+        li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
         
         const titleText = escapeHtml(item.title);
         const summaryText = escapeHtml(item.summary);
         const dateText = escapeHtml(item.date);
         
         li.innerHTML = `
-          <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline block mb-1" target="_blank" rel="noopener noreferrer">${titleText}</a>
-          <div class="text-xs text-gray-500 mb-2">${dateText}</div>
-          <div class="mb-3 text-sm text-gray-700">${summaryText}</div>
-          <button type="button" class="how-affect-me-btn w-full bg-green-100 text-green-800 px-3 py-2 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
+          <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>
+          <div class="text-xs text-gray-500 mb-1">${dateText}</div>
+          <div class="mb-2 text-sm">${summaryText}</div>
+          <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
             How does this affect me?
           </button>
         `;
@@ -551,10 +515,6 @@ Please explain the potential impacts for various veteran situations without aski
       }
       
       button.disabled = e.target.value.trim().length === 0 || botIsLoading;
-    });
-
-    document.getElementById('refresh-news').addEventListener('click', () => {
-      fetchNews(true);
     });
 
     // ====== Initialize ======
