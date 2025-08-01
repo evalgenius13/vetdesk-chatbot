@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">>
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @media (max-width: 768px) {
@@ -17,8 +17,6 @@
         flex: 1 1 100%;
       }
     }
-    
-    /* ChatGPT-style chat bubbles */
     .chat-bubble-user {
       max-width: 42rem;
       background: #1e40af;
@@ -30,7 +28,6 @@
       margin-left: auto;
       word-break: break-word;
     }
-    
     .chat-bubble-bot {
       max-width: 42rem;
       background: #f9fafb;
@@ -43,17 +40,12 @@
       word-break: break-word;
       border: 1px solid #e5e7eb;
     }
-    
-    /* Improve paragraph spacing within bot messages */
     .chat-bubble-bot p {
       margin-bottom: 1rem;
     }
-    
     .chat-bubble-bot p:last-child {
       margin-bottom: 0;
     }
-    
-    /* Loading spinner */
     .spinner {
       border: 3px solid #e5e7eb;
       border-top: 3px solid #1e40af;
@@ -63,23 +55,16 @@
       animation: spin 1s linear infinite;
       margin: auto;
     }
-    
     @keyframes spin {
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
     }
-    
-    /* Chat container improvements */
     #chat-history {
       scroll-behavior: smooth;
     }
-    
-    /* Message spacing */
     .message-container {
       margin-bottom: 1.5rem;
     }
-
-    /* Error styling */
     .error-message {
       background: #fef2f2;
       border: 1px solid #fecaca;
@@ -88,8 +73,6 @@
       border-radius: 0.5rem;
       margin: 1rem 0;
     }
-
-    /* News feed loading states */
     .news-loading {
       background: #f9fafb;
       border: 1px solid #e5e7eb;
@@ -98,7 +81,6 @@
       text-align: center;
       color: #6b7280;
     }
-
     .news-error {
       background: #fef2f2;
       border: 1px solid #fecaca;
@@ -107,12 +89,9 @@
       border-radius: 0.5rem;
       text-align: center;
     }
-
-    /* News item styling */
     .news-item {
       transition: all 0.2s ease;
     }
-
     .news-item:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -160,7 +139,7 @@
 
     const quickActions = [
       { text: "Tell me about VA disability benefits", label: "Disability" },
-      { text: "What VA healthcare benefits are available?", label: "Healthcare" },  
+      { text: "What VA healthcare benefits are available?", label: "Healthcare" },
       { text: "Can you explain VA education benefits?", label: "Education" },
       { text: "What are VA housing benefits?", label: "Housing" },
       { text: "What new VA benefits or updates should I know about?", label: "What's New" }
@@ -172,33 +151,33 @@
 
     async function fetchNews(forceRefresh = false) {
       if (newsLoading) return;
-      
+
       newsLoading = true;
       const newsFeed = document.getElementById('news-feed');
-      
+
       try {
         showNewsLoading();
-        
+
         const response = await fetch(CONFIG.NEWS_API_URL, {
           method: 'GET',
           headers: {
             'Accept': 'application/json'
           }
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.error && !data.articles?.length) {
           throw new Error(data.error);
         }
-        
+
         newsItems = data.articles || [];
         renderNewsFeed();
-        
+
       } catch (error) {
         console.error('News fetch error:', error);
         showNewsError(error.message);
@@ -220,19 +199,19 @@
     function renderNewsFeed() {
       const feed = document.getElementById('news-feed');
       feed.innerHTML = "";
-      
+
       if (!newsItems.length) {
         feed.innerHTML = '<li class="text-gray-500 text-center py-4">No news available</li>';
         return;
       }
-      
+
       newsItems.forEach((item, idx) => {
         const li = document.createElement('li');
         li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
-        
+
         const titleText = escapeHtml(item.title);
         const summaryText = escapeHtml(item.summary);
-        
+
         li.innerHTML = `
           <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>
           ${item.date ? `<div class="text-xs text-gray-500 mb-1">${escapeHtml(item.date)}</div>` : ''}
@@ -244,17 +223,18 @@
         feed.appendChild(li);
       });
 
-     // Attach event listeners for "How does this affect me?" buttons
-document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const idx = parseInt(this.getAttribute('data-news-idx'));
-    const news = newsItems[idx];
-    if (news) {
-      const userMessage = `How does "${news.title}" affect me?`;
-      addUserMessageToChat(userMessage);
+      // Attach event listeners for "How does this affect me?" buttons
+      document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(this.getAttribute('data-news-idx'));
+          const news = newsItems[idx];
+          if (news) {
+            const userMessage = `How does "${news.title}" affect me?`;
+            addUserMessageToChat(userMessage);
+          }
+        });
+      });
     }
-  });
-});
 
     // ====== Security Helper Functions ======
     function escapeHtml(text) {
@@ -313,7 +293,7 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
     async function renderChatHistory() {
       const ch = document.getElementById('chat-history');
       ch.innerHTML = "";
-      
+
       for (let i = 0; i < chatMessages.length; i++) {
         const msg = chatMessages[i];
         const messageDiv = document.createElement('div');
@@ -325,13 +305,13 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
           ch.appendChild(messageDiv);
         } else if (msg.sender === "bot") {
           messageDiv.className += " flex justify-start";
-          
+
           if (i === chatMessages.length - 1 && msg.streaming) {
             const botBubble = document.createElement('div');
             botBubble.className = "chat-bubble-bot";
             messageDiv.appendChild(botBubble);
             ch.appendChild(messageDiv);
-            
+
             await streamBotText(msg.text, botBubble);
             msg.streaming = false;
           } else {
@@ -341,7 +321,7 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
           }
         }
       }
-      
+
       // Loading spinner for pending bot reply
       if (botIsLoading) {
         const spinnerDiv = document.createElement('div');
@@ -349,7 +329,7 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
         spinnerDiv.innerHTML = `<div class="chat-bubble-bot flex items-center justify-center py-4"><div class="spinner" role="status" aria-label="Loading"></div></div>`;
         ch.appendChild(spinnerDiv);
       }
-      
+
       ch.scrollTop = ch.scrollHeight;
     }
 
@@ -359,7 +339,7 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
         const formattedText = formatBotMessage(text);
         let i = 0;
         const delay = 3;
-        
+
         function typeChar() {
           if (formattedText.includes('<p>')) {
             container.innerHTML = formattedText;
@@ -389,16 +369,16 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
           role: m.sender === "user" ? "user" : "model",
           parts: [{ text: m.text }]
         }));
-        
+
         const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
           },
           body: JSON.stringify({ chatHistory: history })
         });
-        
+
         if (response.status === 429) {
           if (!rateLimitWarning) {
             rateLimitWarning = true;
@@ -406,28 +386,28 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
           }
           throw new Error('Too many requests. Please wait a moment before trying again.');
         }
-        
+
         if (response.status === 401) {
           throw new Error('Authentication failed. Please refresh the page.');
         }
-        
+
         if (!response.ok) {
           throw new Error(`Server error (${response.status}). Please try again later.`);
         }
-        
+
         const data = await response.json();
-        
+
         return (
           data?.candidates?.[0]?.content?.parts?.[0]?.text ||
           "Sorry, I couldn't get an answer right now."
         );
       } catch (e) {
         console.error('API Error:', e);
-        
+
         if (e.message.includes('fetch')) {
           return "Sorry, I'm having trouble connecting. Please check your internet connection and try again.";
         }
-        
+
         return e.message || "Sorry, something went wrong. Please try again later.";
       }
     }
@@ -435,7 +415,7 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
     // ====== Chat Functions with Validation ======
     function addUserMessageToChat(text) {
       const trimmedText = text.trim();
-      
+
       if (!validateMessageLength(trimmedText)) {
         showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
         return;
@@ -460,20 +440,20 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
       botIsLoading = true;
       const sendButton = document.getElementById('send-button');
       const chatInput = document.getElementById('chat-input');
-      
+
       sendButton.disabled = true;
       chatInput.disabled = true;
-      
+
       await renderChatHistory();
-      
+
       const botReply = await getBotReply();
-      
+
       botIsLoading = false;
       sendButton.disabled = false;
       chatInput.disabled = false;
-      
+
       chatInput.focus();
-      
+
       chatMessages.push({ sender: "bot", text: botReply, streaming: true });
       await renderChatHistory();
     }
@@ -483,14 +463,14 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
       e.preventDefault();
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
-      
+
       if (!text) return;
-      
+
       if (!validateMessageLength(text)) {
         showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
         return;
       }
-      
+
       addUserMessageToChat(text);
       input.value = "";
     });
@@ -498,11 +478,11 @@ document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
     document.getElementById('chat-input').addEventListener('input', function(e) {
       const length = e.target.value.length;
       const button = document.getElementById('send-button');
-      
+
       if (length > CONFIG.MAX_MESSAGE_LENGTH) {
         e.target.value = e.target.value.substring(0, CONFIG.MAX_MESSAGE_LENGTH);
       }
-      
+
       button.disabled = e.target.value.trim().length === 0 || botIsLoading;
     });
 
