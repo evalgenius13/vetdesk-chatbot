@@ -244,27 +244,17 @@
         feed.appendChild(li);
       });
 
-      // Attach event listeners for "How does this affect me?" buttons
-      document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const idx = parseInt(this.getAttribute('data-news-idx'));
-          const news = newsItems[idx];
-          if (news) {
-            const analysisPrompt = `Please analyze how this VA news affects different types of veterans:
-
-Title: "${news.title}"
-
-Summary: ${news.summary}
-
-Date: ${news.date}
-
-Please explain the potential impacts for various veteran situations without asking for personal details. Break down what this means for veterans in different circumstances.`;
-            
-            addUserMessageToChat(analysisPrompt);
-          }
-        });
-      });
+     // Attach event listeners for "How does this affect me?" buttons
+document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const idx = parseInt(this.getAttribute('data-news-idx'));
+    const news = newsItems[idx];
+    if (news) {
+      const userMessage = `How does "${news.title}" affect me?`;
+      addUserMessageToChat(userMessage);
     }
+  });
+});
 
     // ====== Security Helper Functions ======
     function escapeHtml(text) {
