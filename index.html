@@ -90,6 +90,27 @@
       border-radius: 0.5rem;
       margin: 1rem 0;
     }
+
+    /* Privacy tooltip */
+    .privacy-tooltip {
+      background: #f0f9ff;
+      border: 1px solid #0ea5e9;
+      color: #0c4a6e;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: opacity 0.3s ease;
+      text-align: center;
+    }
+    .privacy-tooltip.hidden {
+      opacity: 0;
+      pointer-events: none;
+      max-height: 0;
+      padding: 0 12px;
+      margin: 0;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
@@ -114,6 +135,9 @@
       </div>
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
       <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
+      <div id="privacy-tooltip" class="privacy-tooltip hidden">
+        We don't save or store your chat
+      </div>
       <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
         <input id="chat-input" type="text" class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ask me anything about VA benefits..." autocomplete="off" required aria-label="Chat input" maxlength="2000" />
         <button type="submit" id="send-button" class="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
@@ -130,7 +154,10 @@
       MAX_CONVERSATION_LENGTH: 50
     };
 
-  const quickActions = [
+    // Privacy tooltip functionality
+    let hasInteracted = false;
+
+    const quickActions = [
       { text: "Tell me about VA disability benefits", label: "Disability" },
       { text: "What VA healthcare benefits are available?", label: "Healthcare" },  
       { text: "Can you explain VA education benefits?", label: "Education" },
@@ -438,6 +465,19 @@
       
       addUserMessageToChat(text);
       input.value = "";
+    });
+
+    // ====== Privacy Tooltip Event Listener ======
+    document.getElementById('chat-input').addEventListener('focus', function() {
+      if (!hasInteracted) {
+        const tooltip = document.getElementById('privacy-tooltip');
+        tooltip.classList.remove('hidden');
+        hasInteracted = true;
+        
+        setTimeout(() => {
+          tooltip.classList.add('hidden');
+        }, 3500);
+      }
     });
 
     // ====== Input Validation ======
