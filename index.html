@@ -232,11 +232,10 @@
         
         const titleText = escapeHtml(item.title);
         const summaryText = escapeHtml(item.summary);
-        const dateText = escapeHtml(item.date);
         
         li.innerHTML = `
           <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>
-          <div class="text-xs text-gray-500 mb-1">${dateText}</div>
+          ${item.date ? `<div class="text-xs text-gray-500 mb-1">${escapeHtml(item.date)}</div>` : ''}
           <div class="mb-2 text-sm">${summaryText}</div>
           <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
             How does this affect me?
