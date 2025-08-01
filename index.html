@@ -90,6 +90,35 @@
       border-radius: 0.5rem;
       margin: 1rem 0;
     }
+
+    /* News feed loading states */
+    .news-loading {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+      color: #6b7280;
+    }
+
+    .news-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    /* News item styling */
+    .news-item {
+      transition: all 0.2s ease;
+    }
+
+    .news-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
@@ -103,7 +132,14 @@
 
     <!-- News Feed -->
     <section id="news-feed-section" class="w-full md:w-1/3 bg-white border-r border-gray-200 overflow-y-auto p-4 flex flex-col min-w-[0]">
-      <h2 class="text-xl font-semibold mb-3">Veteran News Feed</h2>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold">Latest VA News</h2>
+        <button id="refresh-news" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1" title="Refresh news">
+          <span>↻</span>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
+      </div>
+      <div id="news-status" class="text-xs text-gray-500 mb-3"></div>
       <ul id="news-feed" class="space-y-4 flex-1"></ul>
     </section>
 
@@ -125,12 +161,13 @@
     // Configuration
     const CONFIG = {
       API_URL: 'https://vetdesk-demo2-api.vercel.app/api/chat',
-      FRONTEND_SECRET: 'vetdesk_secure_2025_kx9mR7pL3wQ8nF2vB6jC', // UPDATE THIS to match your backend
+      NEWS_API_URL: 'https://vetdesk-demo2-api.vercel.app/api/news',
+      FRONTEND_SECRET: 'vetdesk_secure_2025_kx9mR7pL3wQ8nF2vB6jC',
       MAX_MESSAGE_LENGTH: 2000,
       MAX_CONVERSATION_LENGTH: 50
     };
 
-  const quickActions = [
+    const quickActions = [
       { text: "Tell me about VA disability benefits", label: "Disability" },
       { text: "What VA healthcare benefits are available?", label: "Healthcare" },  
       { text: "Can you explain VA education benefits?", label: "Education" },
@@ -138,46 +175,106 @@
       { text: "What new VA benefits or updates should I know about?", label: "What's New" }
     ];
 
-    // ====== Example News Feed Data ======
-    const newsItems = [
-      {
-        title: "VA Announces New Policy Updates",
-        url: "#",
-        date: "2025-07-16",
-        summary: "The Department of Veterans Affairs has announced updates to streamline disability claim processing."
-      },
-      {
-        title: "Expanded Healthcare Access for Veterans",
-        url: "#",
-        date: "2025-07-14",
-        summary: "New legislation now allows more veterans to qualify for VA healthcare coverage."
-      },
-      {
-        title: "GI Bill Application Window Extended",
-        url: "#",
-        date: "2025-07-10",
-        summary: "Veterans have more time to apply for the GI Bill thanks to a recent policy extension."
-      }
-    ];
+    // ====== News Feed Management ======
+    let newsItems = [];
+    let newsLoading = false;
 
-    // ====== Render News Feed ======
+    async function fetchNews(forceRefresh = false) {
+      if (newsLoading) return;
+      
+      newsLoading = true;
+      const newsStatus = document.getElementById('news-status');
+      const newsFeed = document.getElementById('news-feed');
+      
+      try {
+        if (!forceRefresh) {
+          showNewsLoading();
+        }
+        
+        const response = await fetch(CONFIG.NEWS_API_URL, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.error && !data.articles?.length) {
+          throw new Error(data.error);
+        }
+        
+        newsItems = data.articles || [];
+        
+        // Update status
+        const statusText = data.cached 
+          ? `Cached data from ${formatLastUpdated(data.lastUpdated)}` 
+          : `Updated ${formatLastUpdated(data.lastUpdated)}`;
+        newsStatus.textContent = statusText;
+        
+        renderNewsFeed();
+        
+      } catch (error) {
+        console.error('News fetch error:', error);
+        showNewsError(error.message);
+      } finally {
+        newsLoading = false;
+      }
+    }
+
+    function showNewsLoading() {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = '<li class="news-loading"><div class="spinner"></div><p class="mt-2">Loading latest VA news...</p></li>';
+    }
+
+    function showNewsError(message) {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = `<li class="news-error">Unable to load news: ${escapeHtml(message)}</li>`;
+    }
+
+    function formatLastUpdated(isoString) {
+      if (!isoString) return 'unknown';
+      
+      try {
+        const date = new Date(isoString);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / (1000 * 60));
+        
+        if (diffMinutes < 1) return 'just now';
+        if (diffMinutes < 60) return `${diffMinutes}m ago`;
+        if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
+        return date.toLocaleDateString();
+      } catch {
+        return 'unknown';
+      }
+    }
+
     function renderNewsFeed() {
       const feed = document.getElementById('news-feed');
       feed.innerHTML = "";
+      
+      if (!newsItems.length) {
+        feed.innerHTML = '<li class="text-gray-500 text-center py-4">No news available</li>';
+        return;
+      }
+      
       newsItems.forEach((item, idx) => {
         const li = document.createElement('li');
-        li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
+        li.className = "news-item p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
         
-        // Sanitize content before rendering
         const titleText = escapeHtml(item.title);
         const summaryText = escapeHtml(item.summary);
         const dateText = escapeHtml(item.date);
         
         li.innerHTML = `
-          <a href="${item.url}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener">${titleText}</a>
-          <div class="text-xs text-gray-500 mb-1">${dateText}</div>
-          <div class="mb-2 text-sm">${summaryText}</div>
-          <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
+          <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline block mb-1" target="_blank" rel="noopener noreferrer">${titleText}</a>
+          <div class="text-xs text-gray-500 mb-2">${dateText}</div>
+          <div class="mb-3 text-sm text-gray-700">${summaryText}</div>
+          <button type="button" class="how-affect-me-btn w-full bg-green-100 text-green-800 px-3 py-2 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
             How does this affect me?
           </button>
         `;
@@ -190,10 +287,32 @@
           const idx = parseInt(this.getAttribute('data-news-idx'));
           const news = newsItems[idx];
           if (news) {
-            addUserMessageToChat(`How does this affect me? (regarding: "${news.title}")`);
+            const analysisPrompt = `Please analyze how this VA news affects different types of veterans:
+
+Title: "${news.title}"
+
+Summary: ${news.summary}
+
+Date: ${news.date}
+
+Please explain the potential impacts for various veteran situations without asking for personal details. Break down what this means for veterans in different circumstances.`;
+            
+            addUserMessageToChat(analysisPrompt);
           }
         });
       });
+    }
+
+    // ====== Security Helper Functions ======
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function validateMessageLength(text) {
+      return text && text.trim().length > 0 && text.length <= CONFIG.MAX_MESSAGE_LENGTH;
     }
 
     // ====== Render Quick Actions ======
@@ -210,17 +329,6 @@
         };
         qa.appendChild(btn);
       });
-    }
-
-    // ====== Security Helper Functions ======
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function validateMessageLength(text) {
-      return text && text.trim().length > 0 && text.length <= CONFIG.MAX_MESSAGE_LENGTH;
     }
 
     // ====== Chat State ======
@@ -240,11 +348,8 @@
 
     // ====== Format Bot Message with Paragraphs ======
     function formatBotMessage(text) {
-      // Sanitize the text first
       const sanitized = escapeHtml(text);
-      
-      // Split on double line breaks and create paragraphs
-      const paragraphs = sanitized.split('\\n\\n').filter(p => p.trim());
+      const paragraphs = sanitized.split('\n\n').filter(p => p.trim());
       if (paragraphs.length > 1) {
         return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
       }
@@ -323,7 +428,6 @@
     // ====== Secure API Integration ======
     async function getBotReply() {
       try {
-        // Validate conversation length
         if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
           throw new Error('Conversation too long. Please start a new conversation.');
         }
@@ -337,7 +441,7 @@
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}` // Add authentication
+            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
           },
           body: JSON.stringify({ chatHistory: history })
         });
@@ -345,7 +449,7 @@
         if (response.status === 429) {
           if (!rateLimitWarning) {
             rateLimitWarning = true;
-            setTimeout(() => { rateLimitWarning = false; }, 60000); // Reset after 1 minute
+            setTimeout(() => { rateLimitWarning = false; }, 60000);
           }
           throw new Error('Too many requests. Please wait a moment before trying again.');
         }
@@ -404,7 +508,6 @@
       const sendButton = document.getElementById('send-button');
       const chatInput = document.getElementById('chat-input');
       
-      // Disable input during processing
       sendButton.disabled = true;
       chatInput.disabled = true;
       
@@ -416,14 +519,13 @@
       sendButton.disabled = false;
       chatInput.disabled = false;
       
-      // Focus back to input
       chatInput.focus();
       
       chatMessages.push({ sender: "bot", text: botReply, streaming: true });
       await renderChatHistory();
     }
 
-    // ====== Form Handler with Validation ======
+    // ====== Event Listeners ======
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('chat-input');
@@ -440,7 +542,6 @@
       input.value = "";
     });
 
-    // ====== Input Validation ======
     document.getElementById('chat-input').addEventListener('input', function(e) {
       const length = e.target.value.length;
       const button = document.getElementById('send-button');
@@ -452,15 +553,19 @@
       button.disabled = e.target.value.trim().length === 0 || botIsLoading;
     });
 
-    // ====== Initialize UI ======
-    renderNewsFeed();
-    renderQuickActions();
-    renderChatHistory();
+    document.getElementById('refresh-news').addEventListener('click', () => {
+      fetchNews(true);
+    });
 
-    // Focus on input
-    document.getElementById('chat-input').focus();
+    // ====== Initialize ======
+    document.addEventListener('DOMContentLoaded', () => {
+      renderQuickActions();
+      renderChatHistory();
+      fetchNews();
+      document.getElementById('chat-input').focus();
+    });
 
-    // Add keyboard shortcut (Ctrl+Enter to send)
+    // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         document.getElementById('chat-form').dispatchEvent(new Event('submit'));
