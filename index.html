@@ -182,7 +182,8 @@
         const response = await fetch(CONFIG.NEWS_API_URL, {
           method: 'GET',
           headers: {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
           }
         });
         
