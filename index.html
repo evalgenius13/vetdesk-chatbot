@@ -246,7 +246,8 @@
         console.log('Raw API response:', data);
         console.log('Articles array:', data.articles);
 
-        if (data.error) {
+        // Prioritize articles - only throw error if no articles available
+        if (data.error && (!data.articles || data.articles.length === 0)) {
           throw new Error(data.error);
         }
 
