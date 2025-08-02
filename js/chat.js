@@ -150,3 +150,169 @@ async function renderChatHistory() {
       ch.appendChild(messageDiv);
     } else if (msg.sender === "bot") {
       messageDiv.className += " flex justify-start";
+
+      if (i === chatMessages.length - 1 && msg.streaming) {
+        const botBubble = document.createElement('div');
+        botBubble.className = "chat-bubble-bot";
+        messageDiv.appendChild(botBubble);
+        ch.appendChild(messageDiv);
+
+        await streamBotText(msg.text, botBubble);
+        msg.streaming = false;
+      } else {
+        const formattedText = formatBotMessage(msg.text);
+        messageDiv.innerHTML = `<div class="chat-bubble-bot">${formattedText}</div>`;
+        ch.appendChild(messageDiv);
+      }
+    }
+  }
+
+  // Loading spinner for pending bot reply
+  if (botIsLoading) {
+    const spinnerDiv = document.createElement('div');
+    spinnerDiv.className = "message-container flex justify-center";
+    spinnerDiv.innerHTML = `<div class="chat-bubble-bot flex items-center justify-center py-4"><div class="spinner" role="status" aria-label="Loading"></div></div>`;
+    ch.appendChild(spinnerDiv);
+  }
+
+  ch.scrollTop = ch.scrollHeight;
+}
+
+// Streaming effect
+function streamBotText(text, container) {
+  return new Promise(resolve => {
+    const formattedText = formatBotMessage(text);
+    let i = 0;
+    const delay = 3;
+
+    function typeChar() {
+      if (formattedText.includes('<p>')) {
+        container.innerHTML = formattedText;
+        resolve();
+      } else {
+        container.textContent = text.slice(0, i + 1);
+        i++;
+        if (i < text.length) {
+          setTimeout(typeChar, delay);
+        } else {
+          resolve();
+        }
+      }
+    }
+    typeChar();
+  });
+}
+
+// API integration
+async function getBotReply() {
+  try {
+    if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
+      throw new Error('Conversation too long. Please start a new conversation.');
+    }
+
+    const history = chatMessages.map(m => ({
+      role: m.sender === "user" ? "user" : "model",
+      parts: [{ text: m.text }]
+    }));
+
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
+      },
+      body: JSON.stringify({ chatHistory: history })
+    });
+
+    if (response.status === 429) {
+      if (!rateLimitWarning) {
+        rateLimitWarning = true;
+        setTimeout(() => { rateLimitWarning = false; }, 60000);
+      }
+      throw new Error('Too many requests. Please wait a moment before trying again.');
+    }
+
+    if (response.status === 401) {
+      throw new Error('Authentication failed. Please refresh the page.');
+    }
+
+    if (!response.ok) {
+      throw new Error(`Server error (${response.status}). Please try again later.`);
+    }
+
+    const data = await response.json();
+
+    return (
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Sorry, I couldn't get an answer right now."
+    );
+  } catch (e) {
+    console.error('API Error:', e);
+
+    if (e.message.includes('fetch')) {
+      return "Sorry, I'm having trouble connecting. Please check your internet connection and try again.";
+    }
+
+    return e.message || "Sorry, something went wrong. Please try again later.";
+  }
+}
+
+// Chat functions
+function addUserMessageToChat(text) {
+  const trimmedText = text.trim();
+
+  if (!validateMessageLength(trimmedText)) {
+    showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+    return;
+  }
+
+  // Check conversation length - count user messages only
+  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+  if (userMessageCount >= 12) {
+    showError('Conversation limit reached (12 questions). Please refresh to start a new conversation for better responses.');
+    return;
+  }
+
+  if (botIsLoading) {
+    showError('Please wait for the current response to finish.');
+    return;
+  }
+
+  chatMessages.push({ sender: "user", text: trimmedText });
+  updateQuestionCounter();
+  renderChatHistory();
+  addBotReplyToChat();
+}
+
+async function addBotReplyToChat() {
+  botIsLoading = true;
+  const sendButton = document.getElementById('send-button');
+  const chatInput = document.getElementById('chat-input');
+
+  sendButton.disabled = true;
+  chatInput.disabled = true;
+
+  await renderChatHistory();
+
+  const botReply = await getBotReply();
+
+  botIsLoading = false;
+  sendButton.disabled = false;
+  chatInput.disabled = false;
+
+  chatInput.focus();
+
+  chatMessages.push({ sender: "bot", text: botReply, streaming: true });
+  await renderChatHistory();
+
+  // Check if this was the last question and offer summary
+  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+  if (userMessageCount === 12) {
+    setTimeout(() => {
+      const summaryOffer = "That was your 12th question! Would you like me to email you a summary of our conversation? Just say 'yes' or provide your email address.";
+      chatMessages.push({ sender: "bot", text: summaryOffer, streaming: true });
+      renderChatHistory();
+      waitingForEmail = true;
+    }, 2000);
+  }
+}
