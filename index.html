@@ -282,12 +282,18 @@
         const li = document.createElement('li');
         li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
 
-        const titleText = escapeHtml(item.title);
-        const summaryText = escapeHtml(item.summary);
+        const titleText = escapeHtml(item.title || 'No title');
+        const summaryText = escapeHtml(item.summary || 'No summary');
+
+        const titleElement = item.url ? 
+          `<a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>` : 
+          `<div class="font-semibold text-blue-900">${titleText}</div>`;
+
+        const dateElement = item.date ? `<div class="text-xs text-gray-500 mb-1">${escapeHtml(item.date)}</div>` : '';
 
         li.innerHTML = `
-          <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>
-          ${item.date ? `<div class="text-xs text-gray-500 mb-1">${escapeHtml(item.date)}</div>` : ''}
+          ${titleElement}
+          ${dateElement}
           <div class="mb-2 text-sm">${summaryText}</div>
           <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
             How does this affect me?
