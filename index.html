@@ -286,14 +286,23 @@
 
     function renderNewsFeed() {
       const feed = document.getElementById('news-feed');
+      console.log('=== RENDER NEWS FEED DEBUG ===');
+      console.log('Feed element found:', !!feed);
+      console.log('NewsItems for rendering:', newsItems);
+      console.log('NewsItems length:', newsItems.length);
+      console.log('NewsItems type:', typeof newsItems);
+      
       feed.innerHTML = "";
 
       if (!newsItems.length) {
+        console.log('No news items - showing fallback');
         feed.innerHTML = '<li class="text-gray-500 text-center py-4">No news available</li>';
         return;
       }
 
+      console.log('Creating news items HTML...');
       newsItems.forEach((item, idx) => {
+        console.log(`Processing item ${idx}:`, item);
         const li = document.createElement('li');
         li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
 
@@ -309,19 +318,10 @@
           </button>
         `;
         feed.appendChild(li);
+        console.log(`Added item ${idx} to feed`);
       });
 
-      // Attach event listeners for "How does this affect me?" buttons
-      document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const idx = parseInt(this.getAttribute('data-news-idx'));
-          const news = newsItems[idx];
-          if (news) {
-            const userMessage = `How does "${news.title}" affect me?`;
-            addUserMessageToChat(userMessage);
-          }
-        });
-      });
+      console.log('=== RENDER COMPLETE ===');
     }
 
     // ====== Security Helper Functions ======
