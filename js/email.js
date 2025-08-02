@@ -156,7 +156,7 @@ For additional support, visit VA.gov or contact your local VA office.`;
       userName: 'Veteran'
     };
 
-    const response = await fetch('/api/send-summary', {
+    const response = await fetch('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
