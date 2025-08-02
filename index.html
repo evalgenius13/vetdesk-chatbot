@@ -222,99 +222,102 @@
     let newsItems = [];
     let newsLoading = false;
 
-   async function fetchNews(forceRefresh = false) {
-  if (newsLoading) return;
+    async function fetchNews(forceRefresh = false) {
+      if (newsLoading) return;
 
-  newsLoading = true;
-  const newsFeed = document.getElementById('news-feed');
+      newsLoading = true;
+      const newsFeed = document.getElementById('news-feed');
 
-  try {
-    showNewsLoading();
+      try {
+        showNewsLoading();
 
-    const response = await fetch(CONFIG.NEWS_API_URL, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      },
-      cache: 'no-store' // disables browser caching
-    });
+        const response = await fetch(CONFIG.NEWS_API_URL, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
 
-    console.log('News fetch status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
 
-    const rawText = await response.clone().text();
-    console.log('Raw response:', rawText);
+        const data = await response.json();
 
-    const data = JSON.parse(rawText);
-    console.log('Parsed news data:', data);
-    console.log('Parsed articles:', data.articles);
+        if (data.error && !data.articles?.length) {
+          throw new Error(data.error);
+        }
 
-    if (data.error && !data.articles?.length) {
-      throw new Error(data.error);
+        newsItems = data.articles || [];
+        renderNewsFeed();
+
+      } catch (error) {
+        console.error('News fetch error:', error);
+        showNewsError(error.message);
+      } finally {
+        newsLoading = false;
+      }
     }
 
-    newsItems = data.articles || [];
-    renderNewsFeed();
+    function showNewsLoading() {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
+    }
 
-  } catch (error) {
-    console.error('News fetch error:', error);
-    showNewsError(error.message);
-  } finally {
-    newsLoading = false;
-  }
-}
+    function showNewsError(message) {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
+    }
 
-function renderNewsFeed() {
-  const feed = document.getElementById('news-feed');
-  feed.innerHTML = "";
+    function showNewsLoading() {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
+    }
 
-  console.log('Rendering news feed...');
-  console.log('Number of articles:', newsItems.length);
+    function showNewsError(message) {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
+    }
 
-  if (!newsItems.length) {
-    feed.innerHTML = '<li class="text-gray-500 text-center py-4">No news available</li>';
-    return;
-  }
+    function renderNewsFeed() {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = "";
 
-  newsItems.forEach((item, idx) => {
-    console.log(`Item ${idx}:`, item);
-
-    const li = document.createElement('li');
-    li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
-
-    const titleText = escapeHtml(item.title || 'No title');
-    const summaryText = escapeHtml(item.summary || 'No summary');
-
-    const titleElement = item.url ? 
-      `<a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>` : 
-      `<div class="font-semibold text-blue-900">${titleText}</div>`;
-
-    const dateElement = item.date ? `<div class="text-xs text-gray-500 mb-1">${escapeHtml(item.date)}</div>` : '';
-
-    li.innerHTML = `
-      ${titleElement}
-      ${dateElement}
-      <div class="mb-2 text-sm">${summaryText}</div>
-      <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
-        How does this affect me?
-      </button>
-    `;
-
-    feed.appendChild(li);
-  });
-
-  console.log('Final news feed DOM:', feed.innerHTML);
-
-  document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const idx = parseInt(this.getAttribute('data-news-idx'));
-      const news = newsItems[idx];
-      if (news) {
-        const userMessage = `How does "${news.title}" affect me?`;
-        addUserMessageToChat(userMessage);
+      if (!newsItems.length) {
+        feed.innerHTML = '<li class="text-gray-500 text-center py-4">No news available</li>';
+        return;
       }
-    });
-  });
-}
+
+      newsItems.forEach((item, idx) => {
+        const li = document.createElement('li');
+        li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
+
+        const titleText = escapeHtml(item.title);
+        const summaryText = escapeHtml(item.summary);
+
+        li.innerHTML = `
+          <a href="${escapeHtml(item.url)}" class="font-semibold text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">${titleText}</a>
+          ${item.date ? `<div class="text-xs text-gray-500 mb-1">${escapeHtml(item.date)}</div>` : ''}
+          <div class="mb-2 text-sm">${summaryText}</div>
+          <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
+            How does this affect me?
+          </button>
+        `;
+        feed.appendChild(li);
+      });
+
+      // Attach event listeners for "How does this affect me?" buttons
+      document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(this.getAttribute('data-news-idx'));
+          const news = newsItems[idx];
+          if (news) {
+            const userMessage = `How does "${news.title}" affect me?`;
+            addUserMessageToChat(userMessage);
+          }
+        });
+      });
+    }
 
     // ====== Security Helper Functions ======
     function escapeHtml(text) {
