@@ -96,14 +96,51 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 280px;
+      background-color: #1e40af;
+      color: white;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 1000;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -140px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 13px;
+      line-height: 1.4;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1e40af transparent transparent transparent;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
 
- <header class="bg-blue-900 text-white p-4 flex items-center">
-  <h1 class="text-2xl font-bold mr-2 mb-0 inline-block">VetDesk™</h1>
-  <span class="text-xs font-light text-blue-200 align-baseline">VA Benefits, Simplified.</span>
-</header>
+  <header class="bg-blue-900 text-white p-4 flex items-center">
+    <h1 class="text-2xl font-bold mr-2 mb-0 inline-block">VetDesk™</h1>
+    <span class="text-xs font-light text-blue-200 align-baseline">VA Benefits, Simplified.</span>
+  </header>
 
   <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
 
@@ -115,11 +152,24 @@
 
     <!-- Chat Section -->
     <section id="chat-section" class="flex-1 flex flex-col h-full bg-gray-50">
-      <div id="welcome-message" class="p-4 text-base text-gray-700 bg-white border-b border-gray-200">
-  <span>
-    👋 Hi there, and welcome! I'm here to help you understand your VA benefits in plain everyday English. Just ask me any questions you have.
-  </span>
-</div>
+      <div class="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div id="welcome-message" class="text-base text-gray-700">
+          <span>
+            👋 Hi there, and welcome! I'm here to help you understand your VA benefits in plain everyday English. Just ask me any questions you have.
+          </span>
+        </div>
+        
+        <!-- Privacy tooltip -->
+        <div class="tooltip">
+          <svg class="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="tooltiptext">
+            We do not save your information. When you refresh this page all data will be lost.
+          </span>
+        </div>
+      </div>
+      
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
       <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
       <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
@@ -139,13 +189,76 @@
       MAX_CONVERSATION_LENGTH: 50
     };
 
+    // Quick actions with rates
     const quickActions = [
       { text: "Tell me about VA disability benefits", label: "Disability" },
       { text: "What VA healthcare benefits are available?", label: "Healthcare" },
       { text: "Can you explain VA education benefits?", label: "Education" },
       { text: "What are VA housing benefits?", label: "Housing" },
+      { text: "What are the current VA disability compensation rates?", label: "Rates" },
       { text: "What new VA benefits or updates should I know about?", label: "What's New" }
     ];
+
+    // Instant rate responses - all 2025 rates
+    const INSTANT_RATE_RESPONSES = {
+      "10": "For 10% disability, you receive $175.51 per month. Veterans with 10% or 20% ratings don't receive additional compensation for dependents.",
+      "20": "For 20% disability, you receive $346.95 per month. Veterans with 10% or 20% ratings don't receive additional compensation for dependents.",
+      "30": "For 30% disability:\n• Veteran alone: $537.42/month\n• With spouse: $601.42/month\n• With one child: $579.42/month\n• With spouse and one child: $648.42/month",
+      "40": "For 40% disability:\n• Veteran alone: $774.16/month\n• With spouse: $859.16/month\n• With one child: $831.16/month\n• With spouse and one child: $922.16/month",
+      "50": "For 50% disability:\n• Veteran alone: $1,102.04/month\n• With spouse: $1,208.04/month\n• With one child: $1,173.04/month\n• With spouse and one child: $1,287.04/month",
+      "60": "For 60% disability:\n• Veteran alone: $1,395.93/month\n• With spouse: $1,523.93/month\n• With one child: $1,480.93/month\n• With spouse and one child: $1,617.93/month",
+      "70": "For 70% disability:\n• Veteran alone: $1,759.19/month\n• With spouse: $1,908.19/month\n• With one child: $1,858.19/month\n• With spouse and one child: $2,018.19/month",
+      "80": "For 80% disability:\n• Veteran alone: $2,044.89/month\n• With spouse: $2,214.89/month\n• With one child: $2,158.89/month\n• With spouse and one child: $2,340.89/month",
+      "90": "For 90% disability:\n• Veteran alone: $2,297.96/month\n• With spouse: $2,489.96/month\n• With one child: $2,425.96/month\n• With spouse and one child: $2,630.96/month",
+      "100": "For 100% disability:\n• Veteran alone: $3,831.30/month\n• With spouse: $4,044.91/month\n• With one child: $3,974.15/month\n• With spouse and one child: $4,201.35/month",
+      "general": "2025 VA Disability Compensation Rates (effective December 1, 2024):\n\n10%: $175.51/month\n20%: $346.95/month\n30%: $537.42/month\n40%: $774.16/month\n50%: $1,102.04/month\n60%: $1,395.93/month\n70%: $1,759.19/month\n80%: $2,044.89/month\n90%: $2,297.96/month\n100%: $3,831.30/month\n\n(Rates shown are for veterans with no dependents. Ask about a specific percentage for dependent rates!)"
+    };
+
+    // Detect if user is asking about disability rates
+    function detectRateQuestion(message) {
+      const msg = message.toLowerCase();
+      
+      // Must contain rate-related keywords
+      const rateKeywords = ['how much', 'rate', 'payment', 'compensation', 'amount', 'pay', 'money', 'receive', 'get paid'];
+      if (!rateKeywords.some(keyword => msg.includes(keyword))) {
+        return null;
+      }
+      
+      // Look for specific percentages
+      const percentMatches = [
+        msg.match(/(\d{1,3})%/),  // "70%"
+        msg.match(/(\d{1,3})\s*percent/), // "70 percent"
+        msg.match(/\b(\d{1,3})\b/), // "what about 70"
+      ];
+      
+      for (const match of percentMatches) {
+        if (match && match[1]) {
+          const num = parseInt(match[1]);
+          if (num >= 10 && num <= 100 && num % 10 === 0) {
+            return num.toString();
+          }
+        }
+      }
+      
+      // Word-based percentages
+      const wordMatch = msg.match(/\b(ten|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one hundred|hundred)\b/);
+      if (wordMatch) {
+        const wordToNum = {
+          'ten': '10', 'twenty': '20', 'thirty': '30', 'forty': '40', 'fifty': '50',
+          'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90', 
+          'hundred': '100', 'one hundred': '100'
+        };
+        const percentage = wordToNum[wordMatch[1]];
+        if (percentage) return percentage;
+      }
+      
+      // General rate inquiry
+      if (msg.includes('rates') || msg.includes('compensation')) {
+        return 'general';
+      }
+      
+      return null;
+    }
 
     // ====== News Feed Management ======
     let newsItems = [];
@@ -260,7 +373,14 @@
         btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
         btn.textContent = action.label;
         btn.onclick = () => {
-          addUserMessageToChat(action.text);
+          // Check if it's the rates quick action
+          if (action.text === "What are the current VA disability compensation rates?") {
+            chatMessages.push({ sender: "user", text: action.text });
+            renderChatHistory();
+            addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
+          } else {
+            addUserMessageToChat(action.text);
+          }
         };
         qa.appendChild(btn);
       });
@@ -289,6 +409,12 @@
         return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
       }
       return sanitized;
+    }
+
+    // ====== Add instant bot response ======
+    function addInstantBotResponse(text) {
+      chatMessages.push({ sender: "bot", text: text, streaming: false });
+      renderChatHistory();
     }
 
     // ====== Render Chat History with ChatGPT-style Formatting ======
@@ -473,6 +599,20 @@
         return;
       }
 
+      // Check for instant rate response first
+      const rateResponse = detectRateQuestion(text);
+      if (rateResponse && INSTANT_RATE_RESPONSES[rateResponse]) {
+        // Add user message
+        chatMessages.push({ sender: "user", text: text });
+        
+        // Add instant rate response
+        addInstantBotResponse(INSTANT_RATE_RESPONSES[rateResponse]);
+        
+        input.value = "";
+        return; // Don't send to AI
+      }
+
+      // Otherwise, proceed with normal AI chat
       addUserMessageToChat(text);
       input.value = "";
     });
