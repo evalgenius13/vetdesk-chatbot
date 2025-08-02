@@ -243,12 +243,16 @@
         }
 
         const data = await response.json();
+        console.log('Raw API response:', data);
+        console.log('Articles array:', data.articles);
 
         if (data.error && !data.articles?.length) {
           throw new Error(data.error);
         }
 
         newsItems = data.articles || [];
+        console.log('Processed newsItems:', newsItems);
+        console.log('NewsItems length:', newsItems.length);
         renderNewsFeed();
 
       } catch (error) {
