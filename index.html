@@ -246,7 +246,7 @@
         console.log('Raw API response:', data);
         console.log('Articles array:', data.articles);
 
-        if (data.error && !data.articles?.length) {
+        if (data.error) {
           throw new Error(data.error);
         }
 
