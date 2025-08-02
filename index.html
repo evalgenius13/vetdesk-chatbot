@@ -274,16 +274,6 @@
       feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
     }
 
-    function showNewsLoading() {
-      const feed = document.getElementById('news-feed');
-      feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
-    }
-
-    function showNewsError(message) {
-      const feed = document.getElementById('news-feed');
-      feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
-    }
-
     function renderNewsFeed() {
       const feed = document.getElementById('news-feed');
       console.log('=== RENDER NEWS FEED DEBUG ===');
@@ -322,6 +312,13 @@
       });
 
       console.log('=== RENDER COMPLETE ===');
+      try {
+        console.log('Final feed innerHTML:', feed.innerHTML);
+        console.log('Feed children count:', feed.children.length);
+        console.log('Feed element:', feed);
+      } catch (error) {
+        console.error('Error accessing feed element:', error);
+      }
     }
 
     // ====== Security Helper Functions ======
