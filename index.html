@@ -1,4 +1,110 @@
-<!DOCTYPE html>
+// ====== Email Summary Functions ======
+    async function sendConversationSummary(email) {
+      try {
+        // Generate AI summary of conversation
+        const conversationForSummary = chatMessages
+          .map(msg => `${msg.sender === 'user' ? 'Veteran' : 'VetDesk'}: ${msg.text}`)
+          .join('\n\n');
+
+        const summaryPrompt = `Please create a professional summary of this VA benefits conversation between a veteran and VetDesk. Focus on:
+- Key benefits discussed and eligibility
+- Specific rates or amounts mentioned
+- Important next steps or actions
+- Any deadlines or time-sensitive information
+
+Keep it concise but comprehensive. Format it in a professional, easy-to-read style for the veteran's records.
+
+Conversation:
+${conversationForSummary}`;
+
+        // Get AI summary
+        const summaryResponse = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
+          },
+          body: JSON.stringify({ 
+            chatHistory: [{
+              role: "user",
+              parts: [{ text: summaryPrompt }]
+            }]
+          })
+        });
+
+        let conversationSummary = "Unable to generate summary - please refer to the full conversation below.";
+        
+        if (summaryResponse.ok) {
+          const summaryData = await summaryResponse.json();
+          conversationSummary = summaryData?.candidates?.[0]?.content?.parts?.[0]?.text || conversationSummary;
+        } else {
+          console.error('Summary API error:', summaryResponse.status);
+        }
+        
+        // Generate date/time
+        const conversationDate = new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const conversationTime = new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        // Format full conversation as backup
+        const formattedConversation = chatMessages
+          .map(msg => {
+            const sender = msg.sender === 'user' ? '👤 You' : '🏛️ VetDesk';
+            return `${sender}:\n${msg.text}`;
+          })
+          .join('\n\n─────────────────────────────────────────\n\n');
+        
+        // Create professional email content
+        const emailContent = `Dear Veteran,
+
+Thank you for using VetDesk to learn more about your VA benefits. Below is a summary of our conversation from ${conversationDate} at ${conversationTime}.
+
+═══════════════════════════════════════════════════════════════
+
+CONVERSATION SUMMARY
+
+${conversationSummary}
+
+═══════════════════════════════════════════════════════════════
+
+NEXT STEPS & VA RESOURCES
+
+• Visit VA.gov for benefit applications and detailed information
+• Call 1-800-827-1000 for general VA benefits questions (Mon-Fri, 8am-8pm ET)  
+• Find your local VA office: va.gov/find-locations
+• Veterans Crisis Line: 988, Press 1 (24/7 confidential support)
+• MyVA411: 1-844-698-2311 for technical support with VA websites
+
+IMPORTANT REMINDERS
+
+• Always verify benefit information with your local VA office
+• Keep this summary for your records  
+• VA benefits and rates may change - check VA.gov for updates
+• Apply for time-sensitive benefits as soon as possible
+
+═══════════════════════════════════════════════════════════════
+
+FULL CONVERSATION RECORD
+
+${formattedConversation}
+
+═══════════════════════════════════════════════════════════════
+
+Best regards,
+The VetDesk Team
+
+──────────────────────────────────────────────────────────────
+VetDesk™ - VA Benefits, Simplified
+This summary was generated on ${conversationDate} at ${conversationTime}
+For additional support, visit VA.gov or contact your local VA office.`;<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -119,6 +225,9 @@
         <span>
           👋 Hi there, and welcome! I'm here to help you understand your VA benefits in plain everyday English. Just ask me any questions you have.
         </span>
+        <div id="question-counter" class="text-xs text-gray-500 mt-2">
+          Questions remaining: <span id="questions-left">12</span>/12
+        </div>
       </div>
       
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
@@ -164,6 +273,142 @@
       "100": "For 100% disability:\n• Veteran alone: $3,831.30/month\n• With spouse: $4,044.91/month\n• With one child: $3,974.15/month\n• With spouse and one child: $4,201.35/month",
       "general": "2025 VA Disability Compensation Rates (effective December 1, 2024):\n\n10%: $175.51/month\n20%: $346.95/month\n30%: $537.42/month\n40%: $774.16/month\n50%: $1,102.04/month\n60%: $1,395.93/month\n70%: $1,759.19/month\n80%: $2,044.89/month\n90%: $2,297.96/month\n100%: $3,831.30/month\n\n(Rates shown are for veterans with no dependents. Ask about a specific percentage for dependent rates!)"
     };
+
+    // ====== Email Summary Functions ======
+    async function sendConversationSummary(email) {
+      try {
+        // Generate professional email content
+        const conversationDate = new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const conversationTime = new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        // Format conversation with proper styling
+        const formattedConversation = chatMessages
+          .map(msg => {
+            const sender = msg.sender === 'user' ? '👤 You' : '🏛️ VetDesk';
+            return `${sender}:\n${msg.text}`;
+          })
+          .join('\n\n─────────────────────────────────────────\n\n');
+        
+        // Create professional email content
+        const emailContent = `
+Dear Veteran,
+
+Thank you for using VetDesk to learn more about your VA benefits. Below is a summary of our conversation from ${conversationDate} at ${conversationTime}.
+
+═══════════════════════════════════════════════════════════════
+
+CONVERSATION SUMMARY
+
+${conversationSummary}
+
+═══════════════════════════════════════════════════════════════
+
+NEXT STEPS & VA RESOURCES
+
+• Visit VA.gov for benefit applications and detailed information
+• Call 1-800-827-1000 for general VA benefits questions (Mon-Fri, 8am-8pm ET)
+• Find your local VA office: va.gov/find-locations
+• Veterans Crisis Line: 988, Press 1 (24/7 confidential support)
+• MyVA411: 1-844-698-2311 for technical support with VA websites
+
+IMPORTANT REMINDERS
+
+• Always verify benefit information with your local VA office
+• Keep this summary for your records
+• VA benefits and rates may change - check VA.gov for updates
+• Apply for time-sensitive benefits as soon as possible
+
+═══════════════════════════════════════════════════════════════
+
+FULL CONVERSATION RECORD
+
+${formattedConversation}
+
+═══════════════════════════════════════════════════════════════
+
+Best regards,
+The VetDesk Team
+
+──────────────────────────────────────────────────────────────
+VetDesk™ - VA Benefits, Simplified
+This summary was generated on ${conversationDate} at ${conversationTime}
+For additional support, visit VA.gov or contact your local VA office.
+        `.trim();
+        
+        const summary = {
+          email: email,
+          subject: `Your VetDesk Benefits Consultation Summary - ${conversationDate}`,
+          content: emailContent,
+          userName: 'Veteran'
+        };
+
+        const response = await fetch('/api/send-summary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(summary)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          const successMessage = `Great! I've sent your conversation summary to ${email}. You should receive it within a few minutes.`;
+          chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
+          renderChatHistory();
+        } else {
+          throw new Error(result.error || 'Failed to send email');
+        }
+      } catch (error) {
+        console.error('Email error:', error);
+        let errorMessage;
+        
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          errorMessage = "Sorry, I couldn't send the email due to a connection issue. Please try again.";
+        } else if (error.message.includes('summary')) {
+          errorMessage = "I sent your email, but there was an issue generating the summary. You'll receive the full conversation instead.";
+        } else {
+          errorMessage = "Sorry, I couldn't send the email right now. Please try again later or contact support.";
+        }
+        
+        chatMessages.push({ sender: "bot", text: errorMessage, streaming: false });
+        renderChatHistory();
+      }
+    }
+
+    function detectEmailRequest(message) {
+      const msg = message.toLowerCase().trim();
+      
+      // Better email regex
+      const emailPattern = /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/;
+      
+      // Check if message contains an email address
+      const emailMatch = message.match(emailPattern);
+      if (emailMatch) {
+        return emailMatch[0];
+      }
+      
+      // Explicit email requests
+      if (msg.includes('email me') || msg.includes('send me summary') || msg.includes('email summary')) {
+        return 'request';
+      }
+      
+      // Confirm if waiting and user says yes
+      if (waitingForEmail && (msg === 'yes' || msg === 'sure' || msg === 'yeah' || msg === 'yep')) {
+        return 'confirm';
+      }
+      
+      return null;
+    }
 
     // Detect if user is asking about disability rates
     function detectRateQuestion(message) {
@@ -368,10 +613,28 @@
       });
     }
 
+    // ====== Update question counter ======
+    function updateQuestionCounter() {
+      const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+      const questionsLeft = 12 - userMessageCount;
+      document.getElementById('questions-left').textContent = questionsLeft;
+      
+      // Change color as questions run out
+      const counterElement = document.getElementById('question-counter');
+      if (questionsLeft <= 3) {
+        counterElement.className = 'text-xs text-red-500 mt-2';
+      } else if (questionsLeft <= 6) {
+        counterElement.className = 'text-xs text-orange-500 mt-2';
+      } else {
+        counterElement.className = 'text-xs text-gray-500 mt-2';
+      }
+    }
+    
     // ====== Chat State ======
     let chatMessages = [];
     let botIsLoading = false;
     let rateLimitWarning = false;
+    let waitingForEmail = false; // Track if we're waiting for email input
 
     // ====== Error Handling ======
     function showError(message) {
@@ -531,8 +794,10 @@
         return;
       }
 
-      if (chatMessages.length >= CONFIG.MAX_CONVERSATION_LENGTH) {
-        showError('Conversation limit reached. Please refresh to start a new conversation.');
+      // Check conversation length - count user messages only
+      const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+      if (userMessageCount >= 12) {
+        showError('Conversation limit reached (12 questions). Please refresh to start a new conversation for better responses.');
         return;
       }
 
@@ -542,6 +807,7 @@
       }
 
       chatMessages.push({ sender: "user", text: trimmedText });
+      updateQuestionCounter(); // Update counter after adding message
       renderChatHistory();
       addBotReplyToChat();
     }
@@ -566,6 +832,17 @@
 
       chatMessages.push({ sender: "bot", text: botReply, streaming: true });
       await renderChatHistory();
+
+      // Check if this was the last question and offer summary
+      const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+      if (userMessageCount === 12) {
+        setTimeout(() => {
+          const summaryOffer = "That was your 12th question! Would you like me to email you a summary of our conversation? Just say 'yes' or provide your email address.";
+          chatMessages.push({ sender: "bot", text: summaryOffer, streaming: true });
+          renderChatHistory();
+          waitingForEmail = true; // Set flag to handle next response
+        }, 2000); // Wait 2 seconds after the regular response
+      }
     }
 
     // ====== Event Listeners ======
@@ -579,6 +856,53 @@
       if (!validateMessageLength(text)) {
         showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
         return;
+      }
+
+      // Check for email requests
+      const emailResponse = detectEmailRequest(text);
+      if (emailResponse) {
+        if (emailResponse === 'request') {
+          chatMessages.push({ sender: "user", text: text });
+          renderChatHistory();
+          
+          const emailRequest = "I'd be happy to email you a summary! Just provide your email address and I'll send it right over.";
+          addInstantBotResponse(emailRequest);
+          waitingForEmail = true;
+          input.value = "";
+          return;
+        } else if (emailResponse === 'confirm' && waitingForEmail) {
+          chatMessages.push({ sender: "user", text: text });
+          renderChatHistory();
+          
+          const emailRequest = "Please provide your email address and I'll send you the summary.";
+          addInstantBotResponse(emailRequest);
+          input.value = "";
+          return;
+        } else if (emailResponse !== 'confirm' && emailResponse !== 'request') {
+          // User provided email address
+          chatMessages.push({ sender: "user", text: text });
+          renderChatHistory();
+          
+          // Show loading message
+          const loadingMessage = "Generating your summary and sending email...";
+          chatMessages.push({ sender: "bot", text: loadingMessage, streaming: false });
+          renderChatHistory();
+          
+          waitingForEmail = false;
+          await sendConversationSummary(emailResponse);
+          
+          // Remove loading message
+          chatMessages.pop();
+          renderChatHistory();
+          
+          input.value = "";
+          return;
+        }
+      }
+
+      // Reset email waiting if user says something unrelated
+      if (waitingForEmail && !emailResponse) {
+        waitingForEmail = false;
       }
 
       // Check for instant rate response first
