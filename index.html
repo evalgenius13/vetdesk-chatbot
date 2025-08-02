@@ -220,11 +220,18 @@
       
       // Must contain rate-related keywords
       const rateKeywords = ['how much', 'rate', 'payment', 'compensation', 'amount', 'pay', 'money', 'receive', 'get paid'];
-      if (!rateKeywords.some(keyword => msg.includes(keyword))) {
+      const hasRateKeyword = rateKeywords.some(keyword => msg.includes(keyword));
+      
+      // Exclude complex scenarios - if it mentions these terms, send to AI instead
+      const complexKeywords = ['reduce', 'surgery', 'repair', 'increase', 'appeal', 'exam', 'c&p', 'rating', 'condition', 'cut', 'lower', 'lose', 'decrease', 'change', 'affect', 'impact', 'medical', 'doctor', 'treatment'];
+      const isComplex = complexKeywords.some(keyword => msg.includes(keyword));
+      
+      // If no rate keywords or if it's a complex question, don't trigger instant response
+      if (!hasRateKeyword || isComplex) {
         return null;
       }
       
-      // Look for specific percentages
+      // Look for specific percentages in simple rate queries only
       const percentMatches = [
         msg.match(/(\d{1,3})%/),  // "70%"
         msg.match(/(\d{1,3})\s*percent/), // "70 percent"
@@ -252,8 +259,8 @@
         if (percentage) return percentage;
       }
       
-      // General rate inquiry
-      if (msg.includes('rates') || msg.includes('compensation')) {
+      // General rate inquiry (only if simple)
+      if ((msg.includes('rates') || msg.includes('compensation')) && !isComplex) {
         return 'general';
       }
       
