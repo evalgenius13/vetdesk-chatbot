@@ -164,7 +164,7 @@ For additional support, visit VA.gov or contact your local VA office.`;
     console.log('[EMAIL SEND RESPONSE]', response.status, result);
 
     if (response.ok && result?.success === true) {
-      const successMessage = `Great! I've sent your conversation summary to ${email}. You should receive it within a few minutes.`;
+    const successMessage = `Great! Your conversation summary has been emailed. You should receive it within a few minutes.`;
       chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
       renderChatHistory();
     } else {
