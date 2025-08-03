@@ -103,7 +103,7 @@ function renderQuickActions() {
     // Special styling for email summary button
     if (action.text === "email summary") {
       btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold";
-      btn.textContent = "📧 " + action.label;
+      btn.textContent = action.label;
     } else {
       // Default styling for other buttons
       btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
