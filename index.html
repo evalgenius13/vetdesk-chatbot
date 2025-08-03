@@ -351,6 +351,10 @@
         mobileNewsModal.classList.remove('show');
       }
 
+      // Make functions globally accessible
+      window.openMobileNews = openMobileNews;
+      window.closeMobileNews = closeMobileNews;
+
       function attachMobileNewsEventListeners() {
         const mobileNewsItems = mobileNewsFeed.querySelectorAll('.news-item button');
         mobileNewsItems.forEach(button => {
