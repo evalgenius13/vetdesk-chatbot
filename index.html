@@ -280,9 +280,8 @@
       
       <!-- Mobile News Modal -->
       <div id="mobile-news-modal" class="mobile-news-modal">
-        <div class="bg-blue-900 text-white p-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Veteran News</h2>
-          <button id="mobile-news-close" class="text-white hover:text-blue-200 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="absolute top-4 right-4 z-10 md:hidden">
+          <button id="mobile-news-close" class="bg-black bg-opacity-50 text-white hover:bg-opacity-70 text-2xl w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
         </div>
         <div class="flex-1 overflow-y-auto p-4">
           <ul id="mobile-news-feed" class="space-y-4"></ul>
