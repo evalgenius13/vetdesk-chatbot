@@ -160,6 +160,9 @@ async function renderChatHistory() {
 
         await streamBotText(msg.text, botBubble);
         msg.streaming = false;
+        // Scroll after streaming finishes
+        ch.scrollTop = ch.scrollHeight;
+        setTimeout(() => { ch.scrollTop = ch.scrollHeight; }, 0);
       } else {
         const formattedText = formatBotMessage(msg.text);
         messageDiv.innerHTML = `<div class="chat-bubble-bot">${formattedText}</div>`;
@@ -177,6 +180,7 @@ async function renderChatHistory() {
   }
 
   ch.scrollTop = ch.scrollHeight;
+  setTimeout(() => { ch.scrollTop = ch.scrollHeight; }, 0);
 }
 
 // Streaming effect
