@@ -129,7 +129,7 @@ function closeMobileNews() {
   }
 }
 
-// Attach event listeners for mobile news feed - FIXED
+// Attach event listeners for mobile news feed
 function attachMobileNewsEventListeners() {
   const mobileNewsFeed = document.getElementById('mobile-news-feed');
   if (!mobileNewsFeed) return;
@@ -140,7 +140,6 @@ function attachMobileNewsEventListeners() {
       const news = newsItems[idx];
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
-        // FIXED: Close mobile news first, then add message
         closeMobileNews();
         addUserMessageToChat(userMessage);
       }
@@ -159,4 +158,10 @@ function escapeHtml(text) {
 // Make sure to call fetchNews() on load to populate feeds.
 document.addEventListener('DOMContentLoaded', () => {
   fetchNews();
+  
+  // Handle mobile news close button
+  const mobileNewsClose = document.getElementById('mobile-news-close');
+  if (mobileNewsClose) {
+    mobileNewsClose.addEventListener('click', closeMobileNews);
+  }
 });
