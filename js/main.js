@@ -34,8 +34,12 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
       chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
       renderChatHistory();
       
+      // Remove loading message before calling email function
+      chatMessages.pop();
+      
       waitingForEmailInput = false;
       await sendConversationSummary(text);
+      renderChatHistory(); // Display the success message
       
       input.value = "";
       return;
