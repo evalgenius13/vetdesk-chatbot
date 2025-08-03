@@ -106,32 +106,61 @@
       <span class="text-xs font-light text-blue-200 align-baseline">VA Benefits, Simplified.</span>
     </div>
     
-    <!-- FAQ Dropdown -->
-    <div class="relative">
-      <button id="faq-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
-        <span class="mr-1">❓</span>FAQ
-      </button>
-      <div id="faq-dropdown" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white text-gray-800 rounded-lg shadow-lg border z-50 max-w-[calc(100vw-2rem)] mr-4 sm:mr-0">
-        <div class="p-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-semibold text-base sm:text-lg">FAQ</h3>
-            <button id="faq-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
+    <div class="flex items-center space-x-3">
+      <!-- About Dropdown -->
+      <div class="relative">
+        <button id="about-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
+          <span class="mr-1">ℹ️</span>About
+        </button>
+        <div id="about-dropdown" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white text-gray-800 rounded-lg shadow-lg border z-50 max-w-[calc(100vw-2rem)] mr-4 sm:mr-0">
+          <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-semibold text-base sm:text-lg">About VetDesk</h3>
+              <button id="about-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
+            </div>
+            
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+              <div>
+                <h4 class="font-medium text-blue-900 mb-2 text-sm">What is VetDesk?</h4>
+                <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">VetDesk is a free service made by veterans for veterans. Our mission is to help explain VA benefits and the policies that affect them in plain English and in a secure, simple, and respectful way. Just ask questions and get clear answers.</p>
+              </div>
+              
+              <div>
+                <h4 class="font-medium text-blue-900 mb-2 text-sm">Important</h4>
+                <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">VetDesk is independent and not affiliated with the VA. For official business, use VA.gov or call 1-800-827-1000.</p>
+              </div>
+            </div>
           </div>
-          
-          <div class="space-y-4 max-h-[60vh] overflow-y-auto">
-            <div>
-              <h4 class="font-medium text-blue-900 mb-2 text-sm">How many questions can I ask?</h4>
-              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">You can ask up to 12 questions per conversation. This limit helps us keep VetDesk completely free for all veterans. After 12 questions, simply refresh the page to start a new conversation.</p>
+        </div>
+      </div>
+      
+      <!-- FAQ Dropdown -->
+      <div class="relative">
+        <button id="faq-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
+          <span class="mr-1">❓</span>FAQ
+        </button>
+        <div id="faq-dropdown" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white text-gray-800 rounded-lg shadow-lg border z-50 max-w-[calc(100vw-2rem)] mr-4 sm:mr-0">
+          <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-semibold text-base sm:text-lg">FAQ</h3>
+              <button id="faq-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
             </div>
             
-            <div>
-              <h4 class="font-medium text-blue-900 mb-2 text-sm">Is this an official VA website?</h4>
-              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">No, VetDesk is not an official VA website. We're an independent service that helps veterans understand VA benefits in plain English. For official VA business, always visit VA.gov or call 1-800-827-1000.</p>
-            </div>
-            
-            <div>
-              <h4 class="font-medium text-blue-900 mb-2 text-sm">Is my information private?</h4>
-              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">Yes. We don't store your personal information or conversation history. Each conversation is temporary and deleted when you close the page. If you request an email summary, we only use your email to send it and don't store it.</p>
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+              <div>
+                <h4 class="font-medium text-blue-900 mb-2 text-sm">How many questions can I ask?</h4>
+                <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">You can ask up to 12 questions per conversation. This limit helps us keep VetDesk completely free for all veterans. After 12 questions, simply refresh the page to start a new conversation.</p>
+              </div>
+              
+              <div>
+                <h4 class="font-medium text-blue-900 mb-2 text-sm">Is this an official VA website?</h4>
+                <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">No, VetDesk is not an official VA website. We're an independent service that helps veterans understand VA benefits in plain English. For official VA business, always visit VA.gov or call 1-800-827-1000.</p>
+              </div>
+              
+              <div>
+                <h4 class="font-medium text-blue-900 mb-2 text-sm">Is my information private?</h4>
+                <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">Yes. We don't store your personal information or conversation history. Each conversation is temporary and deleted when you close the page. If you request an email summary, we only use your email to send it and don't store it.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -174,17 +203,31 @@
   <script src="js/chat.js"></script>
   <script src="js/main.js"></script>
 
-  <!-- FAQ Dropdown JavaScript -->
+  <!-- FAQ and About Dropdown JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // FAQ Dropdown
       const faqButton = document.getElementById('faq-button');
       const faqDropdown = document.getElementById('faq-dropdown');
       const faqClose = document.getElementById('faq-close');
+
+      // About Dropdown
+      const aboutButton = document.getElementById('about-button');
+      const aboutDropdown = document.getElementById('about-dropdown');
+      const aboutClose = document.getElementById('about-close');
 
       // Toggle FAQ dropdown
       faqButton.addEventListener('click', (e) => {
         e.stopPropagation();
         faqDropdown.classList.toggle('hidden');
+        aboutDropdown.classList.add('hidden'); // Close About if open
+      });
+
+      // Toggle About dropdown
+      aboutButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        aboutDropdown.classList.toggle('hidden');
+        faqDropdown.classList.add('hidden'); // Close FAQ if open
       });
 
       // Close FAQ dropdown
@@ -192,10 +235,18 @@
         faqDropdown.classList.add('hidden');
       });
 
-      // Close FAQ when clicking outside
+      // Close About dropdown
+      aboutClose.addEventListener('click', () => {
+        aboutDropdown.classList.add('hidden');
+      });
+
+      // Close dropdowns when clicking outside
       document.addEventListener('click', (e) => {
         if (!faqButton.contains(e.target) && !faqDropdown.contains(e.target)) {
           faqDropdown.classList.add('hidden');
+        }
+        if (!aboutButton.contains(e.target) && !aboutDropdown.contains(e.target)) {
+          aboutDropdown.classList.add('hidden');
         }
       });
     });
