@@ -1,199 +1,144 @@
 // Main initialization and event handlers
 
-let waitingForEmailInput = false;
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize core functionality
   renderQuickActions();
   renderChatHistory();
-  fetchNews();
-  document.getElementById('chat-input').focus();
   
-  // Force welcome message visibility on mobile load
-  const welcome = document.getElementById('welcome-message');
-  if (welcome && window.innerWidth <= 768) {
-    welcome.style.display = 'block';
-    console.log("Mobile welcome forced visible");
-  } else {
-    console.log("Mobile welcome condition not met", {
-      welcomeExists: !!welcome,
-      windowWidth: window.innerWidth,
-      isMobile: window.innerWidth <= 768
-    });
+  // Initialize news feed (only if element exists)
+  const newsFeedElement = document.getElementById('news-feed');
+  if (newsFeedElement) {
+    fetchNews();
   }
   
-  // Debug quick action state
-  const qa = document.getElementById('quick-actions');
-  console.log('Quick actions compact class:', qa.classList.contains('quick-actions-compact'));
+  // Focus chat input and set responsive placeholder
+  const chatInput = document.getElementById('chat-input');
+  if (chatInput) {
+    chatInput.focus();
+    updatePlaceholder();
+  }
+  
+  // Setup event listeners
+  setupFormHandler();
+  setupInputHandler();
+  setupResizeHandler();
 });
 
-// Main form submission handler
-document.getElementById('chat-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  if (!validateMessageLength(text)) {
-    showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
-    return;
+// Set responsive placeholder text
+function updatePlaceholder() {
+  const chatInput = document.getElementById('chat-input');
+  if (!chatInput) return;
+  
+  if (window.innerWidth >= 640) { // sm breakpoint
+    chatInput.placeholder = 'Ask me anything about VA benefits...';
+  } else {
+    chatInput.placeholder = 'Ask me anything...';
   }
+}
 
-  // Handle email input when waiting for email
-  if (waitingForEmailInput) {
-    // Handle cancel first, before email validation
-    if (text.toLowerCase() === "cancel") {
-      chatMessages.push({ sender: "user", text: text });
-      addInstantBotResponse("Email summary cancelled. How else can I help you?");
-      waitingForEmailInput = false;
-      input.value = "";
+// Setup form submission handler
+function setupFormHandler() {
+  const chatForm = document.getElementById('chat-form');
+  if (!chatForm) return;
+
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Validate message length
+    if (!validateMessageLength(text)) {
+      showError(`Message must be between 1 and ${CONFIG?.MAX_MESSAGE_LENGTH || 2000} characters.`);
       return;
     }
-    
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailPattern.test(text)) {
-      chatMessages.push({ sender: "user", text: text });
-      renderChatHistory();
-      
-      // Show loading message
-      chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
-      renderChatHistory();
-      
-      // Remove loading message before calling email function
-      chatMessages.pop();
-      
-      waitingForEmailInput = false;
-      await sendConversationSummary(text);
-      renderChatHistory(); // Display the success message
-      
-      input.value = "";
-      return;
-    } else {
-      chatMessages.push({ sender: "user", text: text });
-      addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
-      input.value = "";
-      return;
-    }
-  }
 
-  // Check for instant rate response first
-  const rateResponse = detectRateQuestion(text);
-  if (rateResponse && INSTANT_RATE_RESPONSES[rateResponse]) {
-    // Add user message
-    chatMessages.push({ sender: "user", text: text });
-    
-    // Hide welcome message and compact quick actions on mobile after first message
-    if (window.innerWidth <= 768) {
-      const userMessages = chatMessages.filter(msg => msg.sender === "user");
-      if (userMessages.length === 1) {
-        const welcomeMessage = document.getElementById('welcome-message');
-        if (welcomeMessage) welcomeMessage.style.display = 'none';
-        renderQuickActions(true);
+    // Handle email input when waiting for email
+    if (waitingForEmailInput) {
+      // Handle cancel first
+      if (text.toLowerCase() === "cancel") {
+        chatMessages.push({ sender: "user", text: text });
+        addInstantBotResponse("Email summary cancelled. How else can I help you?");
+        waitingForEmailInput = false;
+        input.value = "";
+        return;
       }
-    }
-    
-    // Add instant rate response
-    addInstantBotResponse(INSTANT_RATE_RESPONSES[rateResponse]);
-    
-    input.value = "";
-    return; // Don't send to AI
-  }
-
-  // Otherwise, proceed with normal AI chat
-  addUserMessageToChat(text);
-  
-  // Hide welcome message and compact quick actions on mobile after first message
-  if (window.innerWidth <= 768) {
-    const userMessages = chatMessages.filter(msg => msg.sender === "user");
-    if (userMessages.length === 1) {
-      const welcomeMessage = document.getElementById('welcome-message');
-      if (welcomeMessage) welcomeMessage.style.display = 'none';
-      renderQuickActions(true);
-    }
-  }
-  
-  input.value = "";
-});
-
-// Input validation handler
-document.getElementById('chat-input').addEventListener('input', function(e) {
-  const length = e.target.value.length;
-  const button = document.getElementById('send-button');
-
-  if (length > CONFIG.MAX_MESSAGE_LENGTH) {
-    e.target.value = e.target.value.substring(0, CONFIG.MAX_MESSAGE_LENGTH);
-  }
-
-  button.disabled = e.target.value.trim().length === 0 || botIsLoading;
-});
-
-// Render quick actions
-function renderQuickActions(isCompact = false) {
-  const qa = document.getElementById('quick-actions');
-  if (!qa) return;
-  
-  // Add or remove compact class while keeping original classes
-  if (isCompact) {
-    qa.classList.add('quick-actions-compact');
-    qa.classList.remove('flex-wrap');
-  } else {
-    qa.classList.remove('quick-actions-compact');
-    qa.classList.add('flex-wrap');
-  }
-  
-  qa.innerHTML = "";
-  quickActions.forEach(action => {
-    // Skip mobile news button on desktop (users already have news sidebar)
-    if (action.text === "mobile news" && window.innerWidth >= 768) {
-      return;
-    }
-    
-    const btn = document.createElement('button');
-    btn.type = "button";
-    
-    // Normal styling (compact styling will be handled by CSS)
-    if (action.text === "email summary" || action.text === "mobile news") {
-      btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold";
-    } else {
-      btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
-    }
-    
-    btn.textContent = action.label;
-    
-    btn.onclick = () => {
-      // Check if it's the rates quick action
-      if (action.text === "What are the current VA disability compensation rates?") {
-        chatMessages.push({ sender: "user", text: action.text });
+      
+      // Validate email format
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailPattern.test(text)) {
+        chatMessages.push({ sender: "user", text: text });
         renderChatHistory();
-        addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
-      } else if (action.text === "email summary") {
-        // Check if user has asked at least one question
-        const userMessages = chatMessages.filter(msg => msg.sender === "user");
-        if (userMessages.length === 0) {
-          addInstantBotResponse("Please ask me a question about VA benefits first, then I can email you a summary of our conversation.");
-          return;
+        
+        // Show loading message
+        addInstantBotResponse("Generating your summary and sending email...");
+        
+        waitingForEmailInput = false;
+        
+        // Send email summary
+        try {
+          await sendConversationSummary(text);
+        } catch (error) {
+          console.error('Email sending failed:', error);
         }
         
-        // Handle email summary button click
-        chatMessages.push({ sender: "user", text: "email summary" });
         renderChatHistory();
-        addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-        waitingForEmailInput = true;
-        document.getElementById('chat-input').focus();
-      } else if (action.text === "mobile news" && window.innerWidth < 768) {
-        openMobileNews();
+        input.value = "";
+        return;
       } else {
-        addUserMessageToChat(action.text);
+        chatMessages.push({ sender: "user", text: text });
+        addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
+        input.value = "";
+        return;
       }
-    };
-    qa.appendChild(btn);
+    }
+
+    // Normal chat flow
+    addUserMessageToChat(text);
+    input.value = "";
+  });
+}
+
+// Setup input validation handler
+function setupInputHandler() {
+  const chatInput = document.getElementById('chat-input');
+  if (!chatInput) return;
+
+  chatInput.addEventListener('input', function(e) {
+    const length = e.target.value.length;
+    const button = document.getElementById('send-button');
+    const maxLength = CONFIG?.MAX_MESSAGE_LENGTH || 2000;
+
+    if (length > maxLength) {
+      e.target.value = e.target.value.substring(0, maxLength);
+    }
+
+    if (button) {
+      const isEmpty = e.target.value.trim().length === 0;
+      const isLoading = window.botIsLoading || false;
+      button.disabled = isEmpty || isLoading;
+    }
+  });
+}
+
+// Setup resize handler with throttling
+function setupResizeHandler() {
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(updatePlaceholder, 200);
   });
 }
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+      chatForm.dispatchEvent(new Event('submit'));
+    }
   }
 });
