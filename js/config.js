@@ -1,4 +1,4 @@
-// Configuration
+// ===== config.js =====
 const CONFIG = {
   API_URL: 'https://vetdesk-demo2-api.vercel.app/api/chat',
   NEWS_API_URL: 'https://vetdesk-demo2-api.vercel.app/api/news',
@@ -7,17 +7,16 @@ const CONFIG = {
   MAX_CONVERSATION_LENGTH: 50
 };
 
-// Quick actions with rates
 const quickActions = [
   { text: "Tell me about VA disability benefits", label: "Disability" },
   { text: "What VA healthcare benefits are available?", label: "Healthcare" },
   { text: "Can you explain VA education benefits?", label: "Education" },
   { text: "What are VA housing benefits?", label: "Housing" },
   { text: "What are the current VA disability compensation rates?", label: "Rates" },
-  { text: "What new VA benefits or updates should I know about?", label: "What's New" }
+  { text: "What new VA benefits or updates should I know about?", label: "What's New" },
+  { text: "📧 Email Summary", label: "Email Summary" }
 ];
 
-// Instant rate responses - all 2025 rates
 const INSTANT_RATE_RESPONSES = {
   "10": "For 10% disability, you receive $175.51 per month. Veterans with 10% or 20% ratings don't receive additional compensation for dependents.",
   "20": "For 20% disability, you receive $346.95 per month. Veterans with 10% or 20% ratings don't receive additional compensation for dependents.",
