@@ -1,452 +1,179 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>VetDesk Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media (max-width: 768px) {
-      #news-feed-section {
-        display: none;
-      }
-      #chat-section {
-        flex: 1 1 100%;
-      }
+// Main initialization and event handlers
+
+let waitingForEmailInput = false;
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  renderQuickActions();
+  renderChatHistory();
+  fetchNews();
+  document.getElementById('chat-input').focus();
+  
+  // Force welcome message visibility on mobile load
+  const welcome = document.getElementById('welcome-message');
+  if (welcome && window.innerWidth <= 768) {
+    welcome.style.display = 'block';
+  }
+});
+
+// Main form submission handler
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  if (!validateMessageLength(text)) {
+    showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+    return;
+  }
+
+  // Hide welcome message and compact quick actions on mobile after first message
+  if (window.innerWidth <= 768) {
+    const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+    if (userMessageCount === 0) {
+      const welcomeMessage = document.getElementById('welcome-message');
+      if (welcomeMessage) welcomeMessage.style.display = 'none';
+      
+      // Re-render quick actions in compact mode
+      renderQuickActions(true);
     }
-    .chat-bubble-user {
-      max-width: 42rem;
-      background: #1e40af;
-      color: white;
-      border-radius: 1rem;
-      padding: 1rem 1.25rem;
-      line-height: 1.6;
-      white-space: pre-line;
-      margin-left: auto;
-      word-break: break-word;
-    }
-    .chat-bubble-bot {
-      max-width: 42rem;
-      background: #f9fafb;
-      color: #1f2937;
-      border-radius: 1rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      padding: 1.5rem;
-      line-height: 1.6;
-      white-space: pre-line;
-      word-break: break-word;
-      border: 1px solid #e5e7eb;
-    }
-    .chat-bubble-bot p {
-      margin-bottom: 1rem;
-    }
-    .chat-bubble-bot p:last-child {
-      margin-bottom: 0;
-    }
-    .spinner {
-      border: 3px solid #e5e7eb;
-      border-top: 3px solid #1e40af;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      margin: auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg);}
-      100% { transform: rotate(360deg);}
-    }
-    /* Mobile quick actions - horizontal scroll when compact class is added */
-    #quick-actions.quick-actions-compact {
-      flex-wrap: nowrap !important;
-      overflow-x: auto !important;
-      -webkit-overflow-scrolling: touch;
+  }
+
+  // Handle email input when waiting for email
+  if (waitingForEmailInput) {
+    // Handle cancel first, before email validation
+    if (text.toLowerCase() === "cancel") {
+      chatMessages.push({ sender: "user", text: text });
+      addInstantBotResponse("Email summary cancelled. How else can I help you?");
+      waitingForEmailInput = false;
+      input.value = "";
+      return;
     }
     
-    @media (max-width: 768px) {
-      #quick-actions.quick-actions-compact button {
-        flex-shrink: 0;
-        white-space: nowrap;
-        font-size: 0.75rem !important;
-        padding: 0.5rem 0.75rem !important;
-      }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailPattern.test(text)) {
+      chatMessages.push({ sender: "user", text: text });
+      renderChatHistory();
+      
+      // Show loading message
+      chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
+      renderChatHistory();
+      
+      // Remove loading message before calling email function
+      chatMessages.pop();
+      
+      waitingForEmailInput = false;
+      await sendConversationSummary(text);
+      renderChatHistory(); // Display the success message
+      
+      input.value = "";
+      return;
+    } else {
+      chatMessages.push({ sender: "user", text: text });
+      addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
+      input.value = "";
+      return;
     }
-    .message-container {
-      margin-bottom: 1.5rem;
-    }
-    .error-message {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      margin: 1rem 0;
-    }
-    .news-loading {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      text-align: center;
-      color: #6b7280;
-    }
-    .news-error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      text-align: center;
-    }
-    .news-item {
-      transition: all 0.2s ease;
-    }
-    .news-item:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .hamburger {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-    }
-    .hamburger-line {
-      width: 18px;
-      height: 2px;
-      background: white;
-      margin: 2px 0;
-      transition: 0.3s;
+  }
+
+  // Check for instant rate response first
+  const rateResponse = detectRateQuestion(text);
+  if (rateResponse && INSTANT_RATE_RESPONSES[rateResponse]) {
+    // Add user message
+    chatMessages.push({ sender: "user", text: text });
+    
+    // Add instant rate response
+    addInstantBotResponse(INSTANT_RATE_RESPONSES[rateResponse]);
+    
+    input.value = "";
+    return; // Don't send to AI
+  }
+
+  // Otherwise, proceed with normal AI chat
+  addUserMessageToChat(text);
+  input.value = "";
+});
+
+// Input validation handler
+document.getElementById('chat-input').addEventListener('input', function(e) {
+  const length = e.target.value.length;
+  const button = document.getElementById('send-button');
+
+  if (length > CONFIG.MAX_MESSAGE_LENGTH) {
+    e.target.value = e.target.value.substring(0, CONFIG.MAX_MESSAGE_LENGTH);
+  }
+
+  button.disabled = e.target.value.trim().length === 0 || botIsLoading;
+});
+
+// Render quick actions
+function renderQuickActions(isCompact = false) {
+  const qa = document.getElementById('quick-actions');
+  if (!qa) return;
+  
+  // Add or remove compact class while keeping original classes
+  if (isCompact) {
+    qa.classList.add('quick-actions-compact');
+    qa.classList.remove('flex-wrap');
+  } else {
+    qa.classList.remove('quick-actions-compact');
+    qa.classList.add('flex-wrap');
+  }
+  
+  qa.innerHTML = "";
+  quickActions.forEach(action => {
+    // Skip mobile news button on desktop (users already have news sidebar)
+    if (action.text === "mobile news" && window.innerWidth >= 768) {
+      return;
     }
     
-    /* Mobile news inline styles */
-    .mobile-news-inline {
-      display: none;
-      background: white;
-      border-top: 1px solid #e5e7eb;
-      border-bottom: 1px solid #e5e7eb;
-      max-height: 300px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+    const btn = document.createElement('button');
+    btn.type = "button";
+    
+    // Normal styling (compact styling will be handled by CSS)
+    if (action.text === "email summary" || action.text === "mobile news") {
+      btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold";
+    } else {
+      btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
     }
     
-    .mobile-news-inline.show {
-      display: block;
-    }
-  </style>
-</head>
-<body class="bg-gray-100 h-screen flex flex-col">
-
-  <header class="bg-blue-900 text-white p-3 sm:p-4">
-    <div class="flex items-center justify-between">
-      <!-- Left side - Brand with logo after text -->
-      <div class="flex items-center min-w-0 flex-1">
-        <h1 class="text-lg sm:text-2xl font-bold mr-0.5">VetDesk</h1>
-        <img src="/logo.png" alt="VetDesk Logo" class="w-6 h-6 sm:w-8 sm:h-8 mr-2 flex-shrink-0">
-        <span class="text-xs sm:text-sm font-light text-blue-200">™ VA Benefits, Simplified.</span>
-      </div>
-      
-      <!-- Right side - Desktop buttons / Mobile hamburger -->
-      <div class="flex items-center flex-shrink-0 ml-2">
-        <!-- Desktop Navigation -->
-        <div class="hidden md:flex items-center space-x-3">
-          <!-- About Dropdown -->
-          <div class="relative">
-            <button id="about-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
-              <span class="mr-1">ℹ️</span>About
-            </button>
-            <div id="about-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg border z-50">
-              <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-semibold text-lg">About VetDesk</h3>
-                  <button id="about-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
-                </div>
-                
-                <div class="space-y-4 max-h-[60vh] overflow-y-auto">
-                  <div>
-                    <h4 class="font-medium text-blue-900 mb-2 text-sm">What is VetDesk?</h4>
-                    <p class="text-sm text-gray-600 leading-relaxed">VetDesk is a free service made by veterans for veterans. Our mission is to help explain VA benefits and the policies that affect them in plain English and in a secure, simple, and respectful way. Just ask questions and get clear answers.</p>
-                  </div>
-                  
-                  <div>
-                    <h4 class="font-medium text-blue-900 mb-2 text-sm">Important</h4>
-                    <p class="text-sm text-gray-600 leading-relaxed">VetDesk is independent and not affiliated with the VA. For the latest information or to apply for benefits, visit VA.gov or call 1-800-827-1000.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- FAQ Dropdown -->
-          <div class="relative">
-            <button id="faq-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
-              <span class="mr-1">❓</span>FAQ
-            </button>
-            <div id="faq-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg border z-50">
-              <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="font-semibold text-lg">FAQ</h3>
-                  <button id="faq-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
-                </div>
-                
-                <div class="space-y-4 max-h-[60vh] overflow-y-auto">
-                  <div>
-                    <h4 class="font-medium text-blue-900 mb-2 text-sm">How many questions can I ask?</h4>
-                    <p class="text-sm text-gray-600 leading-relaxed">You can ask up to 12 questions per conversation. This limit helps us keep VetDesk completely free for all veterans. After 12 questions, simply refresh the page to start a new conversation.</p>
-                  </div>
-                  
-                  <div>
-                    <h4 class="font-medium text-blue-900 mb-2 text-sm">Is this an official VA website?</h4>
-                    <p class="text-sm text-gray-600 leading-relaxed">No, VetDesk is not an official VA website. We're an independent service that helps veterans understand VA benefits in plain English. For official VA business, always visit VA.gov or call 1-800-827-1000.</p>
-                  </div>
-                  
-                  <div>
-                    <h4 class="font-medium text-blue-900 mb-2 text-sm">Is my information private?</h4>
-                    <p class="text-sm text-gray-600 leading-relaxed">Yes. We don't store your personal information or conversation history. Each conversation is temporary and deleted when you close the page. If you request an email summary, we only use your email to send it and don't store it.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile Hamburger Menu -->
-        <div class="md:hidden relative">
-          <button id="mobile-menu-button" class="bg-blue-800 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors duration-200">
-            <div class="hamburger">
-              <div class="hamburger-line"></div>
-              <div class="hamburger-line"></div>
-              <div class="hamburger-line"></div>
-            </div>
-          </button>
-          
-          <!-- Mobile Menu Dropdown -->
-          <div id="mobile-menu" class="hidden absolute right-0 mt-2 w-72 bg-white text-gray-800 rounded-lg shadow-lg border z-50 max-w-[calc(100vw-1rem)]">
-            <div class="p-4">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="font-semibold text-lg">Menu</h3>
-                <button id="mobile-menu-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
-              </div>
-              
-              <!-- About Section -->
-              <div class="mb-6">
-                <h4 class="font-medium text-blue-900 mb-3 text-base flex items-center">
-                  <span class="mr-2">ℹ️</span>About VetDesk
-                </h4>
-                <div class="space-y-3 pl-6">
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">What is VetDesk?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">VetDesk is a free service made by veterans for veterans. Our mission is to help explain VA benefits and the policies that affect them in plain English and in a secure, simple, and respectful way.</p>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">Important</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">VetDesk is independent and not affiliated with the VA. For official VA business, visit VA.gov or call 1-800-827-1000.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- FAQ Section -->
-              <div>
-                <h4 class="font-medium text-blue-900 mb-3 text-base flex items-center">
-                  <span class="mr-2">❓</span>FAQ
-                </h4>
-                <div class="space-y-3 pl-6 max-h-[40vh] overflow-y-auto">
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">How many questions can I ask?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">You can ask up to 12 questions per conversation. This limit helps us keep VetDesk completely free for all veterans.</p>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">Is this an official VA website?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">No, VetDesk is not an official VA website. We're an independent service that helps veterans understand VA benefits in plain English.</p>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">Is my information private?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">Yes. We don't store your personal information or conversation history. Each conversation is temporary and deleted when you close the page.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
-
-    <!-- News Feed -->
-    <section id="news-feed-section" class="w-full md:w-80 bg-white border-r border-gray-200 overflow-y-auto p-4 flex flex-col min-w-[0]">
-      <h2 class="text-xl font-semibold mb-3">Veteran News Feed</h2>
-      <ul id="news-feed" class="space-y-4 flex-1"></ul>
-      
-      <!-- COPYRIGHT FOOTER -->
-      <div class="mt-auto pt-4 border-t border-gray-200 text-xs text-gray-500 text-center">
-        © 2025 VetDesk™. All rights reserved.
-      </div>
-    </section>
-
-    <!-- Chat Section -->
-    <section id="chat-section" class="flex-1 flex flex-col h-full bg-gray-50">
-      <div id="welcome-message" class="p-4 text-base text-gray-700 bg-white border-b border-gray-200">
-        <span>
-          👋 Hi there, and welcome! I'm here to help you understand your VA benefits in plain everyday English. Just ask me any questions you have.
-        </span>
-        <div id="question-counter" class="text-xs text-gray-500 mt-2">
-          Questions remaining: <span id="questions-left">12</span>/12
-        </div>
-      </div>
-      
-      <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
-      
-      <!-- Mobile News Inline -->
-      <div id="mobile-news-inline" class="mobile-news-inline">
-        <div class="p-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-semibold text-lg">Veteran News Feed</h3>
-            <button id="mobile-news-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-          </div>
-          <ul id="mobile-news-feed" class="space-y-4"></ul>
-        </div>
-      </div>
-      
-      <div id="chat-container" class="flex-1 flex flex-col min-h-0">
-        <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
-        <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
-          <input id="chat-input" type="text" class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ask me anything..." autocomplete="off" required aria-label="Chat input" maxlength="2000" />
-          <button type="submit" id="send-button" class="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
-        </form>
-      </div>
-    </section>
-  </main>
-
-  <!-- Load JavaScript files -->
-  <script src="js/config.js"></script>
-  <script src="js/email.js"></script>
-  <script src="js/news.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/main.js"></script>
-
-  <!-- Navigation JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Set responsive placeholder text
-      const chatInput = document.getElementById('chat-input');
-      const updatePlaceholder = () => {
-        if (window.innerWidth >= 640) { // sm breakpoint
-          chatInput.placeholder = 'Ask me anything about VA benefits...';
-        } else {
-          chatInput.placeholder = 'Ask me anything...';
-        }
-      };
-      
-      // Set initial placeholder
-      updatePlaceholder();
-      
-      // Update on resize
-      window.addEventListener('resize', () => {
-        updatePlaceholder();
-        
-        // Auto-close mobile news inline if window is resized to desktop
-        if (window.innerWidth >= 768) {
-          const mobileNewsInline = document.getElementById('mobile-news-inline');
-          if (mobileNewsInline) {
-            mobileNewsInline.classList.remove('show');
-          }
-          const chatContainer = document.getElementById('chat-container');
-          if (chatContainer) {
-            chatContainer.style.display = 'flex';
-          }
-        }
-      });
-
-      // Mobile News Inline functionality - REMOVED (handled by news.js)
-      // All mobile news functions are now in news.js file
-
-      // Desktop FAQ Dropdown
-      const faqButton = document.getElementById('faq-button');
-      const faqDropdown = document.getElementById('faq-dropdown');
-      const faqClose = document.getElementById('faq-close');
-
-      // Desktop About Dropdown
-      const aboutButton = document.getElementById('about-button');
-      const aboutDropdown = document.getElementById('about-dropdown');
-      const aboutClose = document.getElementById('about-close');
-
-      // Mobile Menu
-      const mobileMenuButton = document.getElementById('mobile-menu-button');
-      const mobileMenu = document.getElementById('mobile-menu');
-      const mobileMenuClose = document.getElementById('mobile-menu-close');
-
-      // Desktop FAQ dropdown
-      if (faqButton) {
-        faqButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          faqDropdown.classList.toggle('hidden');
-          aboutDropdown.classList.add('hidden'); // Close About if open
-        });
-      }
-
-      // Desktop About dropdown
-      if (aboutButton) {
-        aboutButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          aboutDropdown.classList.toggle('hidden');
-          faqDropdown.classList.add('hidden'); // Close FAQ if open
-        });
-      }
-
-      // Close desktop dropdowns
-      if (faqClose) {
-        faqClose.addEventListener('click', () => {
-          faqDropdown.classList.add('hidden');
-        });
-      }
-
-      if (aboutClose) {
-        aboutClose.addEventListener('click', () => {
-          aboutDropdown.classList.add('hidden');
-        });
-      }
-
-      // Mobile menu toggle
-      if (mobileMenuButton) {
-        mobileMenuButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          mobileMenu.classList.toggle('hidden');
-        });
-      }
-
-      // Close mobile menu
-      if (mobileMenuClose) {
-        mobileMenuClose.addEventListener('click', () => {
-          mobileMenu.classList.add('hidden');
-        });
-      }
-
-      // Close all menus when clicking outside
-      document.addEventListener('click', (e) => {
-        // Close desktop dropdowns
-        if (faqButton && faqDropdown && !faqButton.contains(e.target) && !faqDropdown.contains(e.target)) {
-          faqDropdown.classList.add('hidden');
-        }
-        if (aboutButton && aboutDropdown && !aboutButton.contains(e.target) && !aboutDropdown.contains(e.target)) {
-          aboutDropdown.classList.add('hidden');
+    btn.textContent = action.label;
+    
+    btn.onclick = () => {
+      // Check if it's the rates quick action
+      if (action.text === "What are the current VA disability compensation rates?") {
+        chatMessages.push({ sender: "user", text: action.text });
+        renderChatHistory();
+        addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
+      } else if (action.text === "email summary") {
+        // Check if user has asked at least one question
+        const userMessages = chatMessages.filter(msg => msg.sender === "user");
+        if (userMessages.length === 0) {
+          addInstantBotResponse("Please ask me a question about VA benefits first, then I can email you a summary of our conversation.");
+          return;
         }
         
-        // Close mobile menu
-        if (mobileMenuButton && mobileMenu && !mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
-          mobileMenu.classList.add('hidden');
-        }
-      });
-    });
-  </script>
+        // Handle email summary button click
+        chatMessages.push({ sender: "user", text: "email summary" });
+        renderChatHistory();
+        addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
+        waitingForEmailInput = true;
+        document.getElementById('chat-input').focus();
+      } else if (action.text === "mobile news" && window.innerWidth < 768) {
+        openMobileNews();
+      } else {
+        addUserMessageToChat(action.text);
+      }
+    };
+    qa.appendChild(btn);
+  });
+}
 
-</body>
-</html>
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+  }
+});
