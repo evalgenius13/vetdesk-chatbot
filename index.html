@@ -63,9 +63,22 @@
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
     }
-    #chat-history {
-      scroll-behavior: smooth;
-      height: 0; /* Force flex to calculate proper height */
+    /* Mobile quick actions - compact horizontal scroll after first message */
+    .quick-actions-compact {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .quick-actions-compact button {
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.75rem;
     }
     .message-container {
       margin-bottom: 1.5rem;
