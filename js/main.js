@@ -22,12 +22,12 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
   }
 
   // Check for email requests
-  const emailResponse = detectEmailRequest(text);
+  const emailResponse = debugDetectEmailRequest(text); // includes debug logging
   if (emailResponse) {
     if (emailResponse === 'request') {
       chatMessages.push({ sender: "user", text: text });
       renderChatHistory();
-      
+
       const emailRequest = "I'd be happy to email you a summary! Just provide your email address and I'll send it right over.";
       addInstantBotResponse(emailRequest);
       waitingForEmail = true;
@@ -36,7 +36,7 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
     } else if (emailResponse === 'confirm' && waitingForEmail) {
       chatMessages.push({ sender: "user", text: text });
       renderChatHistory();
-      
+
       const emailRequest = "Please provide your email address and I'll send you the summary.";
       addInstantBotResponse(emailRequest);
       input.value = "";
@@ -45,19 +45,20 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
       // User provided email address
       chatMessages.push({ sender: "user", text: text });
       renderChatHistory();
-      
+
       // Show loading message
       const loadingMessage = "Generating your summary and sending email...";
       chatMessages.push({ sender: "bot", text: loadingMessage, streaming: false });
       renderChatHistory();
-      
-      waitingForEmail = false;
-      await sendConversationSummary(emailResponse);
-      
-      // Remove loading message
+
+      // Remove loading message before async to avoid overwriting new messages
       chatMessages.pop();
       renderChatHistory();
-      
+
+      waitingForEmail = false;
+      await sendConversationSummary(emailResponse);
+      renderChatHistory(); // Re-render again after success/failure message
+
       input.value = "";
       return;
     }
@@ -71,14 +72,10 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
   // Check for instant rate response first
   const rateResponse = detectRateQuestion(text);
   if (rateResponse && INSTANT_RATE_RESPONSES[rateResponse]) {
-    // Add user message
     chatMessages.push({ sender: "user", text: text });
-    
-    // Add instant rate response
     addInstantBotResponse(INSTANT_RATE_RESPONSES[rateResponse]);
-    
     input.value = "";
-    return; // Don't send to AI
+    return;
   }
 
   // Otherwise, proceed with normal AI chat
