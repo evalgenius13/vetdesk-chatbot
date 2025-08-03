@@ -281,9 +281,6 @@
       <!-- Mobile News Modal -->
       <div id="mobile-news-modal" class="mobile-news-modal">
         <div class="bg-blue-900 text-white p-4 flex items-center justify-between">
-          <button id="mobile-news-back" class="flex items-center text-white hover:text-blue-200">
-            <span class="mr-2">←</span>Back to Chat
-          </button>
           <h2 class="text-lg font-semibold">Veteran News</h2>
           <button id="mobile-news-close" class="text-white hover:text-blue-200 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
         </div>
@@ -337,7 +334,6 @@
 
       // Mobile News Modal functionality
       const mobileNewsModal = document.getElementById('mobile-news-modal');
-      const mobileNewsBack = document.getElementById('mobile-news-back');
       const mobileNewsClose = document.getElementById('mobile-news-close');
       const mobileNewsFeed = document.getElementById('mobile-news-feed');
 
@@ -371,10 +367,6 @@
             }
           });
         });
-      }
-
-      if (mobileNewsBack) {
-        mobileNewsBack.addEventListener('click', closeMobileNews);
       }
 
       if (mobileNewsClose) {
