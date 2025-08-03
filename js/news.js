@@ -25,8 +25,6 @@ async function fetchNews(forceRefresh = false) {
     }
 
     const data = await response.json();
-    console.log('Raw API response:', data);
-    console.log('Articles array:', data.articles);
 
     // Prioritize articles - only throw error if no articles available
     if (data.error && (!data.articles || data.articles.length === 0)) {
@@ -34,12 +32,9 @@ async function fetchNews(forceRefresh = false) {
     }
 
     newsItems = data.articles || [];
-    console.log('Processed newsItems:', newsItems);
-    console.log('NewsItems length:', newsItems.length);
     renderNewsFeed();
 
   } catch (error) {
-    console.error('News fetch error:', error);
     showNewsError(error.message);
   } finally {
     newsLoading = false;
@@ -58,28 +53,19 @@ function showNewsError(message) {
   feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
 }
 
-// Render news feed in the UI
+// Render news feed in the UI (desktop sidebar)
 function renderNewsFeed() {
   const feed = document.getElementById('news-feed');
-  console.log('=== RENDER NEWS FEED DEBUG ===');
-  console.log('Feed element found:', !!feed);
-  console.log('NewsItems for rendering:', newsItems);
-  console.log('NewsItems length:', newsItems.length);
-  console.log('NewsItems type:', typeof newsItems);
-  
   feed.innerHTML = "";
 
   if (!newsItems.length) {
-    console.log('No news items - showing fallback');
     feed.innerHTML = '<li class="text-gray-500 text-center py-4">No news available</li>';
     return;
   }
 
-  console.log('Creating news items HTML...');
   newsItems.forEach((item, idx) => {
-    console.log(`Processing item ${idx}:`, item);
     const li = document.createElement('li');
-    li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
+    li.className = "p-3 bg-gray-50 border rounded-lg shadow-sm hover:shadow-md transition-shadow news-item";
 
     const titleText = escapeHtml(item.title);
     const summaryText = escapeHtml(item.summary);
@@ -93,27 +79,74 @@ function renderNewsFeed() {
       </button>
     `;
     feed.appendChild(li);
-    console.log(`Added item ${idx} to feed`);
   });
 
-  console.log('=== RENDER COMPLETE ===');
-  try {
-    console.log('Final feed innerHTML:', feed.innerHTML);
-    console.log('Feed children count:', feed.children.length);
-    console.log('Feed element:', feed);
-  } catch (error) {
-    console.error('Error accessing feed element:', error);
-  }
+  // Attach event listeners for desktop "How does this affect me?" buttons
+  attachDesktopNewsEventListeners();
+}
 
-  // Attach event listeners for "How does this affect me?" buttons
-  document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
+// Desktop event listeners (sidebar)
+function attachDesktopNewsEventListeners() {
+  document.querySelectorAll('#news-feed .how-affect-me-btn').forEach(btn => {
+    btn.onclick = function() {
       const idx = parseInt(this.getAttribute('data-news-idx'));
       const news = newsItems[idx];
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
         addUserMessageToChat(userMessage);
       }
-    });
+    };
   });
 }
+
+// Mobile news open/close logic
+function openMobileNews() {
+  const mobileNewsInline = document.getElementById('mobile-news-inline');
+  const chatContainer = document.getElementById('chat-container');
+  const desktopNews = document.getElementById('news-feed');
+  const mobileNewsFeed = document.getElementById('mobile-news-feed');
+  mobileNewsInline.classList.add('show');
+  chatContainer.style.display = 'none';
+
+  // Copy desktop feed HTML for consistency
+  if (desktopNews && mobileNewsFeed) {
+    mobileNewsFeed.innerHTML = desktopNews.innerHTML;
+    attachMobileNewsEventListeners();
+  }
+}
+
+function closeMobileNews() {
+  document.getElementById('mobile-news-inline').classList.remove('show');
+  document.getElementById('chat-container').style.display = 'flex';
+}
+
+// Attach event listeners for mobile news feed
+function attachMobileNewsEventListeners() {
+  const mobileNewsFeed = document.getElementById('mobile-news-feed');
+  if (!mobileNewsFeed) return;
+
+  mobileNewsFeed.querySelectorAll('.how-affect-me-btn').forEach(btn => {
+    btn.onclick = function() {
+      const idx = parseInt(this.getAttribute('data-news-idx'));
+      const news = newsItems[idx];
+      if (news) {
+        const userMessage = `How does "${news.title}" affect me?`;
+        closeMobileNews();
+        addUserMessageToChat(userMessage);
+      }
+    };
+  });
+}
+
+// Utility function for HTML escaping
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Make sure to call fetchNews() on load to populate feeds.
+document.addEventListener('DOMContentLoaded', () => {
+  fetchNews();
+});
