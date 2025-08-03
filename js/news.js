@@ -9,6 +9,13 @@ async function fetchNews(forceRefresh = false) {
 
   newsLoading = true;
   const newsFeed = document.getElementById('news-feed');
+  
+  // If news feed element doesn't exist, fail silently
+  if (!newsFeed) {
+    console.warn('Missing #news-feed element');
+    newsLoading = false;
+    return;
+  }
 
   try {
     showNewsLoading();
