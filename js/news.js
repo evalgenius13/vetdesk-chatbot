@@ -135,13 +135,7 @@ function attachMobileNewsEventListeners() {
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
         closeMobileNews();
-        setTimeout(() => {
-          addUserMessageToChat(userMessage);
-          const chatHistory = document.getElementById('chat-history');
-          if (chatHistory) {
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-          }
-        }, 100);
+        addUserMessageToChat(userMessage);
       }
     };
   });
