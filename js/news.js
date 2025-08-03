@@ -117,7 +117,6 @@ function openMobileNews() {
 }
 
 function closeMobileNews() {
-  // FIXED: Make sure to remove the show class AND show the chat container
   const mobileNewsInline = document.getElementById('mobile-news-inline');
   const chatContainer = document.getElementById('chat-container');
   
