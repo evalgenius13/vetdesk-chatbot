@@ -1,7 +1,5 @@
 // Main initialization and event handlers
 
-let waitingForEmailInput = false;
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   renderQuickActions();
@@ -20,52 +18,6 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
 
   if (!validateMessageLength(text)) {
     showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
-    return;
-  }
-
-  // Handle email input when waiting for email
-  if (waitingForEmailInput) {
-    // Handle cancel first, before email validation
-    if (text.toLowerCase() === "cancel") {
-      chatMessages.push({ sender: "user", text: text });
-      addInstantBotResponse("Email summary cancelled. How else can I help you?");
-      waitingForEmailInput = false;
-      input.value = "";
-      return;
-    }
-    
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailPattern.test(text)) {
-      chatMessages.push({ sender: "user", text: text });
-      renderChatHistory();
-      
-      // Show loading message
-      chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
-      renderChatHistory();
-      
-      // Remove loading message before calling email function
-      chatMessages.pop();
-      
-      waitingForEmailInput = false;
-      await sendConversationSummary(text);
-      renderChatHistory(); // Display the success message
-      
-      input.value = "";
-      return;
-    } else {
-      chatMessages.push({ sender: "user", text: text });
-      addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
-      input.value = "";
-      return;
-    }
-  }
-
-  // Handle "email summary" request
-  if (text.toLowerCase() === "email summary") {
-    chatMessages.push({ sender: "user", text: text });
-    addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-    waitingForEmailInput = true;
-    input.value = "";
     return;
   }
 
@@ -99,6 +51,23 @@ document.getElementById('chat-input').addEventListener('input', function(e) {
   button.disabled = e.target.value.trim().length === 0 || botIsLoading;
 });
 
+// Handle email summary request via prompt
+function handleEmailSummaryRequest() {
+  const email = prompt("Enter your email to receive the summary:");
+  if (!email || !email.includes('@')) {
+    alert("Invalid email.");
+    return;
+  }
+  
+  chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
+  renderChatHistory();
+  
+  // Remove loading message before calling email function
+  chatMessages.pop();
+  
+  sendConversationSummary(email).then(() => renderChatHistory());
+}
+
 // Render quick actions
 function renderQuickActions() {
   const qa = document.getElementById('quick-actions');
@@ -117,12 +86,8 @@ function renderQuickActions() {
         renderChatHistory();
         addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
       } else if (action.text === "email summary") {
-        // Handle email summary button click
-        chatMessages.push({ sender: "user", text: "email summary" });
-        renderChatHistory();
-        addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-        waitingForEmailInput = true;
-        document.getElementById('chat-input').focus();
+        // Handle email summary button click with prompt
+        handleEmailSummaryRequest();
       } else {
         addUserMessageToChat(action.text);
       }
