@@ -136,6 +136,10 @@ function attachMobileNewsEventListeners() {
         const userMessage = `How does "${news.title}" affect me?`;
         closeMobileNews();
         addUserMessageToChat(userMessage);
+        setTimeout(() => {
+          const ch = document.getElementById('chat-history');
+          if (ch) ch.scrollTop = ch.scrollHeight;
+        }, 100);
       }
     };
   });
