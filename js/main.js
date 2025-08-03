@@ -110,8 +110,10 @@ function renderQuickActions(isCompact = false) {
   // Add or remove compact class while keeping original classes
   if (isCompact) {
     qa.classList.add('quick-actions-compact');
+    qa.classList.remove('flex-wrap');
   } else {
     qa.classList.remove('quick-actions-compact');
+    qa.classList.add('flex-wrap');
   }
   
   qa.innerHTML = "";
