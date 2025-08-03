@@ -347,53 +347,15 @@
           if (mobileNewsInline) {
             mobileNewsInline.classList.remove('show');
           }
+          const chatContainer = document.getElementById('chat-container');
+          if (chatContainer) {
+            chatContainer.style.display = 'flex';
+          }
         }
       });
 
-      // Mobile News Inline functionality
-      const mobileNewsInline = document.getElementById('mobile-news-inline');
-      const mobileNewsClose = document.getElementById('mobile-news-close');
-      const mobileNewsFeed = document.getElementById('mobile-news-feed');
-
-      function openMobileNews() {
-        mobileNewsInline.classList.add('show');
-        // Copy news feed content to mobile inline
-        const desktopNews = document.getElementById('news-feed');
-        if (desktopNews) {
-          mobileNewsFeed.innerHTML = desktopNews.innerHTML;
-          // Re-attach event listeners for mobile news items
-          attachMobileNewsEventListeners();
-        }
-      }
-
-      function closeMobileNews() {
-        mobileNewsInline.classList.remove('show');
-      }
-
-      // Make functions globally accessible
-      window.openMobileNews = openMobileNews;
-      window.closeMobileNews = closeMobileNews;
-
-      function attachMobileNewsEventListeners() {
-        const mobileNewsItems = mobileNewsFeed.querySelectorAll('.news-item button');
-        mobileNewsItems.forEach(button => {
-          button.addEventListener('click', function() {
-            const newsText = this.getAttribute('data-news-text');
-            if (newsText) {
-              // Close mobile news modal
-              closeMobileNews();
-              // Add question to chat
-              if (typeof addUserMessageToChat === 'function') {
-                addUserMessageToChat(newsText);
-              }
-            }
-          });
-        });
-      }
-
-      if (mobileNewsClose) {
-        mobileNewsClose.addEventListener('click', closeMobileNews);
-      }
+      // Mobile News Inline functionality - REMOVED (handled by news.js)
+      // All mobile news functions are now in news.js file
 
       // Desktop FAQ Dropdown
       const faqButton = document.getElementById('faq-button');
