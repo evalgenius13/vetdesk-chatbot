@@ -137,7 +137,11 @@ function attachMobileNewsEventListeners() {
         closeMobileNews();
         setTimeout(() => {
           addUserMessageToChat(userMessage);
-        }, 50);
+          const chatHistory = document.getElementById('chat-history');
+          if (chatHistory) {
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+          }
+        }, 100);
       }
     };
   });
