@@ -13,7 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const welcome = document.getElementById('welcome-message');
   if (welcome && window.innerWidth <= 768) {
     welcome.style.display = 'block';
-    console.log('Welcome visible on load:', welcome.style.display);
+    console.log("Mobile welcome forced visible");
+  } else {
+    console.log("Mobile welcome condition not met", {
+      welcomeExists: !!welcome,
+      windowWidth: window.innerWidth,
+      isMobile: window.innerWidth <= 768
+    });
   }
   
   // Debug quick action state
