@@ -1,23 +1,5 @@
 // Email functionality - cleaned up without conversation log
 
-// Check if user has asked at least one question
-function canSendEmailSummary() {
-  const userMessages = chatMessages.filter(msg => msg.sender === "user");
-  return userMessages.length > 0;
-}
-
-// Initiate email summary process with validation
-function initiateEmailSummary() {
-  if (!canSendEmailSummary()) {
-    addInstantBotResponse("Please ask me a question about VA benefits first, then I can email you a summary of our conversation.");
-    return false;
-  }
-  
-  addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-  waitingForEmailInput = true;
-  return true;
-}
-
 async function sendConversationSummary(email) {
   try {
     const conversationText = chatMessages
