@@ -44,18 +44,24 @@ async function fetchNews(forceRefresh = false) {
 // Show loading state
 function showNewsLoading() {
   const feed = document.getElementById('news-feed');
-  feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
+  if (feed) {
+    feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
+  }
 }
 
 // Show error state
 function showNewsError(message) {
   const feed = document.getElementById('news-feed');
-  feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
+  if (feed) {
+    feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
+  }
 }
 
 // Render news feed in the UI (desktop sidebar)
 function renderNewsFeed() {
   const feed = document.getElementById('news-feed');
+  if (!feed) return;
+  
   feed.innerHTML = "";
 
   if (!newsItems.length) {
