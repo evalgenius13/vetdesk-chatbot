@@ -114,42 +114,19 @@
       transition: 0.3s;
     }
     
-    /* Mobile news modal styles - FIXED FOR SCROLLING */
-    .mobile-news-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-    
-    .mobile-news-modal.show {
-      opacity: 1;
-      visibility: visible;
-    }
-    
-    .news-content {
-      position: absolute;
-      top: 10%;
-      left: 5%;
-      right: 5%;
-      bottom: 10%;
+    /* Mobile news inline styles */
+    .mobile-news-inline {
+      display: none;
       background: white;
-      border-radius: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    
-    .news-content .p-4 {
-      flex: 1;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      max-height: 300px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+    }
+    
+    .mobile-news-inline.show {
+      display: block;
     }
   </style>
 </head>
@@ -316,12 +293,13 @@
       
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
       
-      <!-- Mobile News Modal -->
-      <div id="mobile-news-modal" class="mobile-news-modal">
-        <div class="absolute top-4 right-4 z-10 md:hidden">
-          <button id="mobile-news-close" class="bg-black bg-opacity-50 text-white hover:bg-opacity-70 text-2xl w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
-        </div>
-        <div class="news-content p-4">
+      <!-- Mobile News Inline -->
+      <div id="mobile-news-inline" class="mobile-news-inline">
+        <div class="p-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-semibold text-lg">Veteran News Feed</h3>
+            <button id="mobile-news-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
           <ul id="mobile-news-feed" class="space-y-4"></ul>
         </div>
       </div>
@@ -360,23 +338,23 @@
       window.addEventListener('resize', () => {
         updatePlaceholder();
         
-        // Auto-close mobile news modal if window is resized to desktop
+        // Auto-close mobile news inline if window is resized to desktop
         if (window.innerWidth >= 768) {
-          const mobileNewsModal = document.getElementById('mobile-news-modal');
-          if (mobileNewsModal) {
-            mobileNewsModal.classList.remove('show');
+          const mobileNewsInline = document.getElementById('mobile-news-inline');
+          if (mobileNewsInline) {
+            mobileNewsInline.classList.remove('show');
           }
         }
       });
 
-      // Mobile News Modal functionality
-      const mobileNewsModal = document.getElementById('mobile-news-modal');
+      // Mobile News Inline functionality
+      const mobileNewsInline = document.getElementById('mobile-news-inline');
       const mobileNewsClose = document.getElementById('mobile-news-close');
       const mobileNewsFeed = document.getElementById('mobile-news-feed');
 
       function openMobileNews() {
-        mobileNewsModal.classList.add('show');
-        // Copy news feed content to mobile modal
+        mobileNewsInline.classList.add('show');
+        // Copy news feed content to mobile inline
         const desktopNews = document.getElementById('news-feed');
         if (desktopNews) {
           mobileNewsFeed.innerHTML = desktopNews.innerHTML;
@@ -386,7 +364,7 @@
       }
 
       function closeMobileNews() {
-        mobileNewsModal.classList.remove('show');
+        mobileNewsInline.classList.remove('show');
       }
 
       // Make functions globally accessible
