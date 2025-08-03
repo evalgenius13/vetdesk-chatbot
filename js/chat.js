@@ -1,4 +1,37 @@
-// Chat functionality and state management
+// Chat functions
+function addUserMessageToChat(text) {
+  const trimmedText = text.trim();
+
+  if (!validateMessageLength(trimmedText)) {
+    showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+    return;
+  }
+
+  // Check conversation length - count user messages only
+  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+  if (userMessageCount >= 12) {
+    showError('That was your 12th question. You can email yourself a summary or refresh to start a new conversation.');
+    return;
+  }
+
+  if (botIsLoading) {
+    showError('Please wait for the current response to finish.');
+    return;
+  }
+
+  chatMessages.push({ sender: "user", text: trimmedText });
+  
+  // Hide welcome message and quick actions on mobile after first message, add toggle
+  if (window.innerWidth <= 768 && userMessageCount === 0) {
+    const welcomeMessage = document.getElementById('welcome-message');
+    const quickActions = document.getElementById('quick-actions');
+    
+    if (welcomeMessage) welcomeMessage.style.display = 'none';
+    if (quickActions) {
+      quickActions.style.display = 'none';
+      
+      // Add quick actions toggle button
+      const toggleButton = document.createElement// Chat functionality and state management
 
 // Chat State
 let chatMessages = [];
@@ -248,6 +281,40 @@ async function getBotReply() {
 
 // Chat functions
 function addUserMessageToChat(text) {
+  const trimmedText = text.trim();
+
+  if (!validateMessageLength(trimmedText)) {
+    showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+    return;
+  }
+
+  // Check conversation length - count user messages only
+  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+  if (userMessageCount >= 12) {
+    showError('That was your 12th question. You can email yourself a summary or refresh to start a new conversation.');
+    return;
+  }
+
+  if (botIsLoading) {
+    showError('Please wait for the current response to finish.');
+    return;
+  }
+
+  chatMessages.push({ sender: "user", text: trimmedText });
+  
+  // Hide welcome message and quick actions on mobile after first message
+  if (window.innerWidth <= 768 && userMessageCount === 0) {
+    const welcomeMessage = document.getElementById('welcome-message');
+    const quickActions = document.getElementById('quick-actions');
+    
+    if (welcomeMessage) welcomeMessage.style.display = 'none';
+    if (quickActions) quickActions.style.display = 'none';
+  }
+  
+  updateQuestionCounter();
+  renderChatHistory();
+  addBotReplyToChat();
+}text) {
   const trimmedText = text.trim();
 
   if (!validateMessageLength(trimmedText)) {
