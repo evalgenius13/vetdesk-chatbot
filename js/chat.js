@@ -89,11 +89,12 @@ function renderQuickActions() {
     btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
     btn.textContent = action.label;
     btn.onclick = () => {
-      // Check if it's the rates quick action
       if (action.text === "What are the current VA disability compensation rates?") {
         chatMessages.push({ sender: "user", text: action.text });
         renderChatHistory();
         addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
+      } else if (action.text === "mobile news") {
+        openMobileNews();
       } else {
         addUserMessageToChat(action.text);
       }
@@ -279,6 +280,7 @@ function addUserMessageToChat(text) {
   }
 
   chatMessages.push({ sender: "user", text: trimmedText });
+  
   updateQuestionCounter();
   renderChatHistory();
   addBotReplyToChat();
