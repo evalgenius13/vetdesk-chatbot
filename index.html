@@ -63,22 +63,20 @@
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
     }
-    /* Mobile quick actions - compact horizontal scroll after first message */
-    .quick-actions-compact {
-      display: flex;
-      overflow-x: auto;
-      gap: 0.5rem;
-      padding: 0.75rem 1rem;
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    .quick-actions-compact button {
-      flex-shrink: 0;
-      white-space: nowrap;
-      font-size: 0.75rem;
-      padding: 0.5rem 0.75rem;
+    /* Mobile quick actions - horizontal scroll when compact class is added */
+    @media (max-width: 768px) {
+      #quick-actions.quick-actions-compact {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      #quick-actions.quick-actions-compact button {
+        flex-shrink: 0;
+        white-space: nowrap;
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+      }
     }
     .message-container {
       margin-bottom: 1.5rem;
