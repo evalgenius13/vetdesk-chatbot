@@ -15,7 +15,8 @@ const quickActions = [
   { text: "What are VA housing benefits?", label: "Housing" },
   { text: "What are the current VA disability compensation rates?", label: "Rates" },
   { text: "What new VA benefits or updates should I know about?", label: "What's New" },
-  { text: "email summary", label: "📧 Email Summary" }
+  { text: "email summary", label: "📧 Email Summary" },
+  { text: "mobile news", label: "📰 In the News" }
 ];
 
 // Instant rate responses - all 2025 rates
