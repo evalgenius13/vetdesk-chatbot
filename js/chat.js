@@ -269,7 +269,7 @@ function addUserMessageToChat(text) {
   // Check conversation length - count user messages only
   const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
   if (userMessageCount >= 12) {
-    showError('Conversation limit reached (12 questions). Please refresh to start a new conversation for better responses.');
+    showError('That was your 12th question. You can email yourself a summary or refresh to start a new conversation.');
     return;
   }
 
