@@ -23,6 +23,18 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
     return;
   }
 
+  // Hide welcome message and compact quick actions on mobile after first message
+  if (window.innerWidth <= 768) {
+    const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+    if (userMessageCount === 0) {
+      const welcomeMessage = document.getElementById('welcome-message');
+      if (welcomeMessage) welcomeMessage.style.display = 'none';
+      
+      // Re-render quick actions in compact mode
+      renderQuickActions(true);
+    }
+  }
+
   // Handle email input when waiting for email
   if (waitingForEmailInput) {
     // Handle cancel first, before email validation
@@ -91,9 +103,16 @@ document.getElementById('chat-input').addEventListener('input', function(e) {
 });
 
 // Render quick actions
-function renderQuickActions() {
+function renderQuickActions(isCompact = false) {
   const qa = document.getElementById('quick-actions');
   if (!qa) return;
+  
+  // Add or remove compact class while keeping original classes
+  if (isCompact) {
+    qa.classList.add('quick-actions-compact');
+  } else {
+    qa.classList.remove('quick-actions-compact');
+  }
   
   qa.innerHTML = "";
   quickActions.forEach(action => {
@@ -105,15 +124,14 @@ function renderQuickActions() {
     const btn = document.createElement('button');
     btn.type = "button";
     
-    // Special styling for green utility actions
+    // Normal styling (compact styling will be handled by CSS)
     if (action.text === "email summary" || action.text === "mobile news") {
       btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold";
-      btn.textContent = action.label;
     } else {
-      // Default styling for other buttons
       btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
-      btn.textContent = action.label;
     }
+    
+    btn.textContent = action.label;
     
     btn.onclick = () => {
       // Check if it's the rates quick action
