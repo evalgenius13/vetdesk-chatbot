@@ -304,15 +304,4 @@ async function addBotReplyToChat() {
 
   chatMessages.push({ sender: "bot", text: botReply, streaming: true });
   await renderChatHistory();
-
-  // Check if this was the last question and offer summary
-  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
-  if (userMessageCount === 12) {
-    setTimeout(() => {
-      const summaryOffer = "That was your 12th question! Would you like me to email you a summary of our conversation? Just say 'yes' or provide your email address.";
-      chatMessages.push({ sender: "bot", text: summaryOffer, streaming: true });
-      renderChatHistory();
-      waitingForEmail = true;
-    }, 2000);
-  }
 }
