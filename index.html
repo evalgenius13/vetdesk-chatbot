@@ -64,13 +64,13 @@
       100% { transform: rotate(360deg);}
     }
     /* Mobile quick actions - horizontal scroll when compact class is added */
+    #quick-actions.quick-actions-compact {
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
     @media (max-width: 768px) {
-      #quick-actions.quick-actions-compact {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
       #quick-actions.quick-actions-compact button {
         flex-shrink: 0;
         white-space: nowrap;
