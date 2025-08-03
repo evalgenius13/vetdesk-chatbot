@@ -60,32 +60,6 @@
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
     }
-    /* Mobile quick actions - horizontal scroll when compact class is added */
-    #quick-actions.quick-actions-compact {
-      flex-wrap: nowrap !important;
-      overflow-x: auto !important;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    @media (max-width: 768px) {
-      #quick-actions.quick-actions-compact {
-        flex-wrap: nowrap !important;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-      
-      #quick-actions.quick-actions-compact::-webkit-scrollbar {
-        display: none;
-      }
-      
-      #quick-actions.quick-actions-compact button {
-        flex-shrink: 0;
-        white-space: nowrap;
-        font-size: 0.75rem !important;
-        padding: 0.5rem 0.75rem !important;
-      }
-    }
     .message-container {
       margin-bottom: 1.5rem;
     }
@@ -120,37 +94,6 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .hamburger {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-    }
-    .hamburger-line {
-      width: 18px;
-      height: 2px;
-      background: white;
-      margin: 2px 0;
-      transition: 0.3s;
-    }
-    
-    /* Mobile news inline styles */
-    .mobile-news-inline {
-      display: none;
-      background: white;
-      border-top: 1px solid #e5e7eb;
-      border-bottom: 1px solid #e5e7eb;
-      max-height: 300px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    .mobile-news-inline.show {
-      display: block;
-    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
@@ -164,10 +107,9 @@
         <span class="text-xs sm:text-sm font-light text-blue-200">™ VA Benefits, Simplified.</span>
       </div>
       
-      <!-- Right side - Desktop buttons / Mobile hamburger -->
+      <!-- Right side - Desktop Navigation -->
       <div class="flex items-center flex-shrink-0 ml-2">
-        <!-- Desktop Navigation -->
-        <div class="hidden md:flex items-center space-x-3">
+        <div class="flex items-center space-x-3">
           <!-- About Dropdown -->
           <div class="relative">
             <button id="about-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
@@ -227,65 +169,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Mobile Hamburger Menu -->
-        <div class="md:hidden relative">
-          <button id="mobile-menu-button" class="bg-blue-800 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors duration-200">
-            <div class="hamburger">
-              <div class="hamburger-line"></div>
-              <div class="hamburger-line"></div>
-              <div class="hamburger-line"></div>
-            </div>
-          </button>
-          
-          <!-- Mobile Menu Dropdown -->
-          <div id="mobile-menu" class="hidden absolute right-0 mt-2 w-72 bg-white text-gray-800 rounded-lg shadow-lg border z-50 max-w-[calc(100vw-1rem)]">
-            <div class="p-4">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="font-semibold text-lg">Menu</h3>
-                <button id="mobile-menu-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
-              </div>
-              
-              <!-- About Section -->
-              <div class="mb-6">
-                <h4 class="font-medium text-blue-900 mb-3 text-base flex items-center">
-                  <span class="mr-2">ℹ️</span>About VetDesk
-                </h4>
-                <div class="space-y-3 pl-6">
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">What is VetDesk?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">VetDesk is a free service made by veterans for veterans. Our mission is to help explain VA benefits and the policies that affect them in plain English and in a secure, simple, and respectful way.</p>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">Important</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">VetDesk is independent and not affiliated with the VA. For official VA business, visit VA.gov or call 1-800-827-1000.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- FAQ Section -->
-              <div>
-                <h4 class="font-medium text-blue-900 mb-3 text-base flex items-center">
-                  <span class="mr-2">❓</span>FAQ
-                </h4>
-                <div class="space-y-3 pl-6 max-h-[40vh] overflow-y-auto">
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">How many questions can I ask?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">You can ask up to 12 questions per conversation. This limit helps us keep VetDesk completely free for all veterans.</p>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">Is this an official VA website?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">No, VetDesk is not an official VA website. We're an independent service that helps veterans understand VA benefits in plain English.</p>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-sm mb-1">Is my information private?</h5>
-                    <p class="text-xs text-gray-600 leading-relaxed">Yes. We don't store your personal information or conversation history. Each conversation is temporary and deleted when you close the page.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </header>
@@ -316,17 +199,6 @@
       
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
       
-      <!-- Mobile News Inline -->
-      <div id="mobile-news-inline" class="mobile-news-inline">
-        <div class="p-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-semibold text-lg">Veteran News Feed</h3>
-            <button id="mobile-news-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-          </div>
-          <ul id="mobile-news-feed" class="space-y-4"></ul>
-        </div>
-      </div>
-      
       <div id="chat-container" class="flex-1 flex flex-col min-h-0">
         <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
         <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
@@ -347,113 +219,47 @@
   <!-- Navigation JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Set responsive placeholder text
-      const chatInput = document.getElementById('chat-input');
-      const updatePlaceholder = () => {
-        if (window.innerWidth >= 640) { // sm breakpoint
-          chatInput.placeholder = 'Ask me anything about VA benefits...';
-        } else {
-          chatInput.placeholder = 'Ask me anything...';
-        }
-      };
-      
-      // Set initial placeholder
-      updatePlaceholder();
-      
-      // Update on resize
-      window.addEventListener('resize', () => {
-        updatePlaceholder();
-        
-        // Auto-close mobile news inline if window is resized to desktop
-        if (window.innerWidth >= 768) {
-          const mobileNewsInline = document.getElementById('mobile-news-inline');
-          if (mobileNewsInline) {
-            mobileNewsInline.classList.remove('show');
-          }
-          const chatContainer = document.getElementById('chat-container');
-          if (chatContainer) {
-            chatContainer.style.display = 'flex';
-          }
-        }
-      });
-
-      // Mobile News Inline functionality - REMOVED (handled by news.js)
-      // All mobile news functions are now in news.js file
-
-      // Desktop FAQ Dropdown
+      // Desktop dropdowns only
       const faqButton = document.getElementById('faq-button');
       const faqDropdown = document.getElementById('faq-dropdown');
       const faqClose = document.getElementById('faq-close');
-
-      // Desktop About Dropdown
       const aboutButton = document.getElementById('about-button');
       const aboutDropdown = document.getElementById('about-dropdown');
       const aboutClose = document.getElementById('about-close');
 
-      // Mobile Menu
-      const mobileMenuButton = document.getElementById('mobile-menu-button');
-      const mobileMenu = document.getElementById('mobile-menu');
-      const mobileMenuClose = document.getElementById('mobile-menu-close');
-
       // Desktop FAQ dropdown
-      if (faqButton) {
+      if (faqButton && faqDropdown) {
         faqButton.addEventListener('click', (e) => {
           e.stopPropagation();
           faqDropdown.classList.toggle('hidden');
-          aboutDropdown.classList.add('hidden'); // Close About if open
+          if (aboutDropdown) aboutDropdown.classList.add('hidden');
         });
       }
 
       // Desktop About dropdown
-      if (aboutButton) {
+      if (aboutButton && aboutDropdown) {
         aboutButton.addEventListener('click', (e) => {
           e.stopPropagation();
           aboutDropdown.classList.toggle('hidden');
-          faqDropdown.classList.add('hidden'); // Close FAQ if open
+          if (faqDropdown) faqDropdown.classList.add('hidden');
         });
       }
 
-      // Close desktop dropdowns
-      if (faqClose) {
-        faqClose.addEventListener('click', () => {
-          faqDropdown.classList.add('hidden');
-        });
+      // Close buttons
+      if (faqClose && faqDropdown) {
+        faqClose.addEventListener('click', () => faqDropdown.classList.add('hidden'));
+      }
+      if (aboutClose && aboutDropdown) {
+        aboutClose.addEventListener('click', () => aboutDropdown.classList.add('hidden'));
       }
 
-      if (aboutClose) {
-        aboutClose.addEventListener('click', () => {
-          aboutDropdown.classList.add('hidden');
-        });
-      }
-
-      // Mobile menu toggle
-      if (mobileMenuButton) {
-        mobileMenuButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          mobileMenu.classList.toggle('hidden');
-        });
-      }
-
-      // Close mobile menu
-      if (mobileMenuClose) {
-        mobileMenuClose.addEventListener('click', () => {
-          mobileMenu.classList.add('hidden');
-        });
-      }
-
-      // Close all menus when clicking outside
+      // Close dropdowns when clicking outside
       document.addEventListener('click', (e) => {
-        // Close desktop dropdowns
         if (faqButton && faqDropdown && !faqButton.contains(e.target) && !faqDropdown.contains(e.target)) {
           faqDropdown.classList.add('hidden');
         }
         if (aboutButton && aboutDropdown && !aboutButton.contains(e.target) && !aboutDropdown.contains(e.target)) {
           aboutDropdown.classList.add('hidden');
-        }
-        
-        // Close mobile menu
-        if (mobileMenuButton && mobileMenu && !mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
-          mobileMenu.classList.add('hidden');
         }
       });
     });
