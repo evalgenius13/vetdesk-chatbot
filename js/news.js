@@ -133,18 +133,8 @@ function attachMobileNewsEventListeners() {
       const news = newsItems[idx];
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
-        
-        // Close mobile news
         closeMobileNews();
-        
-        // Put message in input field and send
-        const chatInput = document.getElementById('chat-input');
-        const chatForm = document.getElementById('chat-form');
-        
-        if (chatInput && chatForm) {
-          chatInput.value = userMessage;
-          chatForm.dispatchEvent(new Event('submit'));
-        }
+        addUserMessageToChat(userMessage);
       }
     };
   });
