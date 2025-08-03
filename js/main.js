@@ -117,19 +117,12 @@ function renderQuickActions() {
         renderChatHistory();
         addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
       } else if (action.text === "email summary") {
-        // Check if user has asked at least one question
-        const userMessages = chatMessages.filter(msg => msg.sender === "user");
-        if (userMessages.length === 0) {
-          addInstantBotResponse("Please ask me a question about VA benefits first, then I can email you a summary of our conversation.");
-          return;
-        }
-        
         // Handle email summary button click
         chatMessages.push({ sender: "user", text: "email summary" });
         renderChatHistory();
-        addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-        waitingForEmailInput = true;
-        document.getElementById('chat-input').focus();
+        if (initiateEmailSummary()) {
+          document.getElementById('chat-input').focus();
+        }
       } else {
         addUserMessageToChat(action.text);
       }
