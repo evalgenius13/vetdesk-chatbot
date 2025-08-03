@@ -97,6 +97,11 @@ function renderQuickActions() {
   
   qa.innerHTML = "";
   quickActions.forEach(action => {
+    // Skip mobile news button on desktop (users already have news sidebar)
+    if (action.text === "mobile news" && window.innerWidth >= 768) {
+      return;
+    }
+    
     const btn = document.createElement('button');
     btn.type = "button";
     
@@ -130,13 +135,8 @@ function renderQuickActions() {
         addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
         waitingForEmailInput = true;
         document.getElementById('chat-input').focus();
-      } else if (action.text === "mobile news") {
-        // Handle mobile news button click (only on mobile)
-        if (window.innerWidth < 768) {
-          if (typeof openMobileNews === 'function') {
-            openMobileNews();
-          }
-        }
+      } else if (action.text === "mobile news" && window.innerWidth < 768) {
+        openMobileNews();
       } else {
         addUserMessageToChat(action.text);
       }
