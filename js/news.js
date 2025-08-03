@@ -1,210 +1,165 @@
-// Main initialization and event handlers
+// News feed functionality with 24-hour caching
 
-let waitingForEmailInput = false;
+// Cache configuration
+const NEWS_CACHE_KEY = 'vetdesk_news_cache';
+const NEWS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  renderQuickActions();
-  renderChatHistory();
-  
-  // Only fetch news if the element exists
-  const feed = document.getElementById('news-feed');
-  if (feed) {
-    fetchNews();
-  } else {
-    console.warn('news-feed element not found at DOMContentLoaded');
+// Check if cached news is still valid
+function isCacheValid(cacheData) {
+  if (!cacheData || !cacheData.timestamp || !cacheData.articles) {
+    return false;
   }
   
-  document.getElementById('chat-input').focus();
-  
-  // Force welcome message visibility on mobile load
-  const welcome = document.getElementById('welcome-message');
-  if (welcome && window.innerWidth <= 768) {
-    welcome.style.display = 'block';
-    console.log("Mobile welcome forced visible");
-  } else {
-    console.log("Mobile welcome condition not met", {
-      welcomeExists: !!welcome,
-      windowWidth: window.innerWidth,
-      isMobile: window.innerWidth <= 768
-    });
+  const now = Date.now();
+  const cacheAge = now - cacheData.timestamp;
+  return cacheAge < NEWS_CACHE_DURATION;
+}
+
+// Get cached news from localStorage
+function getCachedNews() {
+  try {
+    const cached = localStorage.getItem(NEWS_CACHE_KEY);
+    if (!cached) return null;
+    
+    const cacheData = JSON.parse(cached);
+    return isCacheValid(cacheData) ? cacheData.articles : null;
+  } catch (error) {
+    console.warn('Error reading news cache:', error);
+    return null;
   }
-  
-  // Debug quick action state
-  const qa = document.getElementById('quick-actions');
-  console.log('Quick actions compact class:', qa.classList.contains('quick-actions-compact'));
-  
-  // Log news-feed presence
-  console.log('news-feed present at load?', !!document.getElementById('news-feed'));
-});
+}
 
-// Main form submission handler
-document.getElementById('chat-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
+// Save news to localStorage cache
+function setCachedNews(articles) {
+  try {
+    const cacheData = {
+      articles: articles,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Error saving news cache:', error);
+  }
+}
 
-  if (!text) return;
-
-  if (!validateMessageLength(text)) {
-    showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+// Fetch and display veteran news
+async function fetchNews() {
+  const newsFeed = document.getElementById('news-feed');
+  if (!newsFeed) {
+    console.warn('News feed element not found');
     return;
   }
 
-  // Handle email input when waiting for email
-  if (waitingForEmailInput) {
-    // Handle cancel first, before email validation
-    if (text.toLowerCase() === "cancel") {
-      chatMessages.push({ sender: "user", text: text });
-      addInstantBotResponse("Email summary cancelled. How else can I help you?");
-      waitingForEmailInput = false;
-      input.value = "";
-      return;
-    }
-    
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailPattern.test(text)) {
-      chatMessages.push({ sender: "user", text: text });
-      renderChatHistory();
-      
-      // Show loading message
-      chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
-      renderChatHistory();
-      
-      // Remove loading message before calling email function
-      chatMessages.pop();
-      
-      waitingForEmailInput = false;
-      await sendConversationSummary(text);
-      renderChatHistory(); // Display the success message
-      
-      input.value = "";
-      return;
-    } else {
-      chatMessages.push({ sender: "user", text: text });
-      addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
-      input.value = "";
-      return;
-    }
+  // Try to load from cache first
+  const cachedArticles = getCachedNews();
+  if (cachedArticles) {
+    console.log('Loading news from cache');
+    displayNews(cachedArticles, newsFeed);
+    return;
   }
 
-  // Check for instant rate response first
-  const rateResponse = detectRateQuestion(text);
-  if (rateResponse && INSTANT_RATE_RESPONSES[rateResponse]) {
-    // Add user message
-    chatMessages.push({ sender: "user", text: text });
-    
-    // Hide welcome message and compact quick actions on mobile after first message
-    if (window.innerWidth <= 768) {
-      const userMessages = chatMessages.filter(msg => msg.sender === "user");
-      if (userMessages.length === 1) {
-        const welcomeMessage = document.getElementById('welcome-message');
-        if (welcomeMessage) welcomeMessage.style.display = 'none';
-        renderQuickActions(true);
+  // Show loading state if no cache
+  newsFeed.innerHTML = '<li class="news-loading">Loading veteran news...</li>';
+
+  try {
+    // Check if CONFIG is available
+    if (!CONFIG?.NEWS_API_URL) {
+      throw new Error('News API URL not configured');
+    }
+
+    console.log('Fetching fresh news from API');
+    const response = await fetch(CONFIG.NEWS_API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+
+    const data = await response.json();
+
+    if (!data?.articles || !Array.isArray(data.articles)) {
+      throw new Error('Invalid news data received');
+    }
+
+    // Cache the fresh news
+    setCachedNews(data.articles);
     
-    // Add instant rate response
-    addInstantBotResponse(INSTANT_RATE_RESPONSES[rateResponse]);
-    
-    input.value = "";
-    return; // Don't send to AI
+    // Display the news
+    displayNews(data.articles, newsFeed);
+
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    newsFeed.innerHTML = `
+      <li class="news-error">
+        Unable to load news at this time. Please try again later.
+      </li>
+    `;
+  }
+}
+
+// Display news articles in the feed
+function displayNews(articles, newsFeed) {
+  // Clear existing content
+  newsFeed.innerHTML = '';
+
+  if (!articles || articles.length === 0) {
+    newsFeed.innerHTML = '<li class="news-error">No news articles available at this time.</li>';
+    return;
   }
 
-  // Otherwise, proceed with normal AI chat
-  addUserMessageToChat(text);
-  
-  // Hide welcome message and compact quick actions on mobile after first message
-  if (window.innerWidth <= 768) {
-    const userMessages = chatMessages.filter(msg => msg.sender === "user");
-    if (userMessages.length === 1) {
-      const welcomeMessage = document.getElementById('welcome-message');
-      if (welcomeMessage) welcomeMessage.style.display = 'none';
-      renderQuickActions(true);
+  // Display news articles
+  articles.forEach(article => {
+    if (!article?.title || !article?.url) {
+      return; // Skip invalid articles
     }
-  }
-  
-  input.value = "";
-});
 
-// Input validation handler
-document.getElementById('chat-input').addEventListener('input', function(e) {
-  const length = e.target.value.length;
-  const button = document.getElementById('send-button');
+    const newsItem = document.createElement('li');
+    newsItem.className = 'news-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow';
+    
+    const publishedDate = article.publishedAt ? 
+      new Date(article.publishedAt).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }) : '';
 
-  if (length > CONFIG.MAX_MESSAGE_LENGTH) {
-    e.target.value = e.target.value.substring(0, CONFIG.MAX_MESSAGE_LENGTH);
-  }
+    newsItem.innerHTML = `
+      <article>
+        <h3 class="font-semibold text-sm text-gray-900 mb-2 leading-tight">
+          <a href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">
+            ${escapeHtml(article.title)}
+          </a>
+        </h3>
+        ${article.description ? `
+          <p class="text-xs text-gray-600 mb-2 line-clamp-3">
+            ${escapeHtml(article.description.substring(0, 150))}${article.description.length > 150 ? '...' : ''}
+          </p>
+        ` : ''}
+        <div class="flex justify-between items-center text-xs text-gray-500">
+          ${article.source?.name ? `<span>${escapeHtml(article.source.name)}</span>` : '<span>News Source</span>'}
+          ${publishedDate ? `<span>${publishedDate}</span>` : ''}
+        </div>
+      </article>
+    `;
 
-  button.disabled = e.target.value.trim().length === 0 || botIsLoading;
-});
-
-// Render quick actions
-function renderQuickActions(isCompact = false) {
-  const qa = document.getElementById('quick-actions');
-  if (!qa) return;
-  
-  // Add or remove compact class while keeping original classes
-  if (isCompact) {
-    qa.classList.add('quick-actions-compact');
-    qa.classList.remove('flex-wrap');
-  } else {
-    qa.classList.remove('quick-actions-compact');
-    qa.classList.add('flex-wrap');
-  }
-  
-  qa.innerHTML = "";
-  quickActions.forEach(action => {
-    // Skip mobile news button on desktop (users already have news sidebar)
-    if (action.text === "mobile news" && window.innerWidth >= 768) {
-      return;
-    }
-    
-    const btn = document.createElement('button');
-    btn.type = "button";
-    
-    // Normal styling (compact styling will be handled by CSS)
-    if (action.text === "email summary" || action.text === "mobile news") {
-      btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold";
-    } else {
-      btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
-    }
-    
-    btn.textContent = action.label;
-    
-    btn.onclick = () => {
-      // Check if it's the rates quick action
-      if (action.text === "What are the current VA disability compensation rates?") {
-        chatMessages.push({ sender: "user", text: action.text });
-        renderChatHistory();
-        addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
-      } else if (action.text === "email summary") {
-        // Check if user has asked at least one question
-        const userMessages = chatMessages.filter(msg => msg.sender === "user");
-        if (userMessages.length === 0) {
-          addInstantBotResponse("Please ask me a question about VA benefits first, then I can email you a summary of our conversation.");
-          return;
-        }
-        
-        // Handle email summary button click
-        chatMessages.push({ sender: "user", text: "email summary" });
-        renderChatHistory();
-        addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-        waitingForEmailInput = true;
-        document.getElementById('chat-input').focus();
-      } else if (action.text === "mobile news" && window.innerWidth < 768) {
-        openMobileNews();
-      } else {
-        addUserMessageToChat(action.text);
-      }
-    };
-    qa.appendChild(btn);
+    newsFeed.appendChild(newsItem);
   });
 }
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
-  }
-});
+// Mobile news functionality (placeholder for future use)
+function openMobileNews() {
+  // This function was referenced in the original code but mobile functionality was removed
+  // Keeping as placeholder in case mobile news feature is added later
+  console.log('Mobile news functionality not implemented yet');
+}
+
+// Utility function for escaping HTML (duplicate from chat.js for safety)
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
