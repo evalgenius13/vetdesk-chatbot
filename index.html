@@ -323,7 +323,17 @@
       updatePlaceholder();
       
       // Update on resize
-      window.addEventListener('resize', updatePlaceholder);
+      window.addEventListener('resize', () => {
+        updatePlaceholder();
+        
+        // Auto-close mobile news modal if window is resized to desktop
+        if (window.innerWidth >= 768) {
+          const mobileNewsModal = document.getElementById('mobile-news-modal');
+          if (mobileNewsModal) {
+            mobileNewsModal.classList.remove('show');
+          }
+        }
+      });
 
       // Mobile News Modal functionality
       const mobileNewsModal = document.getElementById('mobile-news-modal');
