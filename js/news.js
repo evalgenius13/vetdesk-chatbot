@@ -116,10 +116,11 @@ function openMobileNews() {
 
 function closeMobileNews() {
   const mobileNewsInline = document.getElementById('mobile-news-inline');
-  
   if (mobileNewsInline) {
     mobileNewsInline.classList.remove('show');
   }
+  const chatContainer = document.getElementById('chat-container');
+  if (chatContainer) chatContainer.style.display = 'flex';
 }
 
 // Attach event listeners for mobile news feed
@@ -134,7 +135,9 @@ function attachMobileNewsEventListeners() {
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
         closeMobileNews();
-        addUserMessageToChat(userMessage);
+        setTimeout(() => {
+          addUserMessageToChat(userMessage);
+        }, 50);
       }
     };
   });
