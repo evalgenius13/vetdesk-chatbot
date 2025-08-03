@@ -99,12 +99,13 @@ function attachDesktopNewsEventListeners() {
   });
 }
 
-// Mobile news open/close logic
+// Mobile news open/close logic - FIXED
 function openMobileNews() {
   const mobileNewsInline = document.getElementById('mobile-news-inline');
   const chatContainer = document.getElementById('chat-container');
   const desktopNews = document.getElementById('news-feed');
   const mobileNewsFeed = document.getElementById('mobile-news-feed');
+  
   mobileNewsInline.classList.add('show');
   chatContainer.style.display = 'none';
 
@@ -116,11 +117,19 @@ function openMobileNews() {
 }
 
 function closeMobileNews() {
-  document.getElementById('mobile-news-inline').classList.remove('show');
-  document.getElementById('chat-container').style.display = 'flex';
+  // FIXED: Make sure to remove the show class AND show the chat container
+  const mobileNewsInline = document.getElementById('mobile-news-inline');
+  const chatContainer = document.getElementById('chat-container');
+  
+  if (mobileNewsInline) {
+    mobileNewsInline.classList.remove('show');
+  }
+  if (chatContainer) {
+    chatContainer.style.display = 'flex';
+  }
 }
 
-// Attach event listeners for mobile news feed
+// Attach event listeners for mobile news feed - FIXED
 function attachMobileNewsEventListeners() {
   const mobileNewsFeed = document.getElementById('mobile-news-feed');
   if (!mobileNewsFeed) return;
@@ -131,6 +140,7 @@ function attachMobileNewsEventListeners() {
       const news = newsItems[idx];
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
+        // FIXED: Close mobile news first, then add message
         closeMobileNews();
         addUserMessageToChat(userMessage);
       }
