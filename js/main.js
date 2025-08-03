@@ -30,6 +30,43 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
     return;
   }
 
+  // Handle email input when waiting for email
+  if (waitingForEmailInput) {
+    // Handle cancel first, before email validation
+    if (text.toLowerCase() === "cancel") {
+      chatMessages.push({ sender: "user", text: text });
+      addInstantBotResponse("Email summary cancelled. How else can I help you?");
+      waitingForEmailInput = false;
+      input.value = "";
+      return;
+    }
+    
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailPattern.test(text)) {
+      chatMessages.push({ sender: "user", text: text });
+      renderChatHistory();
+      
+      // Show loading message
+      chatMessages.push({ sender: "bot", text: "Generating your summary and sending email...", streaming: false });
+      renderChatHistory();
+      
+      // Remove loading message before calling email function
+      chatMessages.pop();
+      
+      waitingForEmailInput = false;
+      await sendConversationSummary(text);
+      renderChatHistory(); // Display the success message
+      
+      input.value = "";
+      return;
+    } else {
+      chatMessages.push({ sender: "user", text: text });
+      addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
+      input.value = "";
+      return;
+    }
+  }
+
   // Check for instant rate response first
   const rateResponse = detectRateQuestion(text);
   if (rateResponse && INSTANT_RATE_RESPONSES[rateResponse]) {
