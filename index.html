@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>VetDesk Chat</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -253,17 +252,13 @@
   </header>
 
   <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+
     <!-- News Feed -->
     <section id="news-feed-section" class="w-full md:w-80 bg-white border-r border-gray-200 overflow-y-auto p-4 flex flex-col min-w-[0]">
       <h2 class="text-xl font-semibold mb-3">Veteran News Feed</h2>
       <ul id="news-feed" class="space-y-4 flex-1"></ul>
-      
-      <!-- COPYRIGHT FOOTER -->
-      <div class="mt-auto pt-4 border-t border-gray-200 text-xs text-gray-500 text-center">
-        © 2025 VetDesk™. All rights reserved.
-      </div>
     </section>
-    
+
     <!-- Chat Section -->
     <section id="chat-section" class="flex-1 flex flex-col h-full bg-gray-50">
       <div id="welcome-message" class="p-4 text-base text-gray-700 bg-white border-b border-gray-200">
@@ -276,6 +271,20 @@
       </div>
       
       <div id="quick-actions" class="flex flex-wrap gap-2 p-4 bg-white border-b border-gray-200"></div>
+      
+      <!-- Mobile News Modal -->
+      <div id="mobile-news-modal" class="mobile-news-modal">
+        <div class="bg-blue-900 text-white p-4 flex items-center justify-between">
+          <button id="mobile-news-back" class="flex items-center text-white hover:text-blue-200">
+            <span class="mr-2">←</span>Back to Chat
+          </button>
+          <h2 class="text-lg font-semibold">Veteran News</h2>
+          <button id="mobile-news-close" class="text-white hover:text-blue-200 text-2xl w-8 h-8 flex items-center justify-center">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4">
+          <ul id="mobile-news-feed" class="space-y-4"></ul>
+        </div>
+      </div>
       <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
       <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
         <input id="chat-input" type="text" class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ask me anything..." autocomplete="off" required aria-label="Chat input" maxlength="2000" />
@@ -309,6 +318,52 @@
       
       // Update on resize
       window.addEventListener('resize', updatePlaceholder);
+
+      // Mobile News Modal functionality
+      const mobileNewsModal = document.getElementById('mobile-news-modal');
+      const mobileNewsBack = document.getElementById('mobile-news-back');
+      const mobileNewsClose = document.getElementById('mobile-news-close');
+      const mobileNewsFeed = document.getElementById('mobile-news-feed');
+
+      function openMobileNews() {
+        mobileNewsModal.classList.add('show');
+        // Copy news feed content to mobile modal
+        const desktopNews = document.getElementById('news-feed');
+        if (desktopNews) {
+          mobileNewsFeed.innerHTML = desktopNews.innerHTML;
+          // Re-attach event listeners for mobile news items
+          attachMobileNewsEventListeners();
+        }
+      }
+
+      function closeMobileNews() {
+        mobileNewsModal.classList.remove('show');
+      }
+
+      function attachMobileNewsEventListeners() {
+        const mobileNewsItems = mobileNewsFeed.querySelectorAll('.news-item button');
+        mobileNewsItems.forEach(button => {
+          button.addEventListener('click', function() {
+            const newsText = this.getAttribute('data-news-text');
+            if (newsText) {
+              // Close mobile news modal
+              closeMobileNews();
+              // Add question to chat
+              if (typeof addUserMessageToChat === 'function') {
+                addUserMessageToChat(newsText);
+              }
+            }
+          });
+        });
+      }
+
+      if (mobileNewsBack) {
+        mobileNewsBack.addEventListener('click', closeMobileNews);
+      }
+
+      if (mobileNewsClose) {
+        mobileNewsClose.addEventListener('click', closeMobileNews);
+      }
 
       // Desktop FAQ Dropdown
       const faqButton = document.getElementById('faq-button');
