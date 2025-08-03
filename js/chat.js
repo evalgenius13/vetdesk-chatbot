@@ -89,12 +89,11 @@ function renderQuickActions() {
     btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
     btn.textContent = action.label;
     btn.onclick = () => {
+      // Check if it's the rates quick action
       if (action.text === "What are the current VA disability compensation rates?") {
         chatMessages.push({ sender: "user", text: action.text });
         renderChatHistory();
         addInstantBotResponse(INSTANT_RATE_RESPONSES["general"]);
-      } else if (action.text === "mobile news") {
-        openMobileNews();
       } else {
         addUserMessageToChat(action.text);
       }
@@ -136,38 +135,24 @@ function addInstantBotResponse(text) {
 }
 
 // Chat history rendering
-async function renderChatHistory() {
+function renderChatHistory() {
   const ch = document.getElementById('chat-history');
   ch.innerHTML = "";
-
   for (let i = 0; i < chatMessages.length; i++) {
     const msg = chatMessages[i];
     const messageDiv = document.createElement('div');
     messageDiv.className = "message-container";
-
     if (msg.sender === "user") {
       messageDiv.className += " flex justify-end";
       messageDiv.innerHTML = `<div class="chat-bubble-user">${escapeHtml(msg.text)}</div>`;
       ch.appendChild(messageDiv);
     } else if (msg.sender === "bot") {
       messageDiv.className += " flex justify-start";
-
-      if (i === chatMessages.length - 1 && msg.streaming) {
-        const botBubble = document.createElement('div');
-        botBubble.className = "chat-bubble-bot";
-        messageDiv.appendChild(botBubble);
-        ch.appendChild(messageDiv);
-
-        await streamBotText(msg.text, botBubble);
-        msg.streaming = false;
-      } else {
-        const formattedText = formatBotMessage(msg.text);
-        messageDiv.innerHTML = `<div class="chat-bubble-bot">${formattedText}</div>`;
-        ch.appendChild(messageDiv);
-      }
+      const formattedText = formatBotMessage(msg.text);
+      messageDiv.innerHTML = `<div class="chat-bubble-bot">${formattedText}</div>`;
+      ch.appendChild(messageDiv);
     }
   }
-
   // Loading spinner for pending bot reply
   if (botIsLoading) {
     const spinnerDiv = document.createElement('div');
@@ -175,8 +160,11 @@ async function renderChatHistory() {
     spinnerDiv.innerHTML = `<div class="chat-bubble-bot flex items-center justify-center py-4"><div class="spinner" role="status" aria-label="Loading"></div></div>`;
     ch.appendChild(spinnerDiv);
   }
-
+  // Robust scroll-to-bottom: immediate and after DOM paints
   ch.scrollTop = ch.scrollHeight;
+  setTimeout(() => {
+    ch.scrollTop = ch.scrollHeight;
+  }, 0);
 }
 
 // Streaming effect
@@ -280,7 +268,6 @@ function addUserMessageToChat(text) {
   }
 
   chatMessages.push({ sender: "user", text: trimmedText });
-  
   updateQuestionCounter();
   renderChatHistory();
   addBotReplyToChat();
@@ -294,7 +281,7 @@ async function addBotReplyToChat() {
   sendButton.disabled = true;
   chatInput.disabled = true;
 
-  await renderChatHistory();
+  renderChatHistory();
 
   const botReply = await getBotReply();
 
@@ -304,6 +291,6 @@ async function addBotReplyToChat() {
 
   chatInput.focus();
 
-  chatMessages.push({ sender: "bot", text: botReply, streaming: true });
-  await renderChatHistory();
+  chatMessages.push({ sender: "bot", text: botReply });
+  renderChatHistory();
 }
