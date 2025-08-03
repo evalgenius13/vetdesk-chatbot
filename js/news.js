@@ -99,15 +99,13 @@ function attachDesktopNewsEventListeners() {
   });
 }
 
-// Mobile news open/close logic - FIXED
+// Mobile news open/close logic
 function openMobileNews() {
   const mobileNewsInline = document.getElementById('mobile-news-inline');
-  const chatContainer = document.getElementById('chat-container');
   const desktopNews = document.getElementById('news-feed');
   const mobileNewsFeed = document.getElementById('mobile-news-feed');
   
   mobileNewsInline.classList.add('show');
-  chatContainer.style.display = 'none';
 
   // Copy desktop feed HTML for consistency
   if (desktopNews && mobileNewsFeed) {
@@ -118,13 +116,9 @@ function openMobileNews() {
 
 function closeMobileNews() {
   const mobileNewsInline = document.getElementById('mobile-news-inline');
-  const chatContainer = document.getElementById('chat-container');
   
   if (mobileNewsInline) {
     mobileNewsInline.classList.remove('show');
-  }
-  if (chatContainer) {
-    chatContainer.style.display = 'flex';
   }
 }
 
