@@ -9,12 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchNews();
   document.getElementById('chat-input').focus();
   
-  // Force welcome message visibility on mobile load if no messages
-  const welcomeMessage = document.getElementById('welcome-message');
-  const hasUserMessages = chatMessages.some(msg => msg.sender === "user");
-  if (window.innerWidth <= 768 && welcomeMessage) {
-    welcomeMessage.style.display = hasUserMessages ? 'none' : 'block';
+  // Force welcome message visibility on mobile load
+  const welcome = document.getElementById('welcome-message');
+  if (welcome && window.innerWidth <= 768) {
+    welcome.style.display = 'block';
+    console.log('Welcome visible on load:', welcome.style.display);
   }
+  
+  // Debug quick action state
+  const qa = document.getElementById('quick-actions');
+  console.log('Quick actions compact class:', qa.classList.contains('quick-actions-compact'));
 });
 
 // Main form submission handler
