@@ -25,6 +25,15 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
 
   // Handle email input when waiting for email
   if (waitingForEmailInput) {
+    // Handle cancel first, before email validation
+    if (text.toLowerCase() === "cancel") {
+      chatMessages.push({ sender: "user", text: text });
+      addInstantBotResponse("Email summary cancelled. How else can I help you?");
+      waitingForEmailInput = false;
+      input.value = "";
+      return;
+    }
+    
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailPattern.test(text)) {
       chatMessages.push({ sender: "user", text: text });
@@ -56,15 +65,6 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
     chatMessages.push({ sender: "user", text: text });
     addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
     waitingForEmailInput = true;
-    input.value = "";
-    return;
-  }
-
-  // Handle cancel during email flow
-  if (waitingForEmailInput && text.toLowerCase() === "cancel") {
-    chatMessages.push({ sender: "user", text: text });
-    addInstantBotResponse("Email summary cancelled. How else can I help you?");
-    waitingForEmailInput = false;
     input.value = "";
     return;
   }
