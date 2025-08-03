@@ -161,14 +161,17 @@ For additional support, visit VA.gov or contact your local VA office.`;
     });
 
     const result = await response.json();
+    console.log('[EMAIL SEND RESPONSE]', response.status, result);
 
-    if (result.success) {
+    if (response.ok && result?.success === true) {
       const successMessage = `Great! I've sent your conversation summary to ${email}. You should receive it within a few minutes.`;
       chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
       renderChatHistory();
     } else {
-      throw new Error(result.error || 'Failed to send email');
+      const fallbackError = result?.error || 'Email API returned an unexpected result.';
+      throw new Error(fallbackError);
     }
+
   } catch (error) {
     console.error('Email error:', error);
     let errorMessage;
