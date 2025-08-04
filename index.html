@@ -5,63 +5,11 @@
   <title>VetDesk Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' data:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://vetdesk-demo2-api.vercel.app; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @media (max-width: 768px) {
-      #news-feed-section {
-        display: none;
-      }
-      #chat-section {
-        flex: 1 1 100%;
-      }
-      
-      /* Mobile quick actions - horizontal scroll */
-      #quick-actions {
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE/Edge */
-        padding: 0.75rem 1rem !important;
-      }
-      
-      #quick-actions::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
-      }
-      
-      #quick-actions > * {
-        display: inline-block;
-        white-space: nowrap;
-        font-size: 0.75rem !important;
-        padding: 0.5rem 0.75rem !important;
-        margin-right: 0.5rem;
-        min-width: auto;
-        flex-shrink: 0;
-      }
-      
-      #quick-actions > *:last-child {
-        margin-right: 1rem; /* Extra space at end for easier scrolling */
-      }
-    }
-    
-    /* Desktop quick actions - keep original flex wrap */
-    @media (min-width: 769px) {
-      #quick-actions {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 1rem !important;
-      }
-      
-      #quick-actions .quick-action-btn {
-        font-size: 0.875rem;
-        padding: 0.5rem 1rem;
-      }
-    }
-    
     .chat-bubble-user {
       max-width: 42rem;
       background: #1e40af;
@@ -138,6 +86,56 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+    
+    @media (max-width: 768px) {
+      #news-feed-section {
+        display: none;
+      }
+      #chat-section {
+        flex: 1 1 100%;
+      }
+      
+      #quick-actions {
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 0.75rem 1rem !important;
+      }
+      
+      #quick-actions::-webkit-scrollbar {
+        display: none;
+      }
+      
+      #quick-actions > * {
+        display: inline-block;
+        white-space: nowrap;
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+        margin-right: 0.5rem;
+        min-width: auto;
+        flex-shrink: 0;
+      }
+      
+      #quick-actions > *:last-child {
+        margin-right: 1rem;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      #quick-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 1rem !important;
+      }
+      
+      #quick-actions > * {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
@@ -151,9 +149,19 @@
         <span class="text-xs sm:text-sm font-light text-blue-200">™ VA Benefits, Simplified.</span>
       </div>
       
-      <!-- Right side - Desktop Navigation -->
+      <!-- Right side - Navigation -->
       <div class="flex items-center flex-shrink-0 ml-2">
-        <div class="flex items-center space-x-3">
+        <!-- Mobile Hamburger Menu -->
+        <div class="md:hidden">
+          <button id="mobile-menu-button" class="bg-blue-800 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center space-x-3">
           <!-- About Dropdown -->
           <div class="relative">
             <button id="about-button" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
@@ -217,6 +225,50 @@
     </div>
   </header>
 
+  <!-- Mobile Menu Overlay -->
+  <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden">
+    <div class="bg-white w-full max-w-sm ml-auto h-full shadow-lg">
+      <div class="p-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-gray-900">Menu</h3>
+          <button id="mobile-menu-close" class="text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center">
+            &times;
+          </button>
+        </div>
+      </div>
+      
+      <div class="p-4 space-y-4">
+        <!-- About Section -->
+        <div class="border-b border-gray-200 pb-4">
+          <h4 class="font-medium text-blue-900 mb-3">About VetDesk</h4>
+          <p class="text-sm text-gray-600 leading-relaxed mb-3">VetDesk is a free service made by veterans for veterans. Our mission is to help explain VA benefits and the policies that affect them in plain English and in a secure, simple, and respectful way. Just ask questions and get clear answers.</p>
+          <p class="text-sm text-gray-600 leading-relaxed"><strong>Important:</strong> VetDesk is independent and not affiliated with the VA. For the latest information or to apply for benefits, visit VA.gov or call 1-800-827-1000.</p>
+        </div>
+        
+        <!-- FAQ Section -->
+        <div>
+          <h4 class="font-medium text-blue-900 mb-3">Frequently Asked Questions</h4>
+          <div class="space-y-3">
+            <div>
+              <h5 class="font-medium text-gray-900 text-sm">How many questions can I ask?</h5>
+              <p class="text-sm text-gray-600 leading-relaxed">You can ask up to 12 questions per conversation. This limit helps us keep VetDesk completely free for all veterans. After 12 questions, simply refresh the page to start a new conversation.</p>
+            </div>
+            
+            <div>
+              <h5 class="font-medium text-gray-900 text-sm">Is this an official VA website?</h5>
+              <p class="text-sm text-gray-600 leading-relaxed">No, VetDesk is not an official VA website. We're an independent service that helps veterans understand VA benefits in plain English. For official VA business, always visit VA.gov or call 1-800-827-1000.</p>
+            </div>
+            
+            <div>
+              <h5 class="font-medium text-gray-900 text-sm">Is my information private?</h5>
+              <p class="text-sm text-gray-600 leading-relaxed">Yes. We don't store your personal information or conversation history. Each conversation is temporary and deleted when you close the page. If you request an email summary, we only use your email to send it and don't store it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
 
     <!-- News Feed -->
@@ -232,13 +284,8 @@
 
     <!-- Chat Section -->
     <section id="chat-section" class="flex-1 flex flex-col h-full bg-gray-50">
-      <div id="welcome-message" class="p-4 text-base text-gray-700 bg-white border-b border-gray-200">
-        <span>
-          👋 Hi there, and welcome! I'm here to help you understand your VA benefits in plain everyday English. Just ask me any questions you have.
-        </span>
-        <div id="question-counter" class="text-xs text-gray-500 mt-2">
-          Questions remaining: <span id="questions-left">12</span>/12
-        </div>
+      <div id="question-counter" class="px-4 py-2 text-xs text-gray-500 bg-white border-b border-gray-200 text-center">
+        Questions remaining: <span id="questions-left">12</span>/12
       </div>
       
       <!-- Quick Actions - Now horizontally scrollable on mobile -->
@@ -260,55 +307,6 @@
   <script src="js/news.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/main.js"></script>
-
-  <!-- Navigation JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Desktop dropdowns only
-      const faqButton = document.getElementById('faq-button');
-      const faqDropdown = document.getElementById('faq-dropdown');
-      const faqClose = document.getElementById('faq-close');
-      const aboutButton = document.getElementById('about-button');
-      const aboutDropdown = document.getElementById('about-dropdown');
-      const aboutClose = document.getElementById('about-close');
-
-      // Desktop FAQ dropdown
-      if (faqButton && faqDropdown) {
-        faqButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          faqDropdown.classList.toggle('hidden');
-          if (aboutDropdown) aboutDropdown.classList.add('hidden');
-        });
-      }
-
-      // Desktop About dropdown
-      if (aboutButton && aboutDropdown) {
-        aboutButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          aboutDropdown.classList.toggle('hidden');
-          if (faqDropdown) faqDropdown.classList.add('hidden');
-        });
-      }
-
-      // Close buttons
-      if (faqClose && faqDropdown) {
-        faqClose.addEventListener('click', () => faqDropdown.classList.add('hidden'));
-      }
-      if (aboutClose && aboutDropdown) {
-        aboutClose.addEventListener('click', () => aboutDropdown.classList.add('hidden'));
-      }
-
-      // Close dropdowns when clicking outside
-      document.addEventListener('click', (e) => {
-        if (faqButton && faqDropdown && !faqButton.contains(e.target) && !faqDropdown.contains(e.target)) {
-          faqDropdown.classList.add('hidden');
-        }
-        if (aboutButton && aboutDropdown && !aboutButton.contains(e.target) && !aboutDropdown.contains(e.target)) {
-          aboutDropdown.classList.add('hidden');
-        }
-      });
-    });
-  </script>
 
 </body>
 </html>
