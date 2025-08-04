@@ -36,6 +36,17 @@ function setupAutoResize() {
     }, 0);
   });
 
+  // Prevent Enter from creating new lines - it should submit instead
+  textarea.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const chatForm = document.getElementById('chat-form');
+      if (chatForm) {
+        chatForm.dispatchEvent(new Event('submit'));
+      }
+    }
+  });
+
   // Reset height when form is submitted
   window.resetTextareaHeight = function() {
     textarea.style.height = 'auto';
