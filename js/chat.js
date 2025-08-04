@@ -1,4 +1,43 @@
-// Chat functionality and state management
+// API integration
+async function getBotReply() {
+  try {
+    if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
+      throw new Error('Conversation too long. Please start a new conversation.');
+    }
+
+    const history = chatMessages.map(m => ({
+      role: m.sender === "user" ? "user" : "model",
+      parts: [{ text: m.text }]
+    }));
+
+    // Add system prompt to the API call
+    const systemPrompt = `You are VetDesk, a helpful AI assistant specializing in VA benefits for veterans. You provide accurate, up-to-date information about VA disability, healthcare, education, and housing benefits in plain English. 
+
+Key guidelines:
+- Always be respectful and understanding of veterans' experiences
+- Provide clear, actionable information about VA benefits
+- When discussing rates or specific amounts, use the most current information available
+- Encourage veterans to verify information with official VA sources (VA.gov or 1-800-827-1000)
+- If you're unsure about something, direct them to official VA resources
+- Keep responses concise but comprehensive
+- Use a helpful, professional, and empathetic tone
+
+Remember: You are not an official VA representative, but an independent service helping veterans understand their benefits.`;
+
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
+      },
+      body: JSON.stringify({ 
+        chatHistory: history,
+        systemPrompt: systemPrompt
+      })
+    });
+
+    // Rate limiting with retry logic
+    if// Chat functionality and state management
 
 // Chat State
 let chatMessages = [];
@@ -168,7 +207,10 @@ async function getBotReply() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
       },
-      body: JSON.stringify({ chatHistory: history })
+      body: JSON.stringify({ 
+        chatHistory: history,
+        systemPrompt: getCurrentSystemPrompt()
+      })
     });
 
     // Rate limiting with retry logic
