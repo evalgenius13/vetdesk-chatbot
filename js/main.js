@@ -209,43 +209,6 @@ function setupInputHandler() {
   });
 }
 
-// Update both question counters (desktop and mobile)
-function updateQuestionCounters() {
-  // This function should be called from your chat.js updateQuestionCounter function
-  const userMessageCount = chatMessages?.filter(msg => msg.sender === "user").length || 0;
-  const questionsLeft = 12 - userMessageCount;
-  
-  // Update desktop counter
-  const desktopCounter = document.getElementById('questions-left');
-  if (desktopCounter) {
-    desktopCounter.textContent = questionsLeft;
-  }
-  
-  // Update mobile counter
-  const mobileCounter = document.getElementById('mobile-questions-left');
-  if (mobileCounter) {
-    mobileCounter.textContent = questionsLeft;
-  }
-  
-  // Update colors for both counters
-  const updateCounterColor = (counterElement) => {
-    if (!counterElement) return;
-    const parentDiv = counterElement.closest('[id*="question-counter"]');
-    if (!parentDiv) return;
-    
-    if (questionsLeft <= 3) {
-      parentDiv.className = parentDiv.className.replace(/text-gray-500|text-orange-500/, 'text-red-500');
-    } else if (questionsLeft <= 6) {
-      parentDiv.className = parentDiv.className.replace(/text-gray-500|text-red-500/, 'text-orange-500');
-    } else {
-      parentDiv.className = parentDiv.className.replace(/text-red-500|text-orange-500/, 'text-gray-500');
-    }
-  };
-  
-  updateCounterColor(desktopCounter);
-  updateCounterColor(mobileCounter);
-}
-
 // Setup resize handler with throttling
 function setupResizeHandler() {
   let resizeTimeout;
