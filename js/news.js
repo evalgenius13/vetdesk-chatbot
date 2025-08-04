@@ -59,7 +59,7 @@ function renderNewsFeed() {
   feed.innerHTML = "";
 
   if (!newsItems.length) {
-    feed.innerHTML = '<li class="news-error">No news articles available at this time.</li>';
+    feed.innerHTML = '<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">No news articles available at this time.</li>';
     return;
   }
 
@@ -79,7 +79,7 @@ function renderNewsFeed() {
     li.innerHTML = `
       <article>
         <h3 class="font-semibold text-sm text-gray-900 mb-2 leading-tight">
-          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">
+          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800">
             ${titleText}
           </a>
         </h3>
@@ -112,7 +112,9 @@ function attachDesktopNewsEventListeners() {
       const news = newsItems[idx];
       if (news) {
         const userMessage = `How does "${news.title}" affect me?`;
-        addUserMessageToChat(userMessage);
+        if (typeof addUserMessageToChat === 'function') {
+          addUserMessageToChat(userMessage);
+        }
       }
     };
   });
