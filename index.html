@@ -20,20 +20,17 @@
       white-space: pre-line;
       margin-left: auto;
       word-break: break-word;
-      animation: slideInRight 0.3s ease-out;
     }
     .chat-bubble-bot {
       max-width: 42rem;
       background: #f9fafb;
       color: #1f2937;
       border-radius: 1rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       padding: 1.5rem;
       line-height: 1.6;
       white-space: pre-line;
       word-break: break-word;
       border: 1px solid #e5e7eb;
-      animation: slideInLeft 0.3s ease-out;
     }
     .chat-bubble-bot p {
       margin-bottom: 1rem;
@@ -42,28 +39,7 @@
       margin-bottom: 0;
     }
 
-    /* NEW: Slide-in animations for messages */
-    @keyframes slideInRight {
-      from {
-        opacity: 0;
-        transform: translateX(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes slideInLeft {
-      from {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
+    /* Remove all the animation keyframes */
 
     .spinner {
       border: 3px solid #e5e7eb;
@@ -128,10 +104,8 @@
       border: 1px solid #fecaca;
       color: #dc2626;
       padding: 1rem;
-      border-radius: 0.75rem;
+      border-radius: 0.5rem;
       margin: 1rem 0;
-      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
-      animation: slideInLeft 0.3s ease-out;
     }
 
     .news-loading {
@@ -150,28 +124,19 @@
       border-radius: 0.5rem;
       text-align: center;
     }
-    .news-item {
-      transition: all 0.2s ease;
-    }
-    .news-item:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
 
     /* NEW: Auto-resizing textarea styles */
     .chat-textarea {
       resize: none;
       overflow: hidden;
-      min-height: 44px; /* Minimum touch target */
-      max-height: 120px; /* Limit to ~6 lines */
-      transition: height 0.2s ease;
+      min-height: 44px;
+      max-height: 120px;
     }
 
     /* NEW: Character counter styles */
     .char-counter {
       font-size: 0.75rem;
       color: #6b7280;
-      transition: color 0.2s ease;
     }
 
     .char-counter.warning {
