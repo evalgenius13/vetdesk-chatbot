@@ -12,6 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchNews();
   }
   
+  // NEW: Setup Phase 1 enhancements
+  setupAutoResize();
+  setupScrollToBottom();
+  updateCharacterCounter();
+  
   // Focus chat input and set responsive placeholder
   const chatInput = document.getElementById('chat-input');
   if (chatInput) {
@@ -23,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFormHandler();
   setupInputHandler();
   setupResizeHandler();
-  setupNavigation(); // Add navigation setup
+  setupNavigation();
 });
 
 // Navigation functionality
@@ -142,69 +147,102 @@ function setupFormHandler() {
     }
 
     // Handle email input when waiting for email
-    if (waitingForEmailInput) {
+    if (window.waitingForEmailInput) {
       // Handle cancel first
       if (text.toLowerCase() === "cancel") {
-        chatMessages.push({ sender: "user", text: text });
-        addInstantBotResponse("Email summary cancelled. How else can I help you?");
-        waitingForEmailInput = false;
+        if (window.chatMessages) {
+          window.chatMessages.push({ sender: "user", text: text });
+        }
+        if (typeof addInstantBotResponse === 'function') {
+          addInstantBotResponse("Email summary cancelled. How else can I help you?");
+        }
+        window.waitingForEmailInput = false;
         input.value = "";
+        if (window.resetTextareaHeight) {
+          window.resetTextareaHeight();
+        }
         return;
       }
       
       // Validate email format
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (emailPattern.test(text)) {
-        chatMessages.push({ sender: "user", text: text });
-        renderChatHistory();
+        if (window.chatMessages) {
+          window.chatMessages.push({ sender: "user", text: text });
+        }
+        if (typeof renderChatHistory === 'function') {
+          renderChatHistory();
+        }
         
         // Show loading message
-        addInstantBotResponse("Generating your summary and sending email...");
+        if (typeof addInstantBotResponse === 'function') {
+          addInstantBotResponse("Generating your summary and sending email...");
+        }
         
-        waitingForEmailInput = false;
+        window.waitingForEmailInput = false;
         
         // Send email summary
         try {
-          await sendConversationSummary(text);
+          if (typeof sendConversationSummary === 'function') {
+            await sendConversationSummary(text);
+          }
         } catch (error) {
           console.error('Email sending failed:', error);
         }
         
-        renderChatHistory();
+        if (typeof renderChatHistory === 'function') {
+          renderChatHistory();
+        }
         input.value = "";
+        if (window.resetTextareaHeight) {
+          window.resetTextareaHeight();
+        }
         return;
       } else {
-        chatMessages.push({ sender: "user", text: text });
-        addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
+        if (window.chatMessages) {
+          window.chatMessages.push({ sender: "user", text: text });
+        }
+        if (typeof addInstantBotResponse === 'function') {
+          addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
+        }
         input.value = "";
+        if (window.resetTextareaHeight) {
+          window.resetTextareaHeight();
+        }
         return;
       }
     }
 
     // Normal chat flow
-    addUserMessageToChat(text);
+    if (typeof addUserMessageToChat === 'function') {
+      addUserMessageToChat(text);
+    }
     input.value = "";
+    if (window.resetTextareaHeight) {
+      window.resetTextareaHeight();
+    }
+    if (typeof updateCharacterCounter === 'function') {
+      updateCharacterCounter();
+    }
   });
 }
 
-// Setup input validation handler
+// NEW: Setup input validation handler
 function setupInputHandler() {
   const chatInput = document.getElementById('chat-input');
   if (!chatInput) return;
 
   chatInput.addEventListener('input', function(e) {
     const length = e.target.value.length;
-    const button = document.getElementById('send-button');
     const maxLength = CONFIG?.MAX_MESSAGE_LENGTH || 2000;
 
     if (length > maxLength) {
       e.target.value = e.target.value.substring(0, maxLength);
     }
 
-    if (button) {
-      const isEmpty = e.target.value.trim().length === 0;
-      const isLoading = window.botIsLoading || false;
-      button.disabled = isEmpty || isLoading;
+    // Only call updateCharacterCounter if it exists
+    if (typeof updateCharacterCounter === 'function') {
+      updateCharacterCounter();
     }
   });
 }
