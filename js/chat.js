@@ -165,11 +165,12 @@ async function getBotReply() {
 
     // Inject system prompt every 10 bot responses to refresh AI memory
     const botMessageCount = chatMessages.filter(msg => msg.sender === "bot").length;
+    
     if (botMessageCount > 0 && botMessageCount % 10 === 0) {
-      // Add system prompt as a user message to remind the AI of its role
+      // Add the full system prompt as a user message to completely refresh AI memory
       history.push({
         role: "user",
-        parts: [{ text: `[SYSTEM REMINDER: ${SYSTEM_PROMPT}]` }]
+        parts: [{ text: `Please remember and follow these instructions exactly: ${SYSTEM_PROMPT}` }]
       });
     }
 
