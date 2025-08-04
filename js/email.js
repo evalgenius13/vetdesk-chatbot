@@ -8,7 +8,7 @@ async function sendConversationSummary(email) {
     }
 
     // Check if chatMessages exists and has content
-    if (!window.chatMessages || !Array.isArray(chatMessages) || chatMessages.length === 0) {
+    if (!window.chatMessages || !Array.isArray(window.chatMessages) || window.chatMessages.length === 0) {
       throw new Error('No conversation to summarize');
     }
 
@@ -18,7 +18,7 @@ async function sendConversationSummary(email) {
     }
 
     // Create conversation text from chat messages
-    const conversationText = chatMessages
+    const conversationText = window.chatMessages
       .filter(msg => msg && msg.sender && msg.text) // Filter out invalid messages
       .map(msg => `${msg.sender === 'user' ? 'Veteran' : 'VetDesk'}: ${msg.text}`)
       .join('\n\n─────────────────────────────────────────\n\n');
@@ -123,8 +123,8 @@ For additional support, visit VA.gov or contact your local VA office.`;
 
     if (response.ok && result?.success === true) {
       const successMessage = `Summary sent! You can send ${result.remaining || 0} more this hour.`;
-      if (chatMessages && Array.isArray(chatMessages)) {
-        chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
+      if (window.chatMessages && Array.isArray(window.chatMessages)) {
+        window.chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
       }
     } else {
       throw new Error(result?.error || 'Email sending failed');
@@ -135,8 +135,8 @@ For additional support, visit VA.gov or contact your local VA office.`;
     const errorMessage = error.message || "Failed to send summary. Please try again later.";
     
     // Only try to add to chatMessages if it exists
-    if (window.chatMessages && Array.isArray(chatMessages)) {
-      chatMessages.push({ 
+    if (window.chatMessages && Array.isArray(window.chatMessages)) {
+      window.chatMessages.push({ 
         sender: "bot", 
         text: errorMessage, 
         streaming: false 
