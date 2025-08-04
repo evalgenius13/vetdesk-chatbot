@@ -23,7 +23,92 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFormHandler();
   setupInputHandler();
   setupResizeHandler();
+  setupNavigation(); // Add navigation setup
 });
+
+// Navigation functionality
+function setupNavigation() {
+  // Mobile menu elements
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileMenuClose = document.getElementById('mobile-menu-close');
+  
+  // Desktop dropdown elements
+  const faqButton = document.getElementById('faq-button');
+  const faqDropdown = document.getElementById('faq-dropdown');
+  const faqClose = document.getElementById('faq-close');
+  const aboutButton = document.getElementById('about-button');
+  const aboutDropdown = document.getElementById('about-dropdown');
+  const aboutClose = document.getElementById('about-close');
+
+  // Mobile menu functionality
+  if (mobileMenuButton && mobileMenu) {
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+
+  if (mobileMenuClose && mobileMenu) {
+    mobileMenuClose.addEventListener('click', () => {
+      mobileMenu.classList.add('hidden');
+      document.body.style.overflow = '';
+    });
+  }
+
+  if (mobileMenu) {
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target === mobileMenu) {
+        mobileMenu.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  // Desktop FAQ dropdown
+  if (faqButton && faqDropdown) {
+    faqButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      faqDropdown.classList.toggle('hidden');
+      if (aboutDropdown) aboutDropdown.classList.add('hidden');
+    });
+  }
+
+  // Desktop About dropdown
+  if (aboutButton && aboutDropdown) {
+    aboutButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      aboutDropdown.classList.toggle('hidden');
+      if (faqDropdown) faqDropdown.classList.add('hidden');
+    });
+  }
+
+  // Close buttons for desktop dropdowns
+  if (faqClose && faqDropdown) {
+    faqClose.addEventListener('click', () => faqDropdown.classList.add('hidden'));
+  }
+  if (aboutClose && aboutDropdown) {
+    aboutClose.addEventListener('click', () => aboutDropdown.classList.add('hidden'));
+  }
+
+  // Close desktop dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (faqButton && faqDropdown && !faqButton.contains(e.target) && !faqDropdown.contains(e.target)) {
+      faqDropdown.classList.add('hidden');
+    }
+    if (aboutButton && aboutDropdown && !aboutButton.contains(e.target) && !aboutDropdown.contains(e.target)) {
+      aboutDropdown.classList.add('hidden');
+    }
+  });
+
+  // Close mobile menu on window resize to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768 && mobileMenu && !mobileMenu.classList.contains('hidden')) {
+      mobileMenu.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  });
+}
 
 // Set responsive placeholder text
 function updatePlaceholder() {
