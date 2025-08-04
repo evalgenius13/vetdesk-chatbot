@@ -78,49 +78,6 @@ function renderQuickActions() {
   });
 }
 
-// Question counter - update both desktop and mobile counters
-function updateQuestionCounter() {
-  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
-  const questionsLeft = 12 - userMessageCount;
-  
-  // Update desktop counter (in welcome message)
-  const desktopCounter = document.getElementById('questions-left');
-  if (desktopCounter) {
-    desktopCounter.textContent = questionsLeft;
-  }
-  
-  // Update mobile counter (standalone)
-  const mobileCounter = document.getElementById('mobile-questions-left');
-  if (mobileCounter) {
-    mobileCounter.textContent = questionsLeft;
-  }
-  
-  // Change color as questions run out - desktop counter
-  const desktopCounterElement = document.getElementById('question-counter');
-  if (desktopCounterElement) {
-    if (questionsLeft <= 3) {
-      desktopCounterElement.className = 'text-xs text-red-500 mt-2';
-    } else if (questionsLeft <= 6) {
-      desktopCounterElement.className = 'text-xs text-orange-500 mt-2';
-    } else {
-      desktopCounterElement.className = 'text-xs text-gray-500 mt-2';
-    }
-  }
-  
-  // Change color as questions run out - mobile counter (preserve md:hidden class)
-  const mobileCounterElement = document.getElementById('mobile-question-counter');
-  if (mobileCounterElement) {
-    const baseClasses = 'px-4 py-2 text-xs bg-white border-b border-gray-200 text-center md:hidden';
-    if (questionsLeft <= 3) {
-      mobileCounterElement.className = baseClasses + ' text-red-500';
-    } else if (questionsLeft <= 6) {
-      mobileCounterElement.className = baseClasses + ' text-orange-500';
-    } else {
-      mobileCounterElement.className = baseClasses + ' text-gray-500';
-    }
-  }
-}
-
 // Message formatting
 function formatBotMessage(text) {
   const sanitized = escapeHtml(text);
@@ -206,6 +163,16 @@ async function getBotReply() {
       parts: [{ text: m.text }]
     }));
 
+    // Inject system prompt every 10 bot responses to refresh AI memory
+    const botMessageCount = chatMessages.filter(msg => msg.sender === "bot").length;
+    if (botMessageCount > 0 && botMessageCount % 10 === 0) {
+      // Add system prompt as a user message to remind the AI of its role
+      history.push({
+        role: "user",
+        parts: [{ text: `[SYSTEM REMINDER: ${SYSTEM_PROMPT}]` }]
+      });
+    }
+
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: {
@@ -260,13 +227,6 @@ function addUserMessageToChat(text) {
     return;
   }
 
-  // Check conversation length - count user messages only
-  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
-  if (userMessageCount >= 12) {
-    showError('That was your 12th question. You can email yourself a summary or refresh to start a new conversation.');
-    return;
-  }
-
   if (botIsLoading) {
     showError('Please wait for the current response to finish.');
     return;
@@ -275,12 +235,12 @@ function addUserMessageToChat(text) {
   chatMessages.push({ sender: "user", text: trimmedText });
   
   // Hide welcome message after first message (works on all screen sizes)
-  if (userMessageCount === 0) {
+  const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+  if (userMessageCount === 1) {
     const welcomeMessage = document.getElementById('welcome-message');
     if (welcomeMessage) welcomeMessage.style.display = 'none';
   }
   
-  updateQuestionCounter();
   renderChatHistory();
   addBotReplyToChat();
 }
