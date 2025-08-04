@@ -56,28 +56,6 @@ function setupFormHandler() {
       return;
     }
 
-    // Check for system commands first
-    if (text.toLowerCase() === '/plain on' || text.toLowerCase() === '/plain off') {
-      const turnOn = text.toLowerCase() === '/plain on';
-      
-      // Set the mode
-      PLAIN_ENGLISH_MODE = turnOn;
-      
-      // Add user message
-      chatMessages.push({ sender: "user", text: text });
-      
-      // Add system response
-      const modeText = turnOn ? 'Plain English mode is now ON' : 'Plain English mode is now OFF';
-      const description = turnOn ? 
-        'I\'ll use simple language, short sentences, and no formatting.' : 
-        'I can now use bullet points, lists, and more detailed formatting.';
-      
-      addInstantBotResponse(`${modeText}. ${description}`);
-      
-      input.value = "";
-      return;
-    }
-
     // Handle email input when waiting for email
     if (waitingForEmailInput) {
       // Handle cancel first
