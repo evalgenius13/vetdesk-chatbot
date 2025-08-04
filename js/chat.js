@@ -288,7 +288,6 @@ function renderChatHistory() {
     spinnerDiv.innerHTML = `
       <div class="chat-bubble-bot">
         <div class="typing-indicator">
-          <span class="text-gray-600">VetDesk is thinking</span>
           <div class="typing-dots">
             <div class="typing-dot"></div>
             <div class="typing-dot"></div>
