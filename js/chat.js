@@ -163,17 +163,6 @@ async function getBotReply() {
       parts: [{ text: m.text }]
     }));
 
-    // Inject system prompt every 3 bot responses to refresh AI memory more frequently
-    const botMessageCount = chatMessages.filter(msg => msg.sender === "bot").length;
-    
-    if (botMessageCount > 0 && botMessageCount % 3 === 0) {
-      // Add the full system prompt as a user message to completely refresh AI memory
-      history.push({
-        role: "user",
-        parts: [{ text: `Please remember and follow these instructions exactly: ${SYSTEM_PROMPT}` }]
-      });
-    }
-
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: {
@@ -183,41 +172,6 @@ async function getBotReply() {
       body: JSON.stringify({ 
         chatHistory: history,
         systemPrompt: SYSTEM_PROMPT
-      })
-    });
-
-    if (response.status === 429) {
-      if (!rateLimitWarning) {
-        rateLimitWarning = true;
-        setTimeout(() => { rateLimitWarning = false; }, 60000);
-      }
-      throw new Error('Too many requests. Please wait a moment before trying again.');
-    }
-
-    if (response.status === 401) {
-      throw new Error('Authentication failed. Please refresh the page.');
-    }
-
-    if (!response.ok) {
-      throw new Error(`Server error (${response.status}). Please try again later.`);
-    }
-
-    const data = await response.json();
-
-    return (
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Sorry, I couldn't get an answer right now."
-    );
-  } catch (e) {
-    console.error('API Error:', e);
-
-    if (e.message.includes('fetch')) {
-      return "Sorry, I'm having trouble connecting. Please check your internet connection and try again.";
-    }
-
-    return e.message || "Sorry, something went wrong. Please try again later.";
-  }
-}
       })
     });
 
