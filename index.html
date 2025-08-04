@@ -773,7 +773,10 @@
         
         btn.textContent = action.label;
         
-        btn.onclick = () => {
+        // Use onclick for quick actions (simpler and works fine)
+        btn.onclick = (e) => {
+          e.preventDefault();
+          
           if (action.text === "email summary") {
             const userMessages = chatMessages.filter(msg => msg.sender === "user");
             if (userMessages.length === 0) {
@@ -791,6 +794,7 @@
             addUserMessageToChat(action.text);
           }
         };
+        
         qa.appendChild(btn);
       });
     }
