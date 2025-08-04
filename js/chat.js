@@ -209,7 +209,7 @@ async function getBotReply() {
       },
       body: JSON.stringify({ 
         chatHistory: history,
-        systemPrompt: getCurrentSystemPrompt()
+        systemPrompt: SYSTEM_PROMPT
       })
     });
 
