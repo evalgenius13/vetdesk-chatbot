@@ -232,14 +232,14 @@ function addUserMessageToChat(text) {
     return;
   }
 
-  chatMessages.push({ sender: "user", text: trimmedText });
-  
   // Hide welcome message after first message (works on all screen sizes)
   const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
-  if (userMessageCount === 1) {
+  if (userMessageCount === 0) {
     const welcomeMessage = document.getElementById('welcome-message');
     if (welcomeMessage) welcomeMessage.style.display = 'none';
   }
+
+  chatMessages.push({ sender: "user", text: trimmedText });
   
   renderChatHistory();
   addBotReplyToChat();
