@@ -266,10 +266,13 @@
         display: inline-block;
         white-space: nowrap;
         font-size: 0.75rem !important;
-        padding: 0.5rem 0.75rem !important;
+        padding: 0.75rem 1rem !important; /* Increased padding for better touch targets */
         margin-right: 0.5rem;
         min-width: auto;
         flex-shrink: 0;
+        min-height: 44px; /* Ensure minimum touch target */
+        cursor: pointer;
+        touch-action: manipulation; /* Improve touch responsiveness */
       }
       
       #quick-actions > *:last-child {
