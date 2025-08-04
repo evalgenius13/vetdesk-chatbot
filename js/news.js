@@ -89,7 +89,7 @@ async function fetchNews() {
   }
 }
 
-// Mobile news functionality (placeholder for future use)  
+// Mobile news functionality (placeholder for future use)
 function openMobileNews() {
   // This function was referenced in the original code but mobile functionality was removed
   // Keeping as placeholder in case mobile news feature is added later
