@@ -4,8 +4,7 @@ const CONFIG = {
   NEWS_API_URL: 'https://vetdesk-demo2-api.vercel.app/api/news',
   FRONTEND_SECRET: 'vetdesk_secure_2025_kx9mR7pL3wQ8nF2vB6jC',
   MAX_MESSAGE_LENGTH: 2000,
-  MAX_CONVERSATION_LENGTH: 50,
-  MAX_QUESTIONS: 12
+  MAX_CONVERSATION_LENGTH: 50
 };
 
 // System prompt for VetDesk AI
