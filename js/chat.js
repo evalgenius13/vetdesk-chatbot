@@ -6,6 +6,175 @@ let botIsLoading = false;
 let rateLimitWarning = false;
 let waitingForEmailInput = false;
 
+// NEW: Auto-resizing textarea functionality
+function setupAutoResize() {
+  const textarea = document.getElementById('chat-input');
+  if (!textarea) return;
+
+  function resizeTextarea() {
+    // Reset height to get accurate scrollHeight
+    textarea.style.height = 'auto';
+    
+    // Calculate new height within constraints
+    const minHeight = 44; // Minimum touch target
+    const maxHeight = window.innerWidth < 768 ? 100 : 120; // Mobile vs desktop
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+    
+    textarea.style.height = newHeight + 'px';
+  }
+
+  textarea.addEventListener('input', function() {
+    resizeTextarea();
+    updateCharacterCounter();
+  });
+
+  // Handle paste events
+  textarea.addEventListener('paste', function() {
+    setTimeout(() => {
+      resizeTextarea();
+      updateCharacterCounter();
+    }, 0);
+  });
+
+  // Reset height when form is submitted
+  window.resetTextareaHeight = function() {
+    textarea.style.height = 'auto';
+    textarea.style.height = '44px';
+  };
+}
+
+// NEW: Character counter functionality
+function updateCharacterCounter() {
+  const textarea = document.getElementById('chat-input');
+  const charCount = document.getElementById('char-count');
+  const charLimit = document.getElementById('char-limit');
+  const counter = document.getElementById('char-counter');
+  const sendButton = document.getElementById('send-button');
+  
+  if (!textarea || !charCount || !charLimit || !counter) return;
+
+  const currentLength = textarea.value.length;
+  const maxLength = CONFIG.MAX_MESSAGE_LENGTH;
+  
+  charCount.textContent = currentLength;
+  charLimit.textContent = maxLength;
+  
+  // Update counter styling based on character count
+  counter.classList.remove('warning', 'danger');
+  
+  if (currentLength > maxLength * 0.9) {
+    counter.classList.add('danger');
+  } else if (currentLength > maxLength * 0.8) {
+    counter.classList.add('warning');
+  }
+  
+  // Update send button state
+  if (sendButton) {
+    const isEmpty = textarea.value.trim().length === 0;
+    const isOverLimit = currentLength > maxLength;
+    sendButton.disabled = isEmpty || window.botIsLoading || isOverLimit;
+  }
+}
+
+// NEW: Scroll to bottom functionality
+function setupScrollToBottom() {
+  const chatHistory = document.getElementById('chat-history');
+  const scrollButton = document.getElementById('scroll-to-bottom');
+  
+  if (!chatHistory || !scrollButton) return;
+
+  // Monitor scroll position
+  chatHistory.addEventListener('scroll', function() {
+    const isAtBottom = this.scrollTop + this.clientHeight >= this.scrollHeight - 10;
+    
+    if (isAtBottom) {
+      scrollButton.classList.remove('visible');
+    } else {
+      scrollButton.classList.add('visible');
+    }
+  });
+
+  // Scroll to bottom when button is clicked
+  scrollButton.addEventListener('click', function() {
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  });
+}
+
+// Simple auto-scroll function
+window.autoScrollToBottom = function() {
+  const chatHistory = document.getElementById('chat-history');
+  if (chatHistory) {
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+};
+
+// NEW: Enhanced loading states
+function setLoadingState(loading) {
+  const sendButton = document.getElementById('send-button');
+  const sendButtonText = document.getElementById('send-button-text');
+  const sendButtonSpinner = document.getElementById('send-button-spinner');
+  const chatInput = document.getElementById('chat-input');
+  const loadingOverlay = document.getElementById('input-loading-overlay');
+  
+  botIsLoading = loading;
+  window.botIsLoading = loading; // Make it globally accessible
+  
+  if (loading) {
+    // Disable input
+    if (chatInput) {
+      chatInput.disabled = true;
+      chatInput.classList.add('input-disabled');
+    }
+    
+    // Show loading overlay
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove('hidden');
+    }
+    
+    // Update send button
+    if (sendButton) {
+      sendButton.disabled = true;
+      sendButton.classList.add('send-button-loading');
+    }
+    if (sendButtonText) {
+      sendButtonText.classList.add('hidden');
+    }
+    if (sendButtonSpinner) {
+      sendButtonSpinner.classList.remove('hidden');
+    }
+  } else {
+    // Enable input
+    if (chatInput) {
+      chatInput.disabled = false;
+      chatInput.classList.remove('input-disabled');
+    }
+    
+    // Hide loading overlay
+    if (loadingOverlay) {
+      loadingOverlay.classList.add('hidden');
+    }
+    
+    // Update send button
+    if (sendButton) {
+      sendButton.classList.remove('send-button-loading');
+    }
+    if (sendButtonText) {
+      sendButtonText.classList.remove('hidden');
+    }
+    if (sendButtonSpinner) {
+      sendButtonSpinner.classList.add('hidden');
+    }
+    
+    // Re-focus input
+    if (chatInput) {
+      chatInput.focus();
+    }
+    
+    // Update send button state based on input
+    updateCharacterCounter();
+  }
+}
+
 // Utility functions
 function escapeHtml(text) {
   if (!text) return '';
@@ -26,7 +195,7 @@ function showError(message) {
   errorDiv.className = "message-container";
   errorDiv.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
   ch.appendChild(errorDiv);
-  ch.scrollTop = ch.scrollHeight;
+  window.autoScrollToBottom(); // NEW: Use new scroll function
 }
 
 // Quick actions rendering
@@ -112,18 +281,25 @@ function renderChatHistory() {
       ch.appendChild(messageDiv);
     }
   }
-  // Loading spinner for pending bot reply
+  // NEW: Enhanced loading spinner with typing indicator
   if (botIsLoading) {
     const spinnerDiv = document.createElement('div');
-    spinnerDiv.className = "message-container flex justify-center";
-    spinnerDiv.innerHTML = `<div class="chat-bubble-bot flex items-center justify-center py-4"><div class="spinner" role="status" aria-label="Loading"></div></div>`;
+    spinnerDiv.className = "message-container flex justify-start";
+    spinnerDiv.innerHTML = `
+      <div class="chat-bubble-bot">
+        <div class="typing-indicator">
+          <span class="text-gray-600">VetDesk is thinking</span>
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+      </div>`;
     ch.appendChild(spinnerDiv);
   }
-  // Robust scroll-to-bottom: immediate and after DOM paints
-  ch.scrollTop = ch.scrollHeight;
-  setTimeout(() => {
-    ch.scrollTop = ch.scrollHeight;
-  }, 0);
+  // NEW: Use enhanced scroll function
+  window.autoScrollToBottom();
 }
 
 // Streaming effect (optional - not currently used but kept for future use)
@@ -236,23 +412,12 @@ function addUserMessageToChat(text) {
 }
 
 async function addBotReplyToChat() {
-  botIsLoading = true;
-  const sendButton = document.getElementById('send-button');
-  const chatInput = document.getElementById('chat-input');
-
-  sendButton.disabled = true;
-  chatInput.disabled = true;
-
+  setLoadingState(true); // NEW: Use enhanced loading state
   renderChatHistory();
 
   const botReply = await getBotReply();
 
-  botIsLoading = false;
-  sendButton.disabled = false;
-  chatInput.disabled = false;
-
-  chatInput.focus();
-
+  setLoadingState(false); // NEW: Use enhanced loading state
   chatMessages.push({ sender: "bot", text: botReply });
   renderChatHistory();
 }
