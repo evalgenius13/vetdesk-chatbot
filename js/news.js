@@ -43,7 +43,7 @@ async function fetchNews() {
     }
 
     // Display news articles
-    data.articles.forEach(article => {
+    data.articles.forEach((article, idx) => {
       if (!article?.title || !article?.url) {
         return; // Skip invalid articles
       }
@@ -69,14 +69,29 @@ async function fetchNews() {
               ${escapeHtml(article.description.substring(0, 150))}${article.description.length > 150 ? '...' : ''}
             </p>
           ` : ''}
-          <div class="flex justify-between items-center text-xs text-gray-500">
+          <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
             ${article.source?.name ? `<span>${escapeHtml(article.source.name)}</span>` : '<span>News Source</span>'}
             ${publishedDate ? `<span>${publishedDate}</span>` : ''}
           </div>
+          <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
+            How does this affect me?
+          </button>
         </article>
       `;
 
       newsFeed.appendChild(newsItem);
+    });
+
+    // Attach event listeners for "How does this affect me?" buttons
+    document.querySelectorAll('.how-affect-me-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.getAttribute('data-news-idx'));
+        const article = data.articles[idx];
+        if (article) {
+          const userMessage = `How does "${article.title}" affect me?`;
+          addUserMessageToChat(userMessage);
+        }
+      });
     });
 
   } catch (error) {
@@ -89,7 +104,7 @@ async function fetchNews() {
   }
 }
 
-// Mobile news functionality (placeholder for future use)
+// Mobile news functionality (placeholder for future use)  
 function openMobileNews() {
   // This function was referenced in the original code but mobile functionality was removed
   // Keeping as placeholder in case mobile news feature is added later
