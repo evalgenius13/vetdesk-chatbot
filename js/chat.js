@@ -78,20 +78,46 @@ function renderQuickActions() {
   });
 }
 
-// Question counter
+// Question counter - update both desktop and mobile counters
 function updateQuestionCounter() {
   const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
   const questionsLeft = 12 - userMessageCount;
-  document.getElementById('questions-left').textContent = questionsLeft;
   
-  // Change color as questions run out
-  const counterElement = document.getElementById('question-counter');
-  if (questionsLeft <= 3) {
-    counterElement.className = 'text-xs text-red-500 mt-2';
-  } else if (questionsLeft <= 6) {
-    counterElement.className = 'text-xs text-orange-500 mt-2';
-  } else {
-    counterElement.className = 'text-xs text-gray-500 mt-2';
+  // Update desktop counter (in welcome message)
+  const desktopCounter = document.getElementById('questions-left');
+  if (desktopCounter) {
+    desktopCounter.textContent = questionsLeft;
+  }
+  
+  // Update mobile counter (standalone)
+  const mobileCounter = document.getElementById('mobile-questions-left');
+  if (mobileCounter) {
+    mobileCounter.textContent = questionsLeft;
+  }
+  
+  // Change color as questions run out - desktop counter
+  const desktopCounterElement = document.getElementById('question-counter');
+  if (desktopCounterElement) {
+    if (questionsLeft <= 3) {
+      desktopCounterElement.className = 'text-xs text-red-500 mt-2';
+    } else if (questionsLeft <= 6) {
+      desktopCounterElement.className = 'text-xs text-orange-500 mt-2';
+    } else {
+      desktopCounterElement.className = 'text-xs text-gray-500 mt-2';
+    }
+  }
+  
+  // Change color as questions run out - mobile counter (preserve md:hidden class)
+  const mobileCounterElement = document.getElementById('mobile-question-counter');
+  if (mobileCounterElement) {
+    const baseClasses = 'px-4 py-2 text-xs bg-white border-b border-gray-200 text-center md:hidden';
+    if (questionsLeft <= 3) {
+      mobileCounterElement.className = baseClasses + ' text-red-500';
+    } else if (questionsLeft <= 6) {
+      mobileCounterElement.className = baseClasses + ' text-orange-500';
+    } else {
+      mobileCounterElement.className = baseClasses + ' text-gray-500';
+    }
   }
 }
 
