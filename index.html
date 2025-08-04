@@ -20,6 +20,7 @@
       white-space: pre-line;
       margin-left: auto;
       word-break: break-word;
+      animation: slideInRight 0.3s ease-out;
     }
     .chat-bubble-bot {
       max-width: 42rem;
@@ -32,6 +33,7 @@
       white-space: pre-line;
       word-break: break-word;
       border: 1px solid #e5e7eb;
+      animation: slideInLeft 0.3s ease-out;
     }
     .chat-bubble-bot p {
       margin-bottom: 1rem;
@@ -39,6 +41,31 @@
     .chat-bubble-bot p:last-child {
       margin-bottom: 0;
     }
+
+    /* Slide-in animations for messages */
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Enhanced spinner with typing dots */
     .spinner {
       border: 3px solid #e5e7eb;
       border-top: 3px solid #1e40af;
@@ -48,21 +75,65 @@
       animation: spin 1s linear infinite;
       margin: auto;
     }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .typing-dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #6b7280;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
     @keyframes spin {
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
     }
+
     .message-container {
       margin-bottom: 1.5rem;
     }
+
+    /* Enhanced error styling */
     .error-message {
       background: #fef2f2;
       border: 1px solid #fecaca;
       color: #dc2626;
       padding: 1rem;
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
       margin: 1rem 0;
+      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+      animation: slideInLeft 0.3s ease-out;
     }
+
     .news-loading {
       background: #f9fafb;
       border: 1px solid #e5e7eb;
@@ -85,6 +156,88 @@
     .news-item:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Auto-resizing textarea styles */
+    .chat-textarea {
+      resize: none;
+      overflow: hidden;
+      min-height: 44px; /* Minimum touch target */
+      max-height: 120px; /* Limit to ~6 lines */
+      transition: height 0.2s ease;
+    }
+
+    /* Character counter styles */
+    .char-counter {
+      font-size: 0.75rem;
+      color: #6b7280;
+      transition: color 0.2s ease;
+    }
+
+    .char-counter.warning {
+      color: #f59e0b;
+    }
+
+    .char-counter.danger {
+      color: #dc2626;
+    }
+
+    /* Scroll to bottom button */
+    .scroll-to-bottom {
+      position: fixed;
+      bottom: 120px;
+      right: 20px;
+      z-index: 30;
+      background: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px) scale(0.8);
+      pointer-events: none;
+    }
+
+    .scroll-to-bottom.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .scroll-to-bottom:hover {
+      background: #1e3a8a;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+    }
+
+    .scroll-to-bottom:active {
+      transform: translateY(0) scale(0.95);
+    }
+
+    /* Input container enhancements */
+    .input-container {
+      position: relative;
+    }
+
+    .input-disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .send-button-loading {
+      background: #6b7280 !important;
+      cursor: not-allowed !important;
+    }
+
+    .send-button-loading:hover {
+      background: #6b7280 !important;
     }
     
     @media (max-width: 768px) {
@@ -122,6 +275,18 @@
       #quick-actions > *:last-child {
         margin-right: 1rem;
       }
+
+      .scroll-to-bottom {
+        bottom: 140px;
+        right: 16px;
+      }
+
+      /* Enhanced mobile textarea */
+      .chat-textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+        min-height: 44px;
+        max-height: 100px; /* Slightly smaller on mobile */
+      }
     }
     
     @media (min-width: 769px) {
@@ -135,6 +300,22 @@
         font-size: 0.875rem;
         padding: 0.5rem 1rem;
       }
+    }
+
+    /* Loading overlay for input area */
+    .input-loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(1px);
+      z-index: 10;
+      border-radius: 0.5rem;
     }
   </style>
 </head>
@@ -288,22 +469,942 @@
       <!-- Quick Actions - Now horizontally scrollable on mobile -->
       <div id="quick-actions" class="flex bg-white border-b border-gray-200"></div>
       
-      <div id="chat-container" class="flex-1 flex flex-col min-h-0">
+      <div id="chat-container" class="flex-1 flex flex-col min-h-0 relative">
         <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
-        <form id="chat-form" class="flex gap-2 p-4 bg-white border-t border-gray-200" autocomplete="off">
-          <input id="chat-input" type="text" class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ask me anything..." autocomplete="off" required aria-label="Chat input" maxlength="2000" />
-          <button type="submit" id="send-button" class="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
+        
+        <!-- Scroll to bottom button -->
+        <button id="scroll-to-bottom" class="scroll-to-bottom" aria-label="Scroll to bottom">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </button>
+        
+        <form id="chat-form" class="bg-white border-t border-gray-200" autocomplete="off">
+          <div class="input-container p-4">
+            <!-- Character counter -->
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex-1"></div>
+              <div id="char-counter" class="char-counter">
+                <span id="char-count">0</span>/<span id="char-limit">2000</span>
+              </div>
+            </div>
+            
+            <!-- Input area -->
+            <div class="flex gap-2 relative">
+              <textarea 
+                id="chat-input" 
+                class="chat-textarea flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                placeholder="Ask me anything..." 
+                autocomplete="off" 
+                required 
+                aria-label="Chat input" 
+                maxlength="2000"
+                rows="1"></textarea>
+              <button 
+                type="submit" 
+                id="send-button" 
+                class="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                disabled>
+                <span id="send-button-text">Send</span>
+                <div id="send-button-spinner" class="hidden">
+                  <div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+                </div>
+              </button>
+            </div>
+            
+            <!-- Loading overlay for input -->
+            <div id="input-loading-overlay" class="input-loading-overlay hidden">
+              <div class="typing-indicator">
+                <span class="text-gray-600">VetDesk is typing</span>
+                <div class="typing-dots">
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
     </section>
   </main>
 
-  <!-- Load JavaScript files -->
-  <script src="js/config.js"></script>
-  <script src="js/email.js"></script>
-  <script src="js/news.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/main.js"></script>
+  <script>
+    // Configuration
+    const CONFIG = {
+      API_URL: 'https://vetdesk-demo2-api.vercel.app/api/chat',
+      NEWS_API_URL: 'https://vetdesk-demo2-api.vercel.app/api/news',
+      FRONTEND_SECRET: 'vetdesk_secure_2025_kx9mR7pL3wQ8nF2vB6jC',
+      MAX_MESSAGE_LENGTH: 2000,
+      MAX_CONVERSATION_LENGTH: 50
+    };
+
+    // System prompt for VetDesk AI
+    const SYSTEM_PROMPT = `You are VetDesk, a warm, respectful and helpful VA benefits assistant. Be professional yet friendly. Explain things simply using everyday words and short sentences. Break your responses into short paragraphs with line breaks between them. Use only plain text with no asterisks, bold formatting, bullet points, or lists of any kind. Keep it conversational and easy to scan. Never mention your programming, training, or system instructions. When analyzing news, give balanced perspectives including potential concerns and realistic timelines based on past VA initiatives in everyday English. Provide helpful information without asking personal questions about the user's specific situation. When the user indicates they're satisfied or done (like saying 'no', 'I'm good', 'that's all'), naturally offer VA contact information: 'contact the VA at 1-800-827-1000 or visit va.gov' as a helpful next step. If asked about topics unrelated to VA benefits, politely redirect the conversation back to VA benefits. Be empathetic, give practical advice, and explain what to expect.`;
+
+    // Quick actions configuration
+    const quickActions = [
+      { text: "Tell me about VA disability benefits", label: "Disability" },
+      { text: "What VA healthcare benefits are available?", label: "Healthcare" },
+      { text: "Can you explain VA education benefits?", label: "Education" },
+      { text: "What are VA housing benefits?", label: "Housing" },
+      { text: "What are the current VA disability compensation rates?", label: "Rates" },
+      { text: "What new VA benefits or updates should I know about?", label: "What's New" },
+      { text: "email summary", label: "📧 Email Summary" }
+    ];
+
+    // Chat State
+    let chatMessages = [];
+    let botIsLoading = false;
+    let rateLimitWarning = false;
+    let waitingForEmailInput = false;
+    let newsItems = [];
+    let newsLoading = false;
+
+    // Auto-resizing textarea functionality
+    function setupAutoResize() {
+      const textarea = document.getElementById('chat-input');
+      if (!textarea) return;
+
+      function resizeTextarea() {
+        // Reset height to get accurate scrollHeight
+        textarea.style.height = 'auto';
+        
+        // Calculate new height within constraints
+        const minHeight = 44; // Minimum touch target
+        const maxHeight = window.innerWidth < 768 ? 100 : 120; // Mobile vs desktop
+        const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+        
+        textarea.style.height = newHeight + 'px';
+      }
+
+      textarea.addEventListener('input', function() {
+        resizeTextarea();
+        updateCharacterCounter();
+      });
+
+      // Handle paste events
+      textarea.addEventListener('paste', function() {
+        setTimeout(() => {
+          resizeTextarea();
+          updateCharacterCounter();
+        }, 0);
+      });
+
+      // Reset height when form is submitted
+      window.resetTextareaHeight = function() {
+        textarea.style.height = 'auto';
+        textarea.style.height = '44px';
+      };
+    }
+
+    // Character counter functionality
+    function updateCharacterCounter() {
+      const textarea = document.getElementById('chat-input');
+      const charCount = document.getElementById('char-count');
+      const charLimit = document.getElementById('char-limit');
+      const counter = document.getElementById('char-counter');
+      const sendButton = document.getElementById('send-button');
+      
+      if (!textarea || !charCount || !charLimit || !counter) return;
+
+      const currentLength = textarea.value.length;
+      const maxLength = CONFIG.MAX_MESSAGE_LENGTH;
+      
+      charCount.textContent = currentLength;
+      charLimit.textContent = maxLength;
+      
+      // Update counter styling based on character count
+      counter.classList.remove('warning', 'danger');
+      
+      if (currentLength > maxLength * 0.9) {
+        counter.classList.add('danger');
+      } else if (currentLength > maxLength * 0.8) {
+        counter.classList.add('warning');
+      }
+      
+      // Update send button state
+      if (sendButton) {
+        const isEmpty = textarea.value.trim().length === 0;
+        const isOverLimit = currentLength > maxLength;
+        sendButton.disabled = isEmpty || botIsLoading || isOverLimit;
+      }
+    }
+
+    // Scroll to bottom functionality
+    function setupScrollToBottom() {
+      const chatHistory = document.getElementById('chat-history');
+      const scrollButton = document.getElementById('scroll-to-bottom');
+      
+      if (!chatHistory || !scrollButton) return;
+
+      let isUserScrolling = false;
+      let scrollTimeout;
+
+      // Monitor scroll position
+      chatHistory.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        isUserScrolling = true;
+        
+        const isAtBottom = this.scrollTop + this.clientHeight >= this.scrollHeight - 10;
+        
+        if (isAtBottom) {
+          scrollButton.classList.remove('visible');
+        } else {
+          scrollButton.classList.add('visible');
+        }
+        
+        // Reset scroll flag after user stops scrolling
+        scrollTimeout = setTimeout(() => {
+          isUserScrolling = false;
+        }, 150);
+      });
+
+      // Scroll to bottom when button is clicked
+      scrollButton.addEventListener('click', function() {
+        chatHistory.scrollTo({
+          top: chatHistory.scrollHeight,
+          behavior: 'smooth'
+        });
+      });
+
+      // Auto-scroll to bottom for new messages (only if user wasn't scrolling)
+      window.autoScrollToBottom = function(force = false) {
+        if (force || !isUserScrolling) {
+          setTimeout(() => {
+            chatHistory.scrollTo({
+              top: chatHistory.scrollHeight,
+              behavior: 'smooth'
+            });
+          }, 100);
+        }
+      };
+    }
+
+    // Enhanced loading states
+    function setLoadingState(loading) {
+      const sendButton = document.getElementById('send-button');
+      const sendButtonText = document.getElementById('send-button-text');
+      const sendButtonSpinner = document.getElementById('send-button-spinner');
+      const chatInput = document.getElementById('chat-input');
+      const loadingOverlay = document.getElementById('input-loading-overlay');
+      
+      botIsLoading = loading;
+      
+      if (loading) {
+        // Disable input
+        chatInput.disabled = true;
+        chatInput.classList.add('input-disabled');
+        
+        // Show loading overlay
+        loadingOverlay.classList.remove('hidden');
+        
+        // Update send button
+        sendButton.disabled = true;
+        sendButton.classList.add('send-button-loading');
+        sendButtonText.classList.add('hidden');
+        sendButtonSpinner.classList.remove('hidden');
+      } else {
+        // Enable input
+        chatInput.disabled = false;
+        chatInput.classList.remove('input-disabled');
+        
+        // Hide loading overlay
+        loadingOverlay.classList.add('hidden');
+        
+        // Update send button
+        sendButton.classList.remove('send-button-loading');
+        sendButtonText.classList.remove('hidden');
+        sendButtonSpinner.classList.add('hidden');
+        
+        // Re-focus input
+        chatInput.focus();
+        
+        // Update send button state based on input
+        updateCharacterCounter();
+      }
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function validateMessageLength(text) {
+      return text && text.trim().length > 0 && text.length <= CONFIG.MAX_MESSAGE_LENGTH;
+    }
+
+    function showError(message) {
+      const ch = document.getElementById('chat-history');
+      if (!ch) return;
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = "message-container";
+      errorDiv.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
+      ch.appendChild(errorDiv);
+      window.autoScrollToBottom();
+    }
+
+    // Quick actions rendering
+    function renderQuickActions() {
+      const qa = document.getElementById('quick-actions');
+      if (!qa) return;
+      
+      qa.innerHTML = "";
+      quickActions.forEach(action => {
+        if (action.text === "mobile news") {
+          return;
+        }
+        
+        const btn = document.createElement('button');
+        btn.type = "button";
+        
+        if (action.text === "email summary") {
+          btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold";
+        } else {
+          btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium";
+        }
+        
+        btn.textContent = action.label;
+        
+        btn.onclick = () => {
+          if (action.text === "email summary") {
+            const userMessages = chatMessages.filter(msg => msg.sender === "user");
+            if (userMessages.length === 0) {
+              addInstantBotResponse("Please ask me a question about VA benefits first, then I can email you a summary of our conversation.");
+              return;
+            }
+            
+            chatMessages.push({ sender: "user", text: "email summary" });
+            renderChatHistory();
+            addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
+            waitingForEmailInput = true;
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) chatInput.focus();
+          } else {
+            addUserMessageToChat(action.text);
+          }
+        };
+        qa.appendChild(btn);
+      });
+    }
+
+    // Message formatting
+    function formatBotMessage(text) {
+      const sanitized = escapeHtml(text);
+      const paragraphs = sanitized.split('\n\n').filter(p => p.trim());
+      if (paragraphs.length > 1) {
+        return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+      }
+      return sanitized;
+    }
+
+    function addInstantBotResponse(text) {
+      chatMessages.push({ sender: "bot", text: text, streaming: false });
+      renderChatHistory();
+    }
+
+    // Enhanced chat history rendering with animations
+    function renderChatHistory() {
+      const ch = document.getElementById('chat-history');
+      ch.innerHTML = "";
+      
+      for (let i = 0; i < chatMessages.length; i++) {
+        const msg = chatMessages[i];
+        const messageDiv = document.createElement('div');
+        messageDiv.className = "message-container";
+        
+        if (msg.sender === "user") {
+          messageDiv.className += " flex justify-end";
+          messageDiv.innerHTML = `<div class="chat-bubble-user">${escapeHtml(msg.text)}</div>`;
+          ch.appendChild(messageDiv);
+        } else if (msg.sender === "bot") {
+          messageDiv.className += " flex justify-start";
+          const formattedText = formatBotMessage(msg.text);
+          messageDiv.innerHTML = `<div class="chat-bubble-bot">${formattedText}</div>`;
+          ch.appendChild(messageDiv);
+        }
+      }
+      
+      // Enhanced loading spinner with typing indicator
+      if (botIsLoading) {
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.className = "message-container flex justify-start";
+        spinnerDiv.innerHTML = `
+          <div class="chat-bubble-bot">
+            <div class="typing-indicator">
+              <span class="text-gray-600">VetDesk is thinking</span>
+              <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+              </div>
+            </div>
+          </div>`;
+        ch.appendChild(spinnerDiv);
+      }
+      
+      // Auto-scroll to bottom
+      window.autoScrollToBottom();
+    }
+
+    // API integration
+    async function getBotReply() {
+      try {
+        if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
+          throw new Error('Conversation too long. Please start a new conversation.');
+        }
+
+        const history = chatMessages.map(m => ({
+          role: m.sender === "user" ? "user" : "model",
+          parts: [{ text: m.text }]
+        }));
+
+        const response = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
+          },
+          body: JSON.stringify({ 
+            chatHistory: history,
+            systemPrompt: SYSTEM_PROMPT
+          })
+        });
+
+        if (response.status === 429) {
+          if (!rateLimitWarning) {
+            rateLimitWarning = true;
+            setTimeout(() => { rateLimitWarning = false; }, 60000);
+          }
+          throw new Error('Too many requests. Please wait a moment before trying again.');
+        }
+
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please refresh the page.');
+        }
+
+        if (!response.ok) {
+          throw new Error(`Server error (${response.status}). Please try again later.`);
+        }
+
+        const data = await response.json();
+
+        return (
+          data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "Sorry, I couldn't get an answer right now."
+        );
+      } catch (e) {
+        console.error('API Error:', e);
+
+        if (e.message.includes('fetch')) {
+          return "Sorry, I'm having trouble connecting. Please check your internet connection and try again.";
+        }
+
+        return e.message || "Sorry, something went wrong. Please try again later.";
+      }
+    }
+
+    // Main chat functions
+    function addUserMessageToChat(text) {
+      const trimmedText = text.trim();
+
+      if (!validateMessageLength(trimmedText)) {
+        showError(`Message must be between 1 and ${CONFIG.MAX_MESSAGE_LENGTH} characters.`);
+        return;
+      }
+
+      if (botIsLoading) {
+        showError('Please wait for the current response to finish.');
+        return;
+      }
+
+      // Hide welcome message after first message
+      const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
+      if (userMessageCount === 0) {
+        const welcomeMessage = document.getElementById('welcome-message');
+        if (welcomeMessage) welcomeMessage.style.display = 'none';
+      }
+
+      chatMessages.push({ sender: "user", text: trimmedText });
+      renderChatHistory();
+      addBotReplyToChat();
+    }
+
+    async function addBotReplyToChat() {
+      setLoadingState(true);
+      renderChatHistory();
+
+      const botReply = await getBotReply();
+
+      setLoadingState(false);
+      chatMessages.push({ sender: "bot", text: botReply });
+      renderChatHistory();
+    }
+
+    // Email functionality
+    async function sendConversationSummary(email) {
+      try {
+        if (!email || !email.includes('@')) {
+          throw new Error('Invalid email address');
+        }
+
+        if (!window.chatMessages || !Array.isArray(chatMessages) || chatMessages.length === 0) {
+          throw new Error('No conversation to summarize');
+        }
+
+        if (!CONFIG?.API_URL || !CONFIG?.FRONTEND_SECRET) {
+          throw new Error('Configuration not available');
+        }
+
+        const conversationText = chatMessages
+          .filter(msg => msg && msg.sender && msg.text)
+          .map(msg => `${msg.sender === 'user' ? 'Veteran' : 'VetDesk'}: ${msg.text}`)
+          .join('\n\n─────────────────────────────────────────\n\n');
+        
+        if (!conversationText.trim()) {
+          throw new Error('No valid conversation content found');
+        }
+
+        const summaryPrompt = `Please create a professional summary of this VA benefits conversation between a veteran and VetDesk. Focus on:
+- Key benefits discussed and eligibility
+- Specific rates or amounts mentioned
+- Important next steps or actions
+- Any deadlines or time-sensitive information
+
+Keep it concise but comprehensive. Format it in a professional, easy-to-read style for the veteran's records.
+
+Conversation:
+${conversationText}`;
+
+        const summaryResponse = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
+          },
+          body: JSON.stringify({
+            chatHistory: [{ role: "user", parts: [{ text: summaryPrompt }] }]
+          })
+        });
+
+        let conversationSummary = "Unable to generate summary - please refer to our conversation for details.";
+        if (summaryResponse.ok) {
+          const summaryData = await summaryResponse.json();
+          conversationSummary = summaryData?.candidates?.[0]?.content?.parts?.[0]?.text || conversationSummary;
+        }
+
+        const now = new Date();
+        const conversationDate = now.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+        const conversationTime = now.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+
+        const emailContent = `Dear Veteran,
+
+Thank you for using VetDesk to learn more about your VA benefits. Below is a summary of our conversation from ${conversationDate} at ${conversationTime}.
+
+═══════════════════════════════════════════════════════════════
+CONVERSATION SUMMARY
+
+${conversationSummary}
+
+═══════════════════════════════════════════════════════════════
+NEXT STEPS & VA RESOURCES
+
+• Visit VA.gov for benefit applications and detailed information
+• Call 1-800-827-1000 for general VA benefits questions (Mon-Fri, 8am-8pm ET)
+• Find your local VA office: va.gov/find-locations
+• Veterans Crisis Line: 988, Press 1 (24/7 confidential support)
+• MyVA411: 1-844-698-2311 for technical support with VA websites
+
+IMPORTANT REMINDERS
+
+• Always verify benefit information with your local VA office
+• Keep this summary for your records
+• VA benefits and rates may change - check VA.gov for updates
+• Apply for time-sensitive benefits as soon as possible
+
+═══════════════════════════════════════════════════════════════
+
+Best regards,
+The VetDesk Team
+
+──────────────────────────────────────────────────────────────
+VetDesk™ - VA Benefits, Simplified
+
+This summary was generated on ${conversationDate} at ${conversationTime}
+For additional support, visit VA.gov or contact your local VA office.`;
+
+        const summaryPayload = {
+          email: email.trim(),
+          subject: `Your VetDesk Benefits Consultation Summary - ${conversationDate}`,
+          content: emailContent,
+          userName: 'Veteran'
+        };
+
+        const response = await fetch('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(summaryPayload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result?.success === true) {
+          const successMessage = `Summary sent! You can send ${result.remaining || 0} more this hour.`;
+          if (chatMessages && Array.isArray(chatMessages)) {
+            chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
+          }
+        } else {
+          throw new Error(result?.error || 'Email sending failed');
+        }
+
+      } catch (error) {
+        console.error('Email error:', error);
+        const errorMessage = error.message || "Failed to send summary. Please try again later.";
+        
+        if (window.chatMessages && Array.isArray(chatMessages)) {
+          chatMessages.push({ 
+            sender: "bot", 
+            text: errorMessage, 
+            streaming: false 
+          });
+        }
+        
+        throw error;
+      }
+    }
+
+    // News functionality
+    async function fetchNews(forceRefresh = false) {
+      if (newsLoading) return;
+
+      newsLoading = true;
+      const newsFeed = document.getElementById('news-feed');
+
+      try {
+        showNewsLoading();
+
+        const response = await fetch(CONFIG.NEWS_API_URL, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error && (!data.articles || data.articles.length === 0)) {
+          throw new Error(data.error);
+        }
+
+        newsItems = data.articles || [];
+        renderNewsFeed();
+
+      } catch (error) {
+        showNewsError(error.message);
+      } finally {
+        newsLoading = false;
+      }
+    }
+
+    function showNewsLoading() {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = '<li class="p-3 bg-gray-50 border rounded-lg text-center text-gray-500"><div class="spinner"></div><p class="mt-2">Loading news...</p></li>';
+    }
+
+    function showNewsError(message) {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = `<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">Unable to load news</li>`;
+    }
+
+    function renderNewsFeed() {
+      const feed = document.getElementById('news-feed');
+      feed.innerHTML = "";
+
+      if (!newsItems.length) {
+        feed.innerHTML = '<li class="news-error">No news articles available at this time.</li>';
+        return;
+      }
+
+      newsItems.forEach((item, idx) => {
+        const li = document.createElement('li');
+        li.className = "news-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow";
+
+        const titleText = escapeHtml(item.title);
+        const summaryText = item.summary ? escapeHtml(item.summary) : '';
+        
+        const publishedDate = item.date ? 
+          new Date(item.date).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+          }) : '';
+
+        li.innerHTML = `
+          <article>
+            <h3 class="font-semibold text-sm text-gray-900 mb-2 leading-tight">
+              <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600">
+                ${titleText}
+              </a>
+            </h3>
+            ${summaryText ? `
+              <p class="text-xs text-gray-600 mb-2 line-clamp-3">
+                ${summaryText.length > 150 ? summaryText.substring(0, 150) + '...' : summaryText}
+              </p>
+            ` : ''}
+            <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
+              ${item.source?.name ? `<span>${escapeHtml(item.source.name)}</span>` : '<span>News Source</span>'}
+              ${publishedDate ? `<span>${publishedDate}</span>` : ''}
+            </div>
+            <button type="button" class="how-affect-me-btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-sm font-medium" data-news-idx="${idx}">
+              How does this affect me?
+            </button>
+          </article>
+        `;
+        feed.appendChild(li);
+      });
+
+      attachDesktopNewsEventListeners();
+    }
+
+    function attachDesktopNewsEventListeners() {
+      document.querySelectorAll('#news-feed .how-affect-me-btn').forEach(btn => {
+        btn.onclick = function() {
+          const idx = parseInt(this.getAttribute('data-news-idx'));
+          const news = newsItems[idx];
+          if (news) {
+            const userMessage = `How does "${news.title}" affect me?`;
+            addUserMessageToChat(userMessage);
+          }
+        };
+      });
+    }
+
+    // Navigation setup
+    function setupNavigation() {
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const mobileMenuClose = document.getElementById('mobile-menu-close');
+      
+      const faqButton = document.getElementById('faq-button');
+      const faqDropdown = document.getElementById('faq-dropdown');
+      const faqClose = document.getElementById('faq-close');
+      const aboutButton = document.getElementById('about-button');
+      const aboutDropdown = document.getElementById('about-dropdown');
+      const aboutClose = document.getElementById('about-close');
+
+      if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', () => {
+          mobileMenu.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        });
+      }
+
+      if (mobileMenuClose && mobileMenu) {
+        mobileMenuClose.addEventListener('click', () => {
+          mobileMenu.classList.add('hidden');
+          document.body.style.overflow = '';
+        });
+      }
+
+      if (mobileMenu) {
+        mobileMenu.addEventListener('click', (e) => {
+          if (e.target === mobileMenu) {
+            mobileMenu.classList.add('hidden');
+            document.body.style.overflow = '';
+          }
+        });
+      }
+
+      if (faqButton && faqDropdown) {
+        faqButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          faqDropdown.classList.toggle('hidden');
+          if (aboutDropdown) aboutDropdown.classList.add('hidden');
+        });
+      }
+
+      if (aboutButton && aboutDropdown) {
+        aboutButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          aboutDropdown.classList.toggle('hidden');
+          if (faqDropdown) faqDropdown.classList.add('hidden');
+        });
+      }
+
+      if (faqClose && faqDropdown) {
+        faqClose.addEventListener('click', () => faqDropdown.classList.add('hidden'));
+      }
+      if (aboutClose && aboutDropdown) {
+        aboutClose.addEventListener('click', () => aboutDropdown.classList.add('hidden'));
+      }
+
+      document.addEventListener('click', (e) => {
+        if (faqButton && faqDropdown && !faqButton.contains(e.target) && !faqDropdown.contains(e.target)) {
+          faqDropdown.classList.add('hidden');
+        }
+        if (aboutButton && aboutDropdown && !aboutButton.contains(e.target) && !aboutDropdown.contains(e.target)) {
+          aboutDropdown.classList.add('hidden');
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768 && mobileMenu && !mobileMenu.classList.contains('hidden')) {
+          mobileMenu.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+      });
+    }
+
+    // Set responsive placeholder text
+    function updatePlaceholder() {
+      const chatInput = document.getElementById('chat-input');
+      if (!chatInput) return;
+      
+      if (window.innerWidth >= 640) {
+        chatInput.placeholder = 'Ask me anything about VA benefits...';
+      } else {
+        chatInput.placeholder = 'Ask me anything...';
+      }
+    }
+
+    // Setup form submission handler
+    function setupFormHandler() {
+      const chatForm = document.getElementById('chat-form');
+      if (!chatForm) return;
+
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        if (!input) return;
+        
+        const text = input.value.trim();
+        if (!text) return;
+
+        if (!validateMessageLength(text)) {
+          showError(`Message must be between 1 and ${CONFIG?.MAX_MESSAGE_LENGTH || 2000} characters.`);
+          return;
+        }
+
+        if (waitingForEmailInput) {
+          if (text.toLowerCase() === "cancel") {
+            chatMessages.push({ sender: "user", text: text });
+            addInstantBotResponse("Email summary cancelled. How else can I help you?");
+            waitingForEmailInput = false;
+            input.value = "";
+            if (window.resetTextareaHeight) {
+              window.resetTextareaHeight();
+            }
+            return;
+          }
+          
+          const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (emailPattern.test(text)) {
+            chatMessages.push({ sender: "user", text: text });
+            renderChatHistory();
+            
+            addInstantBotResponse("Generating your summary and sending email...");
+            
+            waitingForEmailInput = false;
+            
+            try {
+              await sendConversationSummary(text);
+            } catch (error) {
+              console.error('Email sending failed:', error);
+            }
+            
+            renderChatHistory();
+            input.value = "";
+            if (window.resetTextareaHeight) {
+              window.resetTextareaHeight();
+            }
+            return;
+          } else {
+            chatMessages.push({ sender: "user", text: text });
+            addInstantBotResponse("Please enter a valid email address, or type 'cancel' to stop.");
+            input.value = "";
+            if (window.resetTextareaHeight) {
+              window.resetTextareaHeight();
+            }
+            return;
+          }
+        }
+
+        addUserMessageToChat(text);
+        input.value = "";
+        if (window.resetTextareaHeight) {
+          window.resetTextareaHeight();
+        }
+        updateCharacterCounter();
+      });
+    }
+
+    // Keyboard shortcuts
+    function setupKeyboardShortcuts() {
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          const chatForm = document.getElementById('chat-form');
+          if (chatForm) {
+            chatForm.dispatchEvent(new Event('submit'));
+          }
+        }
+      });
+    }
+
+    // Resize handler with throttling
+    function setupResizeHandler() {
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updatePlaceholder, 200);
+      });
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize core functionality
+      renderQuickActions();
+      renderChatHistory();
+      
+      // Initialize news feed (only if element exists)
+      const newsFeedElement = document.getElementById('news-feed');
+      if (newsFeedElement) {
+        fetchNews();
+      }
+      
+      // Setup all Phase 1 enhancements
+      setupAutoResize();
+      setupScrollToBottom();
+      updateCharacterCounter();
+      
+      // Focus chat input and set responsive placeholder
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.focus();
+        updatePlaceholder();
+      }
+      
+      // Setup event listeners
+      setupFormHandler();
+      setupResizeHandler();
+      setupNavigation();
+      setupKeyboardShortcuts();
+    });
+  </script>
 
 </body>
 </html>
