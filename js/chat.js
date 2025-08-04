@@ -1,43 +1,4 @@
-// API integration
-async function getBotReply() {
-  try {
-    if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
-      throw new Error('Conversation too long. Please start a new conversation.');
-    }
-
-    const history = chatMessages.map(m => ({
-      role: m.sender === "user" ? "user" : "model",
-      parts: [{ text: m.text }]
-    }));
-
-    // Add system prompt to the API call
-    const systemPrompt = `You are VetDesk, a helpful AI assistant specializing in VA benefits for veterans. You provide accurate, up-to-date information about VA disability, healthcare, education, and housing benefits in plain English. 
-
-Key guidelines:
-- Always be respectful and understanding of veterans' experiences
-- Provide clear, actionable information about VA benefits
-- When discussing rates or specific amounts, use the most current information available
-- Encourage veterans to verify information with official VA sources (VA.gov or 1-800-827-1000)
-- If you're unsure about something, direct them to official VA resources
-- Keep responses concise but comprehensive
-- Use a helpful, professional, and empathetic tone
-
-Remember: You are not an official VA representative, but an independent service helping veterans understand their benefits.`;
-
-    const response = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
-      },
-      body: JSON.stringify({ 
-        chatHistory: history,
-        systemPrompt: systemPrompt
-      })
-    });
-
-    // Rate limiting with retry logic
-    if// Chat functionality and state management
+// Chat functionality and state management
 
 // Chat State
 let chatMessages = [];
@@ -54,7 +15,6 @@ function escapeHtml(text) {
 }
 
 function validateMessageLength(text) {
-  if (!CONFIG?.MAX_MESSAGE_LENGTH) return false;
   return text && text.trim().length > 0 && text.length <= CONFIG.MAX_MESSAGE_LENGTH;
 }
 
@@ -69,10 +29,10 @@ function showError(message) {
   ch.scrollTop = ch.scrollHeight;
 }
 
-// Simplified quick actions rendering
+// Quick actions rendering
 function renderQuickActions() {
   const qa = document.getElementById('quick-actions');
-  if (!qa || !quickActions) return;
+  if (!qa) return;
   
   qa.innerHTML = "";
   quickActions.forEach(action => {
@@ -93,7 +53,7 @@ function renderQuickActions() {
     
     btn.textContent = action.label;
     
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       if (action.text === "email summary") {
         // Check if user has asked at least one question
         const userMessages = chatMessages.filter(msg => msg.sender === "user");
@@ -113,24 +73,19 @@ function renderQuickActions() {
         // All other actions go directly to AI chat
         addUserMessageToChat(action.text);
       }
-    });
+    };
     qa.appendChild(btn);
   });
 }
 
-// Question counter with magic number fix
+// Question counter
 function updateQuestionCounter() {
   const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
-  const questionsLeft = CONFIG.MAX_QUESTIONS - userMessageCount;
-  const questionsLeftElement = document.getElementById('questions-left');
-  if (!questionsLeftElement) return;
-  
-  questionsLeftElement.textContent = questionsLeft;
+  const questionsLeft = 12 - userMessageCount;
+  document.getElementById('questions-left').textContent = questionsLeft;
   
   // Change color as questions run out
   const counterElement = document.getElementById('question-counter');
-  if (!counterElement) return;
-  
   if (questionsLeft <= 3) {
     counterElement.className = 'text-xs text-red-500 mt-2';
   } else if (questionsLeft <= 6) {
@@ -140,7 +95,7 @@ function updateQuestionCounter() {
   }
 }
 
-// Message formatting 
+// Message formatting
 function formatBotMessage(text) {
   const sanitized = escapeHtml(text);
   const paragraphs = sanitized.split('\n\n').filter(p => p.trim());
@@ -155,11 +110,9 @@ function addInstantBotResponse(text) {
   renderChatHistory();
 }
 
-// Chat history rendering with scroll fix
+// Chat history rendering
 function renderChatHistory() {
   const ch = document.getElementById('chat-history');
-  if (!ch) return;
-  
   ch.innerHTML = "";
   for (let i = 0; i < chatMessages.length; i++) {
     const msg = chatMessages[i];
@@ -183,13 +136,39 @@ function renderChatHistory() {
     spinnerDiv.innerHTML = `<div class="chat-bubble-bot flex items-center justify-center py-4"><div class="spinner" role="status" aria-label="Loading"></div></div>`;
     ch.appendChild(spinnerDiv);
   }
-  // Fixed scroll with single timeout
+  // Robust scroll-to-bottom: immediate and after DOM paints
+  ch.scrollTop = ch.scrollHeight;
   setTimeout(() => {
     ch.scrollTop = ch.scrollHeight;
-  }, 30);
+  }, 0);
 }
 
-// API integration with improved error handling
+// Streaming effect (optional - not currently used but kept for future use)
+function streamBotText(text, container) {
+  return new Promise(resolve => {
+    const formattedText = formatBotMessage(text);
+    let i = 0;
+    const delay = 3;
+
+    function typeChar() {
+      if (formattedText.includes('<p>')) {
+        container.innerHTML = formattedText;
+        resolve();
+      } else {
+        container.textContent = text.slice(0, i + 1);
+        i++;
+        if (i < text.length) {
+          setTimeout(typeChar, delay);
+        } else {
+          resolve();
+        }
+      }
+    }
+    typeChar();
+  });
+}
+
+// API integration
 async function getBotReply() {
   try {
     if (chatMessages.length > CONFIG.MAX_CONVERSATION_LENGTH) {
@@ -213,14 +192,10 @@ async function getBotReply() {
       })
     });
 
-    // Rate limiting with retry logic
     if (response.status === 429) {
       if (!rateLimitWarning) {
         rateLimitWarning = true;
         setTimeout(() => { rateLimitWarning = false; }, 60000);
-        // One retry after 3 seconds
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        return getBotReply();
       }
       throw new Error('Too many requests. Please wait a moment before trying again.');
     }
@@ -234,11 +209,6 @@ async function getBotReply() {
     }
 
     const data = await response.json();
-
-    // Improved response validation
-    if (!data?.candidates?.length) {
-      throw new Error("Empty response from AI.");
-    }
 
     return (
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
@@ -264,10 +234,10 @@ function addUserMessageToChat(text) {
     return;
   }
 
-  // Check conversation length using CONFIG constant
+  // Check conversation length - count user messages only
   const userMessageCount = chatMessages.filter(msg => msg.sender === "user").length;
-  if (userMessageCount >= CONFIG.MAX_QUESTIONS) {
-    showError(`That was your ${CONFIG.MAX_QUESTIONS}th question. You can email yourself a summary or refresh to start a new conversation.`);
+  if (userMessageCount >= 12) {
+    showError('That was your 12th question. You can email yourself a summary or refresh to start a new conversation.');
     return;
   }
 
@@ -294,19 +264,18 @@ async function addBotReplyToChat() {
   const sendButton = document.getElementById('send-button');
   const chatInput = document.getElementById('chat-input');
 
-  if (sendButton) sendButton.disabled = true;
-  if (chatInput) chatInput.disabled = true;
+  sendButton.disabled = true;
+  chatInput.disabled = true;
 
   renderChatHistory();
 
   const botReply = await getBotReply();
 
   botIsLoading = false;
-  if (sendButton) sendButton.disabled = false;
-  if (chatInput) {
-    chatInput.disabled = false;
-    chatInput.focus();
-  }
+  sendButton.disabled = false;
+  chatInput.disabled = false;
+
+  chatInput.focus();
 
   chatMessages.push({ sender: "bot", text: botReply });
   renderChatHistory();
