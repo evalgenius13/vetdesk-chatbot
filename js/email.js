@@ -28,7 +28,15 @@ async function sendConversationSummary(email) {
     }
 
     // Generate AI summary of the conversation
-    const summaryPrompt = `Write a clean, conversational summary of this VA discussion. Use simple paragraphs. Do not include any headings, titles, email addresses, or mentions of sending emails. Just explain what topics were covered in the conversation.
+    const summaryPrompt = `Create a comprehensive summary of this VA conversation with clear, well-formatted paragraphs. Include:
+
+- Specific benefits discussed with details
+- Eligibility requirements mentioned
+- Any amounts, rates, or limits covered
+- Practical next steps or application processes
+- Key takeaways that would be helpful for their records
+
+Write in conversational, easy-to-read paragraphs (not short choppy sentences). Make it thorough enough to be a useful reference. Do not include any headings, email addresses, or mentions of sending emails.
 
 Conversation:
 ${conversationText}`;
