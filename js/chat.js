@@ -6,7 +6,7 @@ window.chatMessages = chatMessages;
 let botIsLoading = false;
 let rateLimitWarning = false;
 
-// NEW: Auto-resizing textarea functionality
+// Auto-resizing textarea functionality
 function setupAutoResize() {
   const textarea = document.getElementById('chat-input');
   if (!textarea) return;
@@ -54,7 +54,7 @@ function setupAutoResize() {
   };
 }
 
-// NEW: Character counter functionality
+// Character counter functionality
 function updateCharacterCounter() {
   const textarea = document.getElementById('chat-input');
   const charCount = document.getElementById('char-count');
@@ -87,7 +87,7 @@ function updateCharacterCounter() {
   }
 }
 
-// NEW: Scroll to bottom functionality
+// Scroll to bottom functionality
 function setupScrollToBottom() {
   const chatHistory = document.getElementById('chat-history');
   const scrollButton = document.getElementById('scroll-to-bottom');
@@ -119,7 +119,7 @@ window.autoScrollToBottom = function() {
   }
 };
 
-// NEW: Enhanced loading states
+// Enhanced loading states
 function setLoadingState(loading) {
   const sendButton = document.getElementById('send-button');
   const sendButtonText = document.getElementById('send-button-text');
@@ -216,17 +216,14 @@ function renderQuickActions() {
   
   qa.innerHTML = "";
   quickActions.forEach(action => {
-    // Skip mobile-specific actions since we removed mobile menu complexity
-    if (action.text === "mobile news") {
-      return;
-    }
-    
     const btn = document.createElement('button');
     btn.type = "button";
     
     // Styling based on action type
     if (action.text === "email summary") {
       btn.className = "bg-green-100 text-green-800 px-3 py-2 rounded-lg hover:bg-green-200 text-sm font-semibold";
+    } else if (action.text === "mobile news") {
+      btn.className = "bg-purple-100 text-purple-800 px-3 py-2 rounded-lg hover:bg-purple-200 text-sm font-medium md:hidden";
     } else {
       btn.className = "bg-blue-100 text-blue-900 px-3 py-2 rounded-lg hover:bg-blue-200 text-sm font-medium";
     }
@@ -249,6 +246,9 @@ function renderQuickActions() {
         window.waitingForEmailInput = true;
         const chatInput = document.getElementById('chat-input');
         if (chatInput) chatInput.focus();
+      } else if (action.text === "mobile news") {
+        // Handle mobile news toggle
+        openMobileNews();
       } else {
         // All other actions go directly to AI chat
         addUserMessageToChat(action.text);
@@ -292,7 +292,7 @@ function renderChatHistory() {
       ch.appendChild(messageDiv);
     }
   }
-  // NEW: Enhanced loading spinner with typing indicator
+  // Enhanced loading spinner with typing indicator
   if (botIsLoading) {
     const spinnerDiv = document.createElement('div');
     spinnerDiv.className = "message-container flex justify-start";
