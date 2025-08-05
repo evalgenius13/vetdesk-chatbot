@@ -28,9 +28,7 @@ async function sendConversationSummary(email) {
     }
 
     // Generate AI summary of the conversation
-    const summaryPrompt = `Please create a professional summary of this VA benefits conversation. Include the key benefits discussed, any eligibility information, rates or amounts that were mentioned, and important next steps or actions.
-
-Keep it concise but comprehensive. Format it in a professional, easy-to-read style for their records. Only include information that was actually discussed - do not mention what was not covered.
+    const summaryPrompt = `Create a clean summary of this VA conversation for an email. Write in paragraph form without any headings, titles, or formatting. Do not mention sending emails or include email addresses. Just summarize what was discussed in a conversational tone.
 
 Conversation:
 ${conversationText}`;
@@ -67,33 +65,29 @@ ${conversationText}`;
 
     const emailContent = `Hello,
 
-Thank you for using VetDesk to learn more about VA benefits. Below is a summary of your conversation from ${conversationDate} at ${conversationTime}.
+Thank you for using VetDesk. Below is your conversation from ${conversationDate} at ${conversationTime}.
 
 ═══════════════════════════════════════════════════════════════
-CONVERSATION SUMMARY
 
 ${conversationSummary}
 
 ═══════════════════════════════════════════════════════════════
 NEXT STEPS
 
-• Visit VA.gov for benefit applications and detailed information
-• Call 1-800-827-1000 for general VA benefits questions
+• Visit VA.gov for applications and detailed information
+• Call 1-800-827-1000 for general VA questions
 • Veterans Crisis Line: 988, Press 1 (24/7 confidential support)
 
 IMPORTANT REMINDERS
 
-• Always verify benefit information with your local VA office
-• Keep this summary for your records
-• VA benefits and rates may change - check VA.gov for updates
+• Always verify information with your local VA office
+• Keep this for your records
+• VA rates may change - check VA.gov for updates
 
 ═══════════════════════════════════════════════════════════════
 
 Best regards,
-The VetDesk Team
-
-VetDesk™ - VA Benefits, Simplified
-This summary was generated on ${conversationDate} at ${conversationTime}`;
+The VetDesk Team`;
 
     // Send the email
     const summaryPayload = {
