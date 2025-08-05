@@ -206,7 +206,7 @@ function showError(message) {
   errorDiv.className = "message-container";
   errorDiv.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
   ch.appendChild(errorDiv);
-  window.autoScrollToBottom(); // NEW: Use new scroll function
+  window.autoScrollToBottom();
 }
 
 // Quick actions rendering
@@ -308,33 +308,7 @@ function renderChatHistory() {
       </div>`;
     ch.appendChild(spinnerDiv);
   }
-  // NEW: Use enhanced scroll function
   window.autoScrollToBottom();
-}
-
-// Streaming effect (optional - not currently used but kept for future use)
-function streamBotText(text, container) {
-  return new Promise(resolve => {
-    const formattedText = formatBotMessage(text);
-    let i = 0;
-    const delay = 3;
-
-    function typeChar() {
-      if (formattedText.includes('<p>')) {
-        container.innerHTML = formattedText;
-        resolve();
-      } else {
-        container.textContent = text.slice(0, i + 1);
-        i++;
-        if (i < text.length) {
-          setTimeout(typeChar, delay);
-        } else {
-          resolve();
-        }
-      }
-    }
-    typeChar();
-  });
 }
 
 // API integration
@@ -422,12 +396,12 @@ function addUserMessageToChat(text) {
 }
 
 async function addBotReplyToChat() {
-  setLoadingState(true); // NEW: Use enhanced loading state
+  setLoadingState(true);
   renderChatHistory();
 
   const botReply = await getBotReply();
 
-  setLoadingState(false); // NEW: Use enhanced loading state
+  setLoadingState(false);
   chatMessages.push({ sender: "bot", text: botReply });
   renderChatHistory();
 }
