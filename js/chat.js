@@ -4,7 +4,6 @@
 let chatMessages = [];
 let botIsLoading = false;
 let rateLimitWarning = false;
-let waitingForEmailInput = false;
 
 // NEW: Auto-resizing textarea functionality
 function setupAutoResize() {
@@ -246,7 +245,7 @@ function renderQuickActions() {
         chatMessages.push({ sender: "user", text: "email summary" });
         renderChatHistory();
         addInstantBotResponse("I can email you a summary of our conversation for your records. Please enter your email address:");
-        waitingForEmailInput = true;
+        window.waitingForEmailInput = true;
         const chatInput = document.getElementById('chat-input');
         if (chatInput) chatInput.focus();
       } else {
