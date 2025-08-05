@@ -20,7 +20,7 @@ async function sendConversationSummary(email) {
     // Create conversation text from chat messages
     const conversationText = window.chatMessages
       .filter(msg => msg && msg.sender && msg.text) // Filter out invalid messages
-      .map(msg => `${msg.sender === 'user' ? 'Veteran' : 'VetDesk'}: ${msg.text}`)
+      .map(msg => `${msg.sender === 'user' ? 'You' : 'VetDesk'}: ${msg.text}`)
       .join('\n\n─────────────────────────────────────────\n\n');
     
     if (!conversationText.trim()) {
@@ -28,13 +28,9 @@ async function sendConversationSummary(email) {
     }
 
     // Generate AI summary of the conversation
-    const summaryPrompt = `Please create a professional summary of this VA benefits conversation between a veteran and VetDesk. Focus on:
-- Key benefits discussed and eligibility
-- Specific rates or amounts mentioned
-- Important next steps or actions
-- Any deadlines or time-sensitive information
+    const summaryPrompt = `Please create a professional summary of this VA benefits conversation. Include the key benefits discussed, any eligibility information, rates or amounts that were mentioned, and important next steps or actions.
 
-Keep it concise but comprehensive. Format it in a professional, easy-to-read style for the veteran's records.
+Keep it concise but comprehensive. Format it in a professional, easy-to-read style for their records. Only include information that was actually discussed - do not mention what was not covered.
 
 Conversation:
 ${conversationText}`;
@@ -69,9 +65,9 @@ ${conversationText}`;
       minute: '2-digit' 
     });
 
-    const emailContent = `Dear Veteran,
+    const emailContent = `Hello,
 
-Thank you for using VetDesk to learn more about your VA benefits. Below is a summary of our conversation from ${conversationDate} at ${conversationTime}.
+Thank you for using VetDesk to learn more about VA benefits. Below is a summary of your conversation from ${conversationDate} at ${conversationTime}.
 
 ═══════════════════════════════════════════════════════════════
 CONVERSATION SUMMARY
@@ -79,38 +75,32 @@ CONVERSATION SUMMARY
 ${conversationSummary}
 
 ═══════════════════════════════════════════════════════════════
-NEXT STEPS & VA RESOURCES
+NEXT STEPS
 
 • Visit VA.gov for benefit applications and detailed information
-• Call 1-800-827-1000 for general VA benefits questions (Mon-Fri, 8am-8pm ET)
-• Find your local VA office: va.gov/find-locations
+• Call 1-800-827-1000 for general VA benefits questions
 • Veterans Crisis Line: 988, Press 1 (24/7 confidential support)
-• MyVA411: 1-844-698-2311 for technical support with VA websites
 
 IMPORTANT REMINDERS
 
 • Always verify benefit information with your local VA office
 • Keep this summary for your records
 • VA benefits and rates may change - check VA.gov for updates
-• Apply for time-sensitive benefits as soon as possible
 
 ═══════════════════════════════════════════════════════════════
 
 Best regards,
 The VetDesk Team
 
-──────────────────────────────────────────────────────────────
 VetDesk™ - VA Benefits, Simplified
-
-This summary was generated on ${conversationDate} at ${conversationTime}
-For additional support, visit VA.gov or contact your local VA office.`;
+This summary was generated on ${conversationDate} at ${conversationTime}`;
 
     // Send the email
     const summaryPayload = {
       email: email.trim(),
-      subject: `Your VetDesk Benefits Consultation Summary - ${conversationDate}`,
+      subject: `Your VetDesk Benefits Summary - ${conversationDate}`,
       content: emailContent,
-      userName: 'Veteran'
+      userName: 'User'
     };
 
     const response = await fetch('https://vetdesk-demo2-api.vercel.app/api/send-summary', {
