@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
 });
 
-// Navigation functionality
+// Navigation functionality - UPDATED with mobile news support
 function setupNavigation() {
   // Mobile menu elements
   const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -48,6 +48,10 @@ function setupNavigation() {
   const aboutButton = document.getElementById('about-button');
   const aboutDropdown = document.getElementById('about-dropdown');
   const aboutClose = document.getElementById('about-close');
+
+  // Mobile news elements
+  const mobileNewsClose = document.getElementById('mobile-news-close');
+  const mobileNewsContainer = document.getElementById('mobile-news-container');
 
   // Mobile menu functionality
   if (mobileMenuButton && mobileMenu) {
@@ -69,6 +73,19 @@ function setupNavigation() {
       if (e.target === mobileMenu) {
         mobileMenu.classList.add('hidden');
         document.body.style.overflow = '';
+      }
+    });
+  }
+
+  // Mobile news close functionality
+  if (mobileNewsClose) {
+    mobileNewsClose.addEventListener('click', closeMobileNews);
+  }
+
+  if (mobileNewsContainer) {
+    mobileNewsContainer.addEventListener('click', (e) => {
+      if (e.target === mobileNewsContainer) {
+        closeMobileNews();
       }
     });
   }
@@ -109,11 +126,16 @@ function setupNavigation() {
     }
   });
 
-  // Close mobile menu on window resize to desktop
+  // Close mobile menu and mobile news on window resize to desktop
   window.addEventListener('resize', () => {
-    if (window.innerWidth >= 768 && mobileMenu && !mobileMenu.classList.contains('hidden')) {
-      mobileMenu.classList.add('hidden');
-      document.body.style.overflow = '';
+    if (window.innerWidth >= 768) {
+      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+      if (mobileNewsContainer && mobileNewsContainer.classList.contains('show')) {
+        closeMobileNews();
+      }
     }
   });
 }
@@ -254,7 +276,22 @@ function setupResizeHandler() {
   let resizeTimeout;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(updatePlaceholder, 200);
+    resizeTimeout = setTimeout(() => {
+      updatePlaceholder();
+      // Close mobile elements when switching to desktop
+      if (window.innerWidth >= 768) {
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileNewsContainer = document.getElementById('mobile-news-container');
+        
+        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+          mobileMenu.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+        if (mobileNewsContainer && mobileNewsContainer.classList.contains('show')) {
+          closeMobileNews();
+        }
+      }
+    }, 200);
   });
 }
 
