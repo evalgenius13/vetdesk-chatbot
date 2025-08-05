@@ -28,17 +28,16 @@ async function sendConversationSummary(email) {
     }
 
     // Generate AI summary of the conversation
-    const summaryPrompt = `Create a comprehensive summary of this VA conversation with clear, well-formatted paragraphs. Include:
+    const summaryPrompt = `Please create a detailed summary of this VA benefits discussion. Write clear paragraphs covering:
 
-- Specific benefits discussed with details
-- Eligibility requirements mentioned
-- Any amounts, rates, or limits covered
-- Practical next steps or application processes
-- Key takeaways that would be helpful for their records
+- The specific VA benefits that were discussed
+- Eligibility requirements that were mentioned  
+- Any rates, amounts, or important details shared
+- Key takeaways and next steps
 
-Write in conversational, easy-to-read paragraphs (not short choppy sentences). Make it thorough enough to be a useful reference. Do not include any headings, email addresses, or mentions of sending emails.
+Format as readable paragraphs. This is for documentation purposes only.
 
-Conversation:
+Discussion content:
 ${conversationText}`;
 
     const summaryResponse = await fetch(CONFIG.API_URL, {
