@@ -2,6 +2,7 @@
 
 // Chat State
 let chatMessages = [];
+window.chatMessages = chatMessages;
 let botIsLoading = false;
 let rateLimitWarning = false;
 
