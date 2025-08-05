@@ -245,9 +245,110 @@ function attachDesktopNewsEventListeners() {
   });
 }
 
-// Mobile news functionality (placeholder for future use)
+// Mobile news functionality
 function openMobileNews() {
-  console.log('Mobile news functionality not implemented yet');
+  const mobileNewsContainer = document.getElementById('mobile-news-container');
+  if (!mobileNewsContainer) return;
+  
+  mobileNewsContainer.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  renderMobileNewsFeed();
+}
+
+function closeMobileNews() {
+  const mobileNewsContainer = document.getElementById('mobile-news-container');
+  if (mobileNewsContainer) {
+    mobileNewsContainer.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+}
+
+function renderMobileNewsFeed() {
+  const feed = document.getElementById('mobile-news-feed');
+  if (!feed) return;
+  
+  feed.innerHTML = "";
+
+  if (!newsItems.length) {
+    feed.innerHTML = '<li class="p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600">No news articles available at this time.</li>';
+    return;
+  }
+
+  newsItems.forEach((item, idx) => {
+    const li = document.createElement('li');
+    li.className = "news-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm";
+
+    const titleText = escapeHtml(item.title);
+    const summaryText = item.summary ? escapeHtml(item.summary) : '';
+    
+    const publishedDate = item.date ? 
+      new Date(item.date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }) : '';
+
+    li.innerHTML = `
+      <article>
+        <h3 class="font-semibold text-base text-gray-900 mb-3 leading-tight">
+          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800">
+            ${titleText}
+          </a>
+        </h3>
+        ${summaryText ? `
+          <p class="text-sm text-gray-600 mb-3 leading-relaxed">
+            ${summaryText.length > 200 ? summaryText.substring(0, 200) + '...' : summaryText}
+          </p>
+        ` : ''}
+        <div class="flex justify-between items-center text-sm text-gray-500 mb-3">
+          ${item.source?.name ? `<span>${escapeHtml(item.source.name)}</span>` : '<span>News Source</span>'}
+          ${publishedDate ? `<span>${publishedDate}</span>` : ''}
+        </div>
+        <button type="button" class="mobile-how-affect-me-btn bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors text-sm font-medium w-full" data-news-idx="${idx}">
+          How does this affect me?
+        </button>
+      </article>
+    `;
+    feed.appendChild(li);
+  });
+
+  attachMobileNewsEventListeners();
+}
+
+function attachMobileNewsEventListeners() {
+  document.querySelectorAll('#mobile-news-feed .mobile-how-affect-me-btn').forEach(btn => {
+    btn.onclick = async function() {
+      const idx = parseInt(this.getAttribute('data-news-idx'));
+      const article = newsItems[idx];
+      if (!article) return;
+
+      closeMobileNews();
+
+      try {
+        const analysis = await analyzeArticle(article);
+
+        if (typeof chatMessages !== 'undefined') {
+          chatMessages.push({ 
+            sender: "user", 
+            text: `How does "${article.title}" affect me?` 
+          });
+          
+          chatMessages.push({ 
+            sender: "bot", 
+            text: analysis 
+          });
+          
+          if (typeof renderChatHistory === 'function') {
+            renderChatHistory();
+          }
+        }
+      } catch (error) {
+        console.error('Error analyzing article:', error);
+        if (typeof showError === 'function') {
+          showError('Sorry, I couldn\'t analyze that article right now.');
+        }
+      }
+    };
+  });
 }
 
 // Utility function for HTML escaping
