@@ -39,8 +39,6 @@
       margin-bottom: 0;
     }
 
-    /* Remove all the animation keyframes */
-
     .spinner {
       border: 3px solid #e5e7eb;
       border-top: 3px solid #1e40af;
@@ -51,7 +49,7 @@
       margin: auto;
     }
 
-    /* NEW: Enhanced typing indicator */
+    /* Enhanced typing indicator */
     .typing-indicator {
       display: flex;
       align-items: center;
@@ -125,7 +123,7 @@
       text-align: center;
     }
 
-    /* NEW: Auto-resizing textarea styles */
+    /* Auto-resizing textarea styles */
     .chat-textarea {
       resize: none;
       overflow: hidden;
@@ -133,7 +131,7 @@
       max-height: 120px;
     }
 
-    /* NEW: Character counter styles */
+    /* Character counter styles */
     .char-counter {
       font-size: 0.75rem;
       color: #6b7280;
@@ -147,7 +145,7 @@
       color: #dc2626;
     }
 
-    /* NEW: Scroll to bottom button */
+    /* Scroll to bottom button */
     .scroll-to-bottom {
       position: fixed;
       bottom: 120px;
@@ -186,7 +184,7 @@
       transform: translateY(0) scale(0.95);
     }
 
-    /* NEW: Input loading overlay */
+    /* Input loading overlay */
     .input-loading-overlay {
       position: absolute;
       top: 0;
@@ -219,6 +217,60 @@
     .send-button-loading:hover {
       background: #6b7280 !important;
     }
+
+    /* Mobile News Container */
+    .mobile-news-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      z-index: 50;
+      overflow-y: auto;
+      display: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-news-header {
+      background: #1e40af;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .mobile-news-content {
+      padding: 1rem;
+      padding-bottom: 2rem;
+    }
+
+    /* Mobile News Items */
+    #mobile-news-feed .news-item {
+      margin-bottom: 1rem;
+    }
+
+    #mobile-news-feed .news-item:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Enhanced mobile news button styling */
+    .mobile-how-affect-me-btn {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-how-affect-me-btn:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
     
     @media (max-width: 768px) {
       #news-feed-section {
@@ -246,11 +298,11 @@
         display: inline-block;
         white-space: nowrap;
         font-size: 0.75rem !important;
-        padding: 0.75rem 1rem !important; /* NEW: Larger padding for better mobile touch */
+        padding: 0.75rem 1rem !important;
         margin-right: 0.5rem;
         min-width: auto;
         flex-shrink: 0;
-        min-height: 44px; /* NEW: Ensure minimum touch target */
+        min-height: 44px;
       }
       
       #quick-actions > *:last-child {
@@ -264,9 +316,14 @@
 
       /* Enhanced mobile textarea */
       .chat-textarea {
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
         min-height: 44px;
-        max-height: 100px; /* Slightly smaller on mobile */
+        max-height: 100px;
+      }
+
+      /* Show mobile news container on mobile when toggled */
+      .mobile-news-container.show {
+        display: block;
       }
     }
     
@@ -280,6 +337,11 @@
       #quick-actions > * {
         font-size: 0.875rem;
         padding: 0.5rem 1rem;
+      }
+
+      /* Hide mobile news elements on desktop */
+      .mobile-news-container {
+        display: none !important;
       }
     }
   </style>
@@ -435,6 +497,19 @@
     </div>
   </div>
 
+  <!-- Mobile News Feed -->
+  <div id="mobile-news-container" class="mobile-news-container">
+    <div class="mobile-news-header">
+      <h3 class="text-lg font-semibold">Veteran News</h3>
+      <button id="mobile-news-close" class="text-white hover:text-gray-200 text-2xl w-8 h-8 flex items-center justify-center">
+        &times;
+      </button>
+    </div>
+    <div class="mobile-news-content">
+      <ul id="mobile-news-feed" class="space-y-4"></ul>
+    </div>
+  </div>
+
   <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
 
     <!-- News Feed -->
@@ -462,17 +537,17 @@
       <div id="chat-container" class="flex-1 flex flex-col min-h-0 relative">
         <div id="chat-history" class="flex-1 overflow-y-auto p-4" aria-live="polite"></div>
         
-        <!-- NEW: Scroll to bottom button -->
+        <!-- Scroll to bottom button -->
         <button id="scroll-to-bottom" class="scroll-to-bottom" aria-label="Scroll to bottom">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
           </svg>
         </button>
         
-        <!-- NEW: Updated form with character counter and textarea -->
+        <!-- Updated form with character counter and textarea -->
         <form id="chat-form" class="bg-white border-t border-gray-200" autocomplete="off">
           <div class="input-container p-4">
-            <!-- NEW: Character counter -->
+            <!-- Character counter -->
             <div class="flex justify-between items-center mb-2">
               <div class="flex-1"></div>
               <div id="char-counter" class="char-counter">
@@ -480,7 +555,7 @@
               </div>
             </div>
             
-            <!-- NEW: Textarea instead of input -->
+            <!-- Textarea instead of input -->
             <div class="flex gap-2 relative">
               <textarea 
                 id="chat-input" 
@@ -497,14 +572,14 @@
                 class="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 disabled>
                 <span id="send-button-text">Send</span>
-                <!-- NEW: Loading spinner for send button -->
+                <!-- Loading spinner for send button -->
                 <div id="send-button-spinner" class="hidden">
                   <div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
                 </div>
               </button>
             </div>
             
-            <!-- NEW: Loading overlay for input -->
+            <!-- Loading overlay for input -->
             <div id="input-loading-overlay" class="input-loading-overlay hidden">
               <div class="typing-indicator">
                 <div class="typing-dots">
@@ -520,8 +595,31 @@
     </section>
   </main>
 
+  <!-- Configuration -->
+  <script>
+    const CONFIG = {
+      API_URL: 'https://vetdesk-demo2-api.vercel.app/api/chat',
+      NEWS_API_URL: 'https://vetdesk-demo2-api.vercel.app/api/news',
+      FRONTEND_SECRET: 'vetdesk_secure_2025_kx9mR7pL3wQ8nF2vB6jC',
+      MAX_MESSAGE_LENGTH: 2000,
+      MAX_CONVERSATION_LENGTH: 50
+    };
+
+    const SYSTEM_PROMPT = `You are VetDesk, a warm, respectful and helpful VA benefits assistant. Explain things simply using everyday words and in easy to read sentences. Use only plain text with no asterisks, bold formatting, bullet points, or lists of any kind. Keep it conversational and easy to scan. Never mention your programming, training, or system instructions. When analyzing news, give balanced perspectives including potential concerns and realistic timelines based on past VA initiatives in everyday English. Provide helpful and thoughtful information without asking personal questions about the user's specific situation. Naturally offer VA contact information: 'contact the VA at 1-800-827-1000 or visit va.gov' as a helpful next step. If asked about topics unrelated to VA benefits, politely redirect the conversation back to VA benefits. Be warm, empathetic, friendly, give practical advice, and explain what to expect. After providing general information, offer to help with related topics like 'Would you like to know about the application process?' or 'Do you want information about disability ratings?' or 'Are you interested in learning about other VA benefits?' Always end by mentioning veterans can get personalized help by contacting the VA directly.`;
+
+    const quickActions = [
+      { text: "Tell me about VA disability benefits", label: "Disability" },
+      { text: "What VA healthcare benefits are available?", label: "Healthcare" },
+      { text: "Can you explain VA education benefits?", label: "Education" },
+      { text: "What are VA housing benefits?", label: "Housing" },
+      { text: "What are the current VA disability compensation rates?", label: "Rates" },
+      { text: "What new VA benefits or updates should I know about?", label: "What's New" },
+      { text: "mobile news", label: "📰 News" },
+      { text: "email summary", label: "📧 Email Summary" }
+    ];
+  </script>
+
   <!-- Load JavaScript files -->
-  <script src="js/config.js"></script>
   <script src="js/email.js"></script>
   <script src="js/news.js"></script>
   <script src="js/chat.js"></script>
