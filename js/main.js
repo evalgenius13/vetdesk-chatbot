@@ -1,3 +1,6 @@
+// Ensure chatMessages exists globally
+window.chatMessages = window.chatMessages || [];
+
 // Main initialization and event handlers
 
 // Initialize when DOM is loaded
