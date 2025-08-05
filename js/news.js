@@ -208,10 +208,6 @@ function attachDesktopNewsEventListeners() {
       const article = newsItems[idx];
       if (!article) return;
 
-      const originalText = this.textContent;
-      this.textContent = 'Analyzing...';
-      this.disabled = true;
-
       try {
         // Get analysis (cached or fresh)
         const analysis = await analyzeArticle(article);
@@ -241,9 +237,6 @@ function attachDesktopNewsEventListeners() {
         if (typeof showError === 'function') {
           showError('Sorry, I couldn\'t analyze that article right now.');
         }
-      } finally {
-        this.textContent = originalText;
-        this.disabled = false;
       }
     };
   });
