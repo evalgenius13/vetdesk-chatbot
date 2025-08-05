@@ -12,12 +12,12 @@ const SYSTEM_PROMPT = `You are VetDesk, a warm, respectful and helpful VA benefi
 
 // Quick actions configuration
 const quickActions = [
+  { text: "mobile news", label: "📰 News" },
   { text: "Tell me about VA disability benefits", label: "Disability" },
   { text: "What VA healthcare benefits are available?", label: "Healthcare" },
   { text: "Can you explain VA education benefits?", label: "Education" },
   { text: "What are VA housing benefits?", label: "Housing" },
   { text: "What are the current VA disability compensation rates?", label: "Rates" },
   { text: "What new VA benefits or updates should I know about?", label: "What's New" },
-  { text: "mobile news", label: "📰 News" },
   { text: "email summary", label: "📧 Email Summary" }
 ];
