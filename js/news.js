@@ -228,6 +228,10 @@ function attachDesktopNewsEventListeners() {
             text: analysis 
           });
           
+          // Hide welcome message after first interaction
+          const welcomeMessage = document.getElementById('welcome-message');
+          if (welcomeMessage) welcomeMessage.style.display = 'none';
+          
           if (typeof renderChatHistory === 'function') {
             renderChatHistory();
           }
@@ -336,6 +340,10 @@ function attachMobileNewsEventListeners() {
             sender: "bot", 
             text: analysis 
           });
+          
+          // Hide welcome message after first interaction
+          const welcomeMessage = document.getElementById('welcome-message');
+          if (welcomeMessage) welcomeMessage.style.display = 'none';
           
           if (typeof renderChatHistory === 'function') {
             renderChatHistory();
