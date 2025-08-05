@@ -6,13 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
   renderQuickActions();
   renderChatHistory();
   
-  // Initialize news feed (only if element exists)
+  // Initialize news feed
   const newsFeedElement = document.getElementById('news-feed');
   if (newsFeedElement) {
     fetchNews();
   }
   
-  // NEW: Setup Phase 1 enhancements
+  // Setup enhancements
   setupAutoResize();
   setupScrollToBottom();
   updateCharacterCounter();
@@ -120,7 +120,7 @@ function updatePlaceholder() {
   const chatInput = document.getElementById('chat-input');
   if (!chatInput) return;
   
-  if (window.innerWidth >= 640) { // sm breakpoint
+  if (window.innerWidth >= 640) {
     chatInput.placeholder = 'Ask me anything about VA benefits...';
   } else {
     chatInput.placeholder = 'Ask me anything...';
@@ -227,7 +227,7 @@ function setupFormHandler() {
   });
 }
 
-// NEW: Setup input validation handler
+// Setup input validation handler
 function setupInputHandler() {
   const chatInput = document.getElementById('chat-input');
   if (!chatInput) return;
@@ -240,7 +240,6 @@ function setupInputHandler() {
       e.target.value = e.target.value.substring(0, maxLength);
     }
 
-    // Only call updateCharacterCounter if it exists
     if (typeof updateCharacterCounter === 'function') {
       updateCharacterCounter();
     }
