@@ -122,7 +122,7 @@ For additional support, visit VA.gov or contact your local VA office.`;
     const result = await response.json();
 
     if (response.ok && result?.success === true) {
-      const successMessage = `Summary sent! You can send ${result.remaining || 0} more this hour.`;
+    const successMessage = `Summary sent to your email address! You can send ${result.remaining || 0} more this hour.`;
       if (window.chatMessages && Array.isArray(window.chatMessages)) {
         window.chatMessages.push({ sender: "bot", text: successMessage, streaming: false });
       }
