@@ -111,12 +111,22 @@ function setupScrollToBottom() {
   });
 }
 
-// Simple auto-scroll function
+// Smart auto-scroll function
 window.autoScrollToBottom = function() {
   const chatHistory = document.getElementById('chat-history');
-  if (chatHistory) {
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+  if (!chatHistory) return;
+  
+  // On mobile, scroll to show the start of the latest bot message
+  if (window.innerWidth <= 768) {
+    const lastBotMessage = chatHistory.querySelector('.message-container:last-child .chat-bubble-bot');
+    if (lastBotMessage) {
+      lastBotMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
   }
+  
+  // Desktop: scroll to bottom as usual
+  chatHistory.scrollTop = chatHistory.scrollHeight;
 };
 
 // Enhanced loading states
