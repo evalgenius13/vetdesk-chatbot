@@ -1,11 +1,92 @@
-// News feed functionality
+// News feed functionality with simple caching
 
 let newsItems = [];
 let newsLoading = false;
 
+// Simple cache functions
+function getCachedNews() {
+  try {
+    const cached = sessionStorage.getItem('news');
+    return cached ? JSON.parse(cached) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getCachedAnalysis(articleUrl) {
+  try {
+    const cached = sessionStorage.getItem('analysis_' + btoa(articleUrl).slice(0, 20));
+    return cached ? JSON.parse(cached) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveAnalysis(articleUrl, analysis) {
+  try {
+    const key = 'analysis_' + btoa(articleUrl).slice(0, 20);
+    sessionStorage.setItem(key, JSON.stringify({
+      analysis: analysis,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    // Storage full, ignore
+  }
+}
+
+// Analyze article (with simple caching)
+async function analyzeArticle(article) {
+  // Check cache
+  const cached = getCachedAnalysis(article.url);
+  if (cached) {
+    return cached.analysis;
+  }
+  
+  // Call API
+  try {
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.FRONTEND_SECRET}`
+      },
+      body: JSON.stringify({ 
+        chatHistory: [{
+          role: "user",
+          parts: [{ text: `How does this VA news affect veterans? Article: "${article.title}" - ${article.summary}` }]
+        }],
+        systemPrompt: SYSTEM_PROMPT
+      })
+    });
+
+    if (!response.ok) throw new Error('API failed');
+
+    const data = await response.json();
+    const analysis = data?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                    "Sorry, I couldn't analyze this article.";
+    
+    // Save to cache
+    saveAnalysis(article.url, analysis);
+    return analysis;
+    
+  } catch (error) {
+    return "Sorry, I couldn't analyze this article right now.";
+  }
+}
+
 // Fetch news from backend API
 async function fetchNews(forceRefresh = false) {
   if (newsLoading) return;
+
+  // Check cache first
+  if (!forceRefresh) {
+    const cached = getCachedNews();
+    if (cached) {
+      newsItems = cached;
+      renderNewsFeed();
+      return;
+    }
+  }
 
   newsLoading = true;
   const newsFeed = document.getElementById('news-feed');
@@ -32,10 +113,25 @@ async function fetchNews(forceRefresh = false) {
     }
 
     newsItems = data.articles || [];
+    
+    // Cache the news
+    try {
+      sessionStorage.setItem('news', JSON.stringify(newsItems));
+    } catch (e) {
+      // Storage full, ignore
+    }
+    
     renderNewsFeed();
 
   } catch (error) {
-    showNewsError(error.message);
+    // Try to use cached news on error
+    const cached = getCachedNews();
+    if (cached && cached.length > 0) {
+      newsItems = cached;
+      renderNewsFeed();
+    } else {
+      showNewsError(error.message);
+    }
   } finally {
     newsLoading = false;
   }
@@ -107,14 +203,43 @@ function renderNewsFeed() {
 // Desktop event listeners (sidebar)
 function attachDesktopNewsEventListeners() {
   document.querySelectorAll('#news-feed .how-affect-me-btn').forEach(btn => {
-    btn.onclick = function() {
+    btn.onclick = async function() {
       const idx = parseInt(this.getAttribute('data-news-idx'));
-      const news = newsItems[idx];
-      if (news) {
-        const userMessage = `How does "${news.title}" affect me?`;
-        if (typeof addUserMessageToChat === 'function') {
-          addUserMessageToChat(userMessage);
+      const article = newsItems[idx];
+      if (!article) return;
+
+      const originalText = this.textContent;
+      this.textContent = 'Analyzing...';
+      this.disabled = true;
+
+      try {
+        // Get analysis (cached or fresh)
+        const analysis = await analyzeArticle(article);
+
+        // Add to chat
+        if (typeof chatMessages !== 'undefined') {
+          chatMessages.push({ 
+            sender: "user", 
+            text: `How does "${article.title}" affect me?` 
+          });
+          
+          chatMessages.push({ 
+            sender: "bot", 
+            text: analysis 
+          });
+          
+          if (typeof renderChatHistory === 'function') {
+            renderChatHistory();
+          }
         }
+      } catch (error) {
+        console.error('Error analyzing article:', error);
+        if (typeof showError === 'function') {
+          showError('Sorry, I couldn\'t analyze that article right now.');
+        }
+      } finally {
+        this.textContent = originalText;
+        this.disabled = false;
       }
     };
   });
