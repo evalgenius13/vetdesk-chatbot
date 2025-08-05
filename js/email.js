@@ -28,7 +28,7 @@ async function sendConversationSummary(email) {
     }
 
     // Generate AI summary of the conversation
-    const summaryPrompt = `Create a clean summary of this VA conversation for an email. Write in paragraph form without any headings, titles, or formatting. Do not mention sending emails or include email addresses. Just summarize what was discussed in a conversational tone.
+    const summaryPrompt = `Write a clean, conversational summary of this VA discussion. Use simple paragraphs. Do not include any headings, titles, email addresses, or mentions of sending emails. Just explain what topics were covered in the conversation.
 
 Conversation:
 ${conversationText}`;
@@ -67,24 +67,12 @@ ${conversationText}`;
 
 Thank you for using VetDesk. Below is your conversation from ${conversationDate} at ${conversationTime}.
 
-═══════════════════════════════════════════════════════════════
-
 ${conversationSummary}
 
-═══════════════════════════════════════════════════════════════
 NEXT STEPS
-
 • Visit VA.gov for applications and detailed information
 • Call 1-800-827-1000 for general VA questions
 • Veterans Crisis Line: 988, Press 1 (24/7 confidential support)
-
-IMPORTANT REMINDERS
-
-• Always verify information with your local VA office
-• Keep this for your records
-• VA rates may change - check VA.gov for updates
-
-═══════════════════════════════════════════════════════════════
 
 Best regards,
 The VetDesk Team`;
